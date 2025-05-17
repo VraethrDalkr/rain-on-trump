@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Is It Raining on Trump?</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="manifest" href="manifest.webmanifest">
+  <style>
+    body{margin:0;display:flex;flex-direction:column;
+         justify-content:center;align-items:center;height:100vh;
+         font-family:system-ui,sans-serif;text-align:center}
+    #answer{font-size:6rem}
+    #loc{margin-top:.5rem;color:#555}
+  </style>
+</head>
+<body>
+  <div id="answer">…</div>
+  <div id="loc"></div>
+
+<script>
+const ENDPOINT = "http://127.0.0.1:8000/is_it_raining.json"; // adjust after deploy
+
+async function refresh(){
+  try{
+    const {raining,location}=await (await fetch(ENDPOINT)).json();
+    document.getElementById('answer').textContent=raining?'🌧️ YES':'☀️ NO';
+    document.getElementById('loc').textContent=location;
+  }catch(e){
+    document.getElementById('answer').textContent='🤷';
+    document.getElementById('loc').textContent='(error)';
+  }
+}
+refresh(); setInterval(refresh,60_000);
+navigator.serviceWorker.register('sw.js');
+</script>
+</body>
+</html>
