@@ -12,10 +12,10 @@ self.addEventListener("fetch", e => {
         caches.match(e.request).then(r => r || fetch(e.request))
     );
 });
-self.addEventListener("push", event => {
-    const data = event.data?.json() || {};
-    self.registration.showNotification(data.title || "Rain on Trump", {
-        body: data.body || "It just started (or stopped) raining!",
-                                       icon: "/icons/icon-192.png",
+self.addEventListener("push", e => {
+    const data = e.data.json();
+    self.registration.showNotification(data.title, {
+        body: data.body,
+        icon: "/icons/icon-192.png",
     });
 });

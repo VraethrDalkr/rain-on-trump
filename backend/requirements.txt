@@ -5,3 +5,12 @@ python-dotenv==1.0.1
 geopy==2.4.1
 pywebpush==1.14.0
 python-multipart==0.0.9    # needed for large JSON bodies, forms
+bs4==0.0.2
+geopy==2.4.1
+lxml==5.4.0
+python-dateutil==2.9.0.post0
+opensky-api @ git+https://github.com/openskynetwork/opensky-api.git#egg=opensky-api&subdirectory=python
+fastapi-utils
+typing-inspect
+pywebpush
+dotenv
