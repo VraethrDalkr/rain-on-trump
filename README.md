@@ -57,12 +57,12 @@ PY
 
 | Order | Source                          | Example                      | Confidence                       |
 | ----- | ------------------------------- | ---------------------------- | -------------------------------- |
-| 1️⃣   | **ADS-B (OpenSky → adsb.fi)**   | plane callsign / lat-lon     | 95 (air), 80-90 (ground)         |
-| 1.5️⃣ | **Overnight base inference**    | DC evening + DC morning      | 58                               |
-| 2️⃣   | **Factba.se JSON calendar**     | latest event with a location | 70 → 30 **linear decay** over 72h |
-| 3️⃣   | ~~FAA VIP/SECURITY-TFR JSON~~   | _(disabled 2025-12)_         | ~~40~~                           |
-| 4️⃣   | **Newswire (GDELT)**            | dateline coords              | 35                               |
-| 5️⃣   | **Last-arrival cache**          | last plane arrival (<7 d)    | 30                               |
+| 1     | **ADS-B (OpenSky → adsb.fi)**   | plane callsign / lat-lon     | 95 (air), 80-90 (ground)         |
+| 2     | **Overnight base inference**    | DC evening + DC morning      | 58                               |
+| 3     | **Factba.se JSON calendar**     | latest event with a location | 70 → 30 **linear decay** over 72h |
+| 4     | ~~FAA VIP/SECURITY-TFR JSON~~   | _(disabled 2025-12)_         | ~~40~~                           |
+| 5     | **Newswire (GDELT)**            | dateline coords              | 35                               |
+| 6     | **Last-arrival cache**          | last plane arrival (<7 d)    | 30                               |
 
 > **Note:** FAA TFR API was disabled in December 2025 after the endpoint changed to return HTML instead of JSON.
 
@@ -161,13 +161,11 @@ This project is licensed under the [GNU Affero General Public License v3.0](LICE
 
 ### Data Source Attributions
 
-This project uses the following external data sources:
-
-* **Weather data by [Open-Meteo.com](https://open-meteo.com/)** – precipitation & thunderstorm detection
-* **Geocoding © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors** via [Nominatim](https://nominatim.org/)
+* [Open-Meteo](https://open-meteo.com/) – weather data
+* [OpenStreetMap](https://www.openstreetmap.org/copyright) / [Nominatim](https://nominatim.org/) – geocoding
 * [OpenSky Network](https://opensky-network.org/) – ADS-B flight tracking
 * [adsb.fi](https://adsb.fi/) – backup ADS-B feed
-* [Factba.se Calendar](https://rollcall.com/factbase/trump/topic/calendar/) – public schedule data
+* [Factba.se](https://rollcall.com/factbase/trump/topic/calendar/) – public schedule data
 
 ---
 
