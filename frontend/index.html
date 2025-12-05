@@ -1,0 +1,2099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Is It Raining on Trump?</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="theme-color" content="#0ea5e9">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      /* iOS PWA safe-area fix: extend document height to prevent bottom white bar */
+      min-height: calc(100% + env(safe-area-inset-top));
+    }
+
+    body {
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow: hidden;
+      transition: background 1s ease;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    /* Theme backgrounds */
+    body.sunny {
+      background: linear-gradient(180deg, #0ea5e9 0%, #0284c7 50%, #0369a1 100%);
+      color: white;
+    }
+
+    body.rain {
+      background: linear-gradient(180deg, #1e293b 0%, #334155 50%, #475569 100%);
+      color: white;
+    }
+
+    body.snow {
+      background: linear-gradient(180deg, #e2e8f0 0%, #94a3b8 50%, #64748b 100%);
+      color: #1e293b;
+    }
+
+    body.mixed {
+      background: linear-gradient(180deg, #374151 0%, #4b5563 50%, #6b7280 100%);
+      color: white;
+    }
+
+    body.thunderstorm {
+      background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+      color: white;
+    }
+
+    body.unknown {
+      background: linear-gradient(180deg, #374151 0%, #4b5563 50%, #6b7280 100%);
+      color: white;
+    }
+
+    body.inflight {
+      background: linear-gradient(180deg, #0ea5e9 0%, #0284c7 50%, #0369a1 100%);
+      color: white;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       NIGHTTIME THEME BACKGROUNDS
+       ═══════════════════════════════════════════════════════════════ */
+    body.sunny-night {
+      background: linear-gradient(180deg, #020617 0%, #0f0a2e 50%, #1e1b4b 100%);
+      color: white;
+    }
+
+    body.rain-night {
+      background: linear-gradient(180deg, #000000 0%, #020617 50%, #0f172a 100%);
+      color: white;
+    }
+
+    body.snow-night {
+      background: linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+      color: white;
+    }
+
+    body.mixed-night {
+      background: linear-gradient(180deg, #030712 0%, #111827 50%, #1f2937 100%);
+      color: white;
+    }
+
+    body.thunderstorm-night {
+      background: linear-gradient(180deg, #000000 0%, #050510 50%, #0f0a1a 100%);
+      color: white;
+    }
+
+    body.unknown-night {
+      background: linear-gradient(180deg, #030712 0%, #111827 50%, #1f2937 100%);
+      color: white;
+    }
+
+    body.inflight-night {
+      background: linear-gradient(180deg, #020617 0%, #0f0a2e 50%, #1e1b4b 100%);
+      color: white;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       WEATHER ANIMATIONS
+       ═══════════════════════════════════════════════════════════════ */
+
+    /* Rain Canvas */
+    #rainCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s;
+      z-index: 1;
+    }
+
+    body.rain #rainCanvas,
+    body.mixed #rainCanvas,
+    body.thunderstorm #rainCanvas,
+    body.rain-night #rainCanvas,
+    body.mixed-night #rainCanvas,
+    body.thunderstorm-night #rainCanvas { opacity: 1; }
+
+    /* Snow particles */
+    .snow-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s;
+      z-index: 2;
+      overflow: hidden;
+    }
+
+    body.snow .snow-container,
+    body.mixed .snow-container,
+    body.snow-night .snow-container,
+    body.mixed-night .snow-container { opacity: 1; }
+
+    .snowflake {
+      position: absolute;
+      top: -20px;
+      color: white;
+      font-size: 1rem;
+      text-shadow: 0 0 5px rgba(255,255,255,0.8);
+      animation: snowfall linear infinite;
+      opacity: 0.8;
+    }
+
+    @keyframes snowfall {
+      0% { transform: translateY(-20px) rotate(0deg); }
+      100% { transform: translateY(100vh) rotate(360deg); }
+    }
+
+    /* Sun effect */
+    .sun-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s;
+      z-index: 1;
+    }
+
+    body.sunny .sun-container,
+    body.inflight .sun-container { opacity: 1; }
+
+    .sun-glow {
+      position: absolute;
+      top: 50px;
+      right: 20px;
+      width: 140px;
+      height: 140px;
+      background: radial-gradient(circle, rgba(255,225,100,1) 0%, rgba(255,200,50,0.6) 30%, rgba(255,180,50,0.2) 55%, transparent 75%);
+      border-radius: 50%;
+      animation: sunPulse 4s ease-in-out infinite;
+      z-index: 2;
+    }
+
+    .sun-rays {
+      position: absolute;
+      top: 120px;
+      left: calc(100% - 90px);
+      width: 300vmax;
+      height: 300vmax;
+      transform: translate(-50%, -50%);
+      background: conic-gradient(from 0deg,
+        transparent 0deg,
+        transparent 8deg, rgba(255,235,150,0.08) 18deg, rgba(255,220,100,0.18) 30deg, rgba(255,235,150,0.08) 42deg, transparent 52deg,
+        transparent 60deg,
+        transparent 68deg, rgba(255,235,150,0.08) 78deg, rgba(255,220,100,0.18) 90deg, rgba(255,235,150,0.08) 102deg, transparent 112deg,
+        transparent 120deg,
+        transparent 128deg, rgba(255,235,150,0.08) 138deg, rgba(255,220,100,0.18) 150deg, rgba(255,235,150,0.08) 162deg, transparent 172deg,
+        transparent 180deg,
+        transparent 188deg, rgba(255,235,150,0.08) 198deg, rgba(255,220,100,0.18) 210deg, rgba(255,235,150,0.08) 222deg, transparent 232deg,
+        transparent 240deg,
+        transparent 248deg, rgba(255,235,150,0.08) 258deg, rgba(255,220,100,0.18) 270deg, rgba(255,235,150,0.08) 282deg, transparent 292deg,
+        transparent 300deg,
+        transparent 308deg, rgba(255,235,150,0.08) 318deg, rgba(255,220,100,0.18) 330deg, rgba(255,235,150,0.08) 342deg, transparent 352deg,
+        transparent 360deg
+      );
+      -webkit-mask-image: radial-gradient(circle, transparent 0%, transparent 60px, black 120px);
+      mask-image: radial-gradient(circle, transparent 0%, transparent 60px, black 120px);
+      filter: blur(1px);
+      animation: sunRotate 120s linear infinite;
+      z-index: 1;
+    }
+
+    @keyframes sunPulse {
+      0%, 100% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(1.15); opacity: 1; }
+    }
+
+    @keyframes sunRotate {
+      from { transform: translate(-50%, -50%) rotate(0deg); }
+      to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       STARS ANIMATION
+       ═══════════════════════════════════════════════════════════════ */
+    .stars-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 1s ease;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    /* Full stars on clear nights */
+    body.sunny-night .stars-container,
+    body.inflight-night .stars-container { opacity: 1; }
+
+    /* Dimmed stars during precipitation */
+    body.rain-night .stars-container { opacity: 0.25; }
+    body.snow-night .stars-container { opacity: 0.35; }
+    body.mixed-night .stars-container { opacity: 0.3; }
+    body.unknown-night .stars-container { opacity: 0.4; }
+
+    /* No stars during thunderstorm */
+    body.thunderstorm-night .stars-container { opacity: 0; }
+
+    .star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: white;
+      border-radius: 50%;
+      animation: twinkle linear infinite;
+    }
+
+    .star.large {
+      width: 3px;
+      height: 3px;
+      box-shadow: 0 0 6px 1px rgba(255, 255, 255, 0.6);
+    }
+
+    .star.bright {
+      width: 4px;
+      height: 4px;
+      box-shadow: 0 0 8px 2px rgba(255, 255, 255, 0.8);
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.2); }
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       MOON
+       ═══════════════════════════════════════════════════════════════ */
+    .moon-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 1s ease;
+      z-index: 1;
+    }
+
+    /* Show moon on clear nights */
+    body.sunny-night .moon-container,
+    body.inflight-night .moon-container { opacity: 1; }
+
+    /* Dim moon during light precipitation */
+    body.snow-night .moon-container { opacity: 0.3; }
+    body.unknown-night .moon-container { opacity: 0.4; }
+
+    /* Hide moon during heavy precipitation */
+    body.rain-night .moon-container,
+    body.mixed-night .moon-container,
+    body.thunderstorm-night .moon-container { opacity: 0; }
+
+    .moon {
+      position: absolute;
+      top: 40px;
+      right: 25px;
+      width: 100px;
+      height: 100px;
+    }
+
+    .moon-glow {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle,
+        rgba(255, 255, 240, 0.95) 0%,
+        rgba(255, 255, 220, 0.5) 35%,
+        rgba(200, 200, 180, 0.2) 55%,
+        transparent 70%);
+      border-radius: 50%;
+      animation: moonPulse 6s ease-in-out infinite;
+    }
+
+    .moon-crescent {
+      position: absolute;
+      width: 80%;
+      height: 80%;
+      top: 10%;
+      left: 10%;
+      background: linear-gradient(135deg,
+        rgba(255, 255, 240, 0.95) 0%,
+        rgba(230, 230, 210, 0.9) 50%,
+        rgba(200, 200, 180, 0.8) 100%);
+      border-radius: 50%;
+      box-shadow:
+        inset -12px -4px 20px rgba(100, 100, 80, 0.4),
+        0 0 30px rgba(255, 255, 240, 0.3);
+    }
+
+    .moon-crescent::before {
+      content: '';
+      position: absolute;
+      width: 15px;
+      height: 15px;
+      background: rgba(180, 180, 160, 0.3);
+      border-radius: 50%;
+      top: 25%;
+      left: 30%;
+      box-shadow:
+        25px 15px 0 8px rgba(180, 180, 160, 0.2),
+        -5px 35px 0 5px rgba(180, 180, 160, 0.25),
+        30px 40px 0 3px rgba(180, 180, 160, 0.2);
+    }
+
+    @keyframes moonPulse {
+      0%, 100% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(1.03); opacity: 1; }
+    }
+
+    /* Lightning flash */
+    .lightning {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: white;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    .lightning.flash {
+      animation: lightningFlash 0.15s ease-out;
+    }
+
+    @keyframes lightningFlash {
+      0% { opacity: 0; }
+      10% { opacity: 0.8; }
+      20% { opacity: 0.2; }
+      30% { opacity: 0.9; }
+      40% { opacity: 0; }
+      100% { opacity: 0; }
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       LAYOUT
+       ═══════════════════════════════════════════════════════════════ */
+
+    .main {
+      height: 100vh;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 10;
+    }
+
+    /* Top bar */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.25rem;
+      padding-top: max(1rem, env(safe-area-inset-top));
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      opacity: 0.8;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: #22c55e;
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .status-dot.offline {
+      background: #ef4444;
+      animation: none;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(0.9); }
+    }
+
+    .updated-time {
+      font-size: 0.8rem;
+      opacity: 0.7;
+    }
+
+    /* Pull to refresh */
+    .ptr {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 0;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      color: inherit;
+      font-size: 1.5rem;
+      transition: height 0.2s;
+      z-index: 100;
+    }
+
+    .ptr.show { height: 60px; }
+    .ptr.spin { animation: spin 1s linear infinite; }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* Center content */
+    .center {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .weather-icon {
+      font-size: 5rem;
+      margin-bottom: 0.5rem;
+      filter: drop-shadow(0 10px 30px rgba(0,0,0,0.2));
+      line-height: 1;
+    }
+
+    body.thunderstorm .weather-icon,
+    body.thunderstorm-night .weather-icon {
+      animation: shake 0.5s ease-in-out infinite;
+      animation-play-state: paused;
+    }
+
+    body.thunderstorm.flash-active .weather-icon,
+    body.thunderstorm-night.flash-active .weather-icon {
+      animation-play-state: running;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-3px); }
+      75% { transform: translateX(3px); }
+    }
+
+    .answer {
+      font-size: clamp(4rem, 18vw, 7rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      margin-bottom: 0.25rem;
+      text-shadow: 0 4px 30px rgba(0,0,0,0.2);
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      opacity: 0.75;
+      font-weight: 400;
+      margin-bottom: 1rem;
+    }
+
+    .rate {
+      font-size: 1.75rem;
+      font-weight: 600;
+      opacity: 0.9;
+    }
+
+    .rate-unit {
+      font-size: 1rem;
+      opacity: 0.6;
+      font-weight: 400;
+    }
+
+    /* Location bar */
+    .location-bar {
+      background: rgba(255,255,255,0.12);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.15);
+      padding: 0.875rem 1.25rem;
+      margin: 0 1.25rem 1rem;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .location-bar:hover {
+      background: rgba(255,255,255,0.18);
+    }
+
+    .location-bar:active {
+      transform: scale(0.98);
+    }
+
+    body.snow .location-bar {
+      background: rgba(0,0,0,0.1);
+      border-color: rgba(0,0,0,0.15);
+    }
+
+    .location-icon {
+      font-size: 1.25rem;
+    }
+
+    .location-text {
+      flex: 1;
+      text-align: left;
+    }
+
+    .location-name {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .location-source {
+      font-size: 0.75rem;
+      opacity: 0.6;
+    }
+
+    .location-chevron {
+      font-size: 1.25rem;
+      opacity: 0.5;
+      transition: transform 0.3s;
+    }
+
+    .location-bar.expanded .location-chevron {
+      transform: rotate(180deg);
+    }
+
+    /* Footer */
+    .footer {
+      display: flex;
+      justify-content: center;
+      gap: 0.75rem;
+      padding: 1rem;
+      padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
+
+    .footer-btn {
+      background: rgba(255,255,255,0.12);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: inherit;
+      padding: 0.6rem 1.25rem;
+      border-radius: 100px;
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
+    }
+
+    .footer-btn:hover {
+      background: rgba(255,255,255,0.2);
+    }
+
+    .footer-btn.subscribed {
+      background: rgba(34, 197, 94, 0.25);
+      border-color: rgba(34, 197, 94, 0.4);
+    }
+
+    body.snow .footer-btn {
+      background: rgba(0,0,0,0.1);
+      border-color: rgba(0,0,0,0.15);
+    }
+
+    body.snow .footer-btn.subscribed {
+      background: rgba(34, 197, 94, 0.3);
+      border-color: rgba(34, 197, 94, 0.5);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       SLIDE-UP SHEET (Location Links)
+       ═══════════════════════════════════════════════════════════════ */
+
+    .sheet-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+      z-index: 200;
+    }
+
+    .sheet-overlay.open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .sheet {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #1e293b;
+      border-radius: 24px 24px 0 0;
+      padding: 1rem;
+      padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+      z-index: 201;
+      color: white;
+    }
+
+    .sheet-overlay.open .sheet {
+      transform: translateY(0);
+    }
+
+    .sheet-handle {
+      width: 36px;
+      height: 4px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 2px;
+      margin: 0 auto 1rem;
+    }
+
+    .sheet-header {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .sheet-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .sheet-subtitle {
+      font-size: 0.8rem;
+      opacity: 0.6;
+      margin-top: 0.25rem;
+    }
+
+    .sheet-links {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .sheet-link {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: rgba(255,255,255,0.08);
+      border-radius: 12px;
+      text-decoration: none;
+      color: inherit;
+      transition: background 0.2s;
+    }
+
+    .sheet-link:hover {
+      background: rgba(255,255,255,0.15);
+    }
+
+    .sheet-link-icon {
+      font-size: 1.5rem;
+      width: 40px;
+      text-align: center;
+    }
+
+    .sheet-link-text {
+      flex: 1;
+    }
+
+    .sheet-link-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .sheet-link-desc {
+      font-size: 0.75rem;
+      opacity: 0.6;
+      margin-top: 0.1rem;
+    }
+
+    .sheet-link-arrow {
+      opacity: 0.4;
+      font-size: 1.25rem;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 6rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e293b;
+      color: white;
+      padding: 0.75rem 1.25rem;
+      border-radius: 10px;
+      font-size: 0.875rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      z-index: 100;
+    }
+
+    .toast.show { opacity: 1; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       SETTINGS SHEET
+       ═══════════════════════════════════════════════════════════════ */
+    .settings-sheet {
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .settings-group {
+      margin-bottom: 1rem;
+    }
+
+    .settings-group-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      opacity: 0.6;
+      margin-bottom: 0.5rem;
+      padding: 0 0.25rem;
+    }
+
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem;
+      background: rgba(255,255,255,0.08);
+      border-radius: 12px;
+      margin-bottom: 0.5rem;
+    }
+
+    .setting-label {
+      flex: 1;
+    }
+
+    .setting-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .setting-desc {
+      font-size: 0.75rem;
+      opacity: 0.6;
+      margin-top: 0.1rem;
+    }
+
+    /* Toggle Switch */
+    .toggle {
+      position: relative;
+      width: 50px;
+      height: 28px;
+      flex-shrink: 0;
+    }
+
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: rgba(255,255,255,0.2);
+      border-radius: 28px;
+      transition: all 0.3s;
+    }
+
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      left: 3px;
+      bottom: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.3s;
+    }
+
+    .toggle input:checked + .toggle-slider {
+      background: #22c55e;
+    }
+
+    .toggle input:checked + .toggle-slider::before {
+      transform: translateX(22px);
+    }
+
+    .toggle input:disabled + .toggle-slider {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Unsubscribe button */
+    .unsubscribe-btn {
+      width: 100%;
+      padding: 1rem;
+      margin-top: 1rem;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #fca5a5;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .unsubscribe-btn:hover {
+      background: rgba(239, 68, 68, 0.25);
+    }
+
+    /* Subscribe prompt in settings */
+    .subscribe-prompt {
+      text-align: center;
+      padding: 2rem 1rem;
+    }
+
+    .subscribe-prompt-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .subscribe-prompt-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .subscribe-prompt-desc {
+      font-size: 0.875rem;
+      opacity: 0.7;
+      margin-bottom: 1.5rem;
+    }
+
+    .subscribe-prompt-btn {
+      padding: 0.875rem 2rem;
+      background: #22c55e;
+      color: white;
+      border: none;
+      border-radius: 100px;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .subscribe-prompt-btn:hover {
+      background: #16a34a;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       FIRST LAUNCH POPUP
+       ═══════════════════════════════════════════════════════════════ */
+    .popup-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      padding-bottom: max(1.5rem, calc(env(safe-area-inset-bottom) + 1rem));
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+      z-index: 300;
+    }
+
+    .popup-overlay.open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .popup {
+      background: #1e293b;
+      border-radius: 20px;
+      padding: 2rem;
+      max-width: 340px;
+      text-align: center;
+      color: white;
+      transform: scale(0.9);
+      transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+
+    .popup-overlay.open .popup {
+      transform: scale(1);
+    }
+
+    .popup-icon {
+      font-size: 3.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .popup-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .popup-desc {
+      font-size: 0.9rem;
+      opacity: 0.75;
+      line-height: 1.5;
+      margin-bottom: 1.5rem;
+    }
+
+    .popup-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .popup-btn-primary {
+      padding: 0.875rem 1.5rem;
+      background: #22c55e;
+      color: white;
+      border: none;
+      border-radius: 100px;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .popup-btn-primary:hover {
+      background: #16a34a;
+    }
+
+    .popup-btn-secondary {
+      padding: 0.75rem 1.5rem;
+      background: transparent;
+      color: inherit;
+      border: none;
+      font-family: inherit;
+      font-size: 0.875rem;
+      opacity: 0.7;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .popup-btn-secondary:hover {
+      opacity: 1;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       iOS INSTALL PROMPT
+       ═══════════════════════════════════════════════════════════════ */
+    .ios-install-steps {
+      text-align: left;
+      margin: 0.5rem 0;
+    }
+
+    .ios-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .ios-step-number {
+      width: 20px;
+      height: 20px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .ios-step-text {
+      font-size: 0.8rem;
+      line-height: 1.3;
+      opacity: 0.9;
+    }
+
+    .ios-step-icon {
+      display: inline-block;
+      font-size: 1rem;
+      vertical-align: middle;
+    }
+
+    .share-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border: 1.5px solid currentColor;
+      border-radius: 3px;
+      font-size: 0.6rem;
+      vertical-align: middle;
+      margin: 0 2px;
+    }
+
+    /* Compact popup for iOS install */
+    #iosInstallPopup .popup {
+      padding: 1.5rem;
+    }
+
+    #iosInstallPopup .popup-icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    #iosInstallPopup .popup-title {
+      font-size: 1.1rem;
+      margin-bottom: 0.25rem;
+    }
+
+    #iosInstallPopup .popup-desc {
+      font-size: 0.8rem;
+      margin-bottom: 0.75rem;
+    }
+  </style>
+</head>
+<body class="unknown">
+  <!-- Weather animation layers -->
+  <canvas id="rainCanvas"></canvas>
+  <div class="snow-container" id="snowContainer"></div>
+  <div class="stars-container" id="starsContainer"></div>
+  <div class="moon-container">
+    <div class="moon">
+      <div class="moon-glow"></div>
+      <div class="moon-crescent"></div>
+    </div>
+  </div>
+  <div class="sun-container">
+    <div class="sun-rays"></div>
+    <div class="sun-glow"></div>
+  </div>
+  <div class="lightning" id="lightning"></div>
+
+  <!-- Pull to refresh -->
+  <div class="ptr" id="ptr">&#8635;</div>
+
+  <!-- Main UI -->
+  <div class="main">
+    <div class="top-bar">
+      <div class="status-indicator">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">Live</span>
+      </div>
+      <div class="updated-time" id="updatedTime">Loading...</div>
+    </div>
+
+    <div class="center">
+      <div class="weather-icon" id="weatherIcon">...</div>
+      <div class="answer" id="answer">...</div>
+      <div class="subtitle" id="subtitle">Checking weather...</div>
+      <div class="rate">
+        <span id="rateValue">-</span>
+        <span class="rate-unit">mm/h</span>
+      </div>
+    </div>
+
+    <div class="location-bar" id="locationBar">
+      <span class="location-icon">📍</span>
+      <div class="location-text">
+        <div class="location-name" id="locationName">Loading...</div>
+        <div class="location-source" id="locationSource"></div>
+      </div>
+      <span class="location-chevron">▼</span>
+    </div>
+
+    <div class="footer">
+      <button class="footer-btn" id="notifyBtn">
+        <span id="notifyIcon">🔕</span>
+        <span id="notifyText">Notify</span>
+      </button>
+      <a href="about.html" class="footer-btn">
+        <span>ℹ️</span>
+        <span>About</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Slide-up sheet -->
+  <div class="sheet-overlay" id="sheetOverlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <div class="sheet-title" id="sheetTitle">Location</div>
+        <div class="sheet-subtitle">Location Details</div>
+      </div>
+      <div class="sheet-links">
+        <a href="#" class="sheet-link" id="linkRadar" target="_blank">
+          <span class="sheet-link-icon">🌧️</span>
+          <div class="sheet-link-text">
+            <div class="sheet-link-title">Weather Radar</div>
+            <div class="sheet-link-desc">Live precipitation on RainViewer</div>
+          </div>
+          <span class="sheet-link-arrow">›</span>
+        </a>
+        <a href="#" class="sheet-link" id="linkMap" target="_blank">
+          <span class="sheet-link-icon">🗺️</span>
+          <div class="sheet-link-text">
+            <div class="sheet-link-title">View on Map</div>
+            <div class="sheet-link-desc">Open in OpenStreetMap</div>
+          </div>
+          <span class="sheet-link-arrow">›</span>
+        </a>
+        <a href="#" class="sheet-link" id="linkSource" target="_blank">
+          <span class="sheet-link-icon">🛫</span>
+          <div class="sheet-link-text">
+            <div class="sheet-link-title">Location Source</div>
+            <div class="sheet-link-desc" id="sourceDesc">Flight tracking data</div>
+          </div>
+          <span class="sheet-link-arrow">›</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Settings Sheet -->
+  <div class="sheet-overlay" id="settingsOverlay">
+    <div class="sheet settings-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <div class="sheet-title">Notification Settings</div>
+        <div class="sheet-subtitle">Choose what you want to be notified about</div>
+      </div>
+      <div id="settingsContent">
+        <!-- Dynamically rendered: toggles when subscribed, subscribe prompt when not -->
+      </div>
+    </div>
+  </div>
+
+  <!-- First Launch Popup -->
+  <div class="popup-overlay" id="firstLaunchPopup">
+    <div class="popup">
+      <div class="popup-icon">🌧️</div>
+      <div class="popup-title">Get Rain Alerts</div>
+      <div class="popup-desc">
+        Want to know when it starts raining on Trump? Enable notifications to get instant updates.
+      </div>
+      <div class="popup-actions">
+        <button class="popup-btn-primary" id="popupEnableBtn">Enable Notifications</button>
+        <button class="popup-btn-secondary" id="popupDismissBtn">Maybe Later</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- iOS Install Prompt -->
+  <div class="popup-overlay" id="iosInstallPopup">
+    <div class="popup">
+      <div class="popup-icon">📲</div>
+      <div class="popup-title">Install App for Notifications</div>
+      <div class="popup-desc">
+        iOS requires this app to be installed on your Home Screen to receive push notifications.
+      </div>
+      <div class="ios-install-steps">
+        <div class="ios-step">
+          <span class="ios-step-number">1</span>
+          <span class="ios-step-text">Tap the <span class="share-icon">↑</span> Share button below</span>
+        </div>
+        <div class="ios-step">
+          <span class="ios-step-number">2</span>
+          <span class="ios-step-text">Scroll down and tap <strong>"Add to Home Screen"</strong></span>
+        </div>
+        <div class="ios-step">
+          <span class="ios-step-number">3</span>
+          <span class="ios-step-text">Tap <strong>"Add"</strong> in the top right</span>
+        </div>
+        <div class="ios-step">
+          <span class="ios-step-number">4</span>
+          <span class="ios-step-text">Open the app from your Home Screen and enable notifications!</span>
+        </div>
+      </div>
+      <div class="popup-actions">
+        <button class="popup-btn-secondary" id="iosInstallDismissBtn">Got it</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ═══════════════════════════════════════════════════════════════
+    // API CONFIGURATION
+    // ═══════════════════════════════════════════════════════════════
+    function apiBase() {
+      if (location.hostname === "rain-api.fly.dev") return location.origin;
+      const LAN = /^(localhost|127\.|10\.|192\.168\.)/;
+      if (LAN.test(location.hostname))
+        return `${location.protocol}//${location.hostname}:8000`;
+      return "https://rain-api.fly.dev";
+    }
+
+    const BASE = apiBase();
+    const ENDPT = BASE + "/is_it_raining.json";
+    const VAPID_PUBLIC = "BO67EcPl8JyHtvhvm04cdf_jMgkXVQBT1uRX9BiljiIxTBH4PpYH0BxsU3BEglva1_iqnqH3T9bVVIj9MI3ZQIE";
+
+    // Current data cache
+    let currentData = null;
+
+    // ═══════════════════════════════════════════════════════════════
+    // iOS DETECTION
+    // ═══════════════════════════════════════════════════════════════
+    function isIOS() {
+      return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    }
+
+    function isStandalone() {
+      // Check for installed PWA mode
+      return window.matchMedia('(display-mode: standalone)').matches
+          || navigator.standalone === true;
+    }
+
+    function isIOSBrowser() {
+      // Returns true if iOS Safari/browser (not installed PWA)
+      return isIOS() && !isStandalone();
+    }
+
+    function showIOSInstallPrompt() {
+      document.getElementById('iosInstallPopup').classList.add('open');
+    }
+
+    function hideIOSInstallPrompt() {
+      document.getElementById('iosInstallPopup').classList.remove('open');
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // RAIN ANIMATION (Canvas)
+    // ═══════════════════════════════════════════════════════════════
+    const rainCanvas = document.getElementById('rainCanvas');
+    const ctx = rainCanvas.getContext('2d');
+    let drops = [];
+
+    function resizeCanvas() {
+      rainCanvas.width = window.innerWidth;
+      rainCanvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    for (let i = 0; i < 150; i++) {
+      drops.push({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        length: Math.random() * 25 + 15,
+        speed: Math.random() * 15 + 20,
+        opacity: Math.random() * 0.4 + 0.2
+      });
+    }
+
+    function animateRain() {
+      ctx.clearRect(0, 0, rainCanvas.width, rainCanvas.height);
+      const isThunderstorm = document.body.classList.contains('thunderstorm');
+      const baseColor = isThunderstorm ? '180, 200, 255' : '200, 220, 255';
+
+      drops.forEach(drop => {
+        ctx.beginPath();
+        ctx.moveTo(drop.x, drop.y);
+        ctx.lineTo(drop.x + 2, drop.y + drop.length);
+        ctx.strokeStyle = `rgba(${baseColor}, ${drop.opacity})`;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        drop.y += drop.speed;
+        drop.x += 2;
+        if (drop.y > rainCanvas.height) {
+          drop.y = -drop.length;
+          drop.x = Math.random() * rainCanvas.width;
+        }
+      });
+      requestAnimationFrame(animateRain);
+    }
+    animateRain();
+
+    // ═══════════════════════════════════════════════════════════════
+    // SNOW ANIMATION
+    // ═══════════════════════════════════════════════════════════════
+    const snowContainer = document.getElementById('snowContainer');
+    const snowflakes = ['❄', '❅', '❆', '•'];
+
+    for (let i = 0; i < 50; i++) {
+      const flake = document.createElement('div');
+      flake.className = 'snowflake';
+      flake.textContent = snowflakes[Math.floor(Math.random() * snowflakes.length)];
+      flake.style.left = Math.random() * 100 + '%';
+      flake.style.fontSize = (Math.random() * 0.8 + 0.6) + 'rem';
+      flake.style.animationDuration = (Math.random() * 5 + 8) + 's';
+      flake.style.animationDelay = Math.random() * 10 + 's';
+      flake.style.opacity = Math.random() * 0.5 + 0.3;
+      snowContainer.appendChild(flake);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // STARS ANIMATION
+    // ═══════════════════════════════════════════════════════════════
+    const starsContainer = document.getElementById('starsContainer');
+
+    function createStars() {
+      starsContainer.innerHTML = '';
+      const starCount = 120;
+
+      for (let i = 0; i < starCount; i++) {
+        const star = document.createElement('div');
+        const rand = Math.random();
+        if (rand > 0.95) {
+          star.className = 'star bright';
+        } else if (rand > 0.85) {
+          star.className = 'star large';
+        } else {
+          star.className = 'star';
+        }
+        star.style.left = Math.random() * 100 + '%';
+        star.style.top = Math.random() * 65 + '%';
+        star.style.animationDuration = (Math.random() * 3 + 2) + 's';
+        star.style.animationDelay = Math.random() * 5 + 's';
+        starsContainer.appendChild(star);
+      }
+    }
+    createStars();
+
+    // ═══════════════════════════════════════════════════════════════
+    // LIGHTNING (Thunderstorm only)
+    // ═══════════════════════════════════════════════════════════════
+    const lightning = document.getElementById('lightning');
+    let lightningInterval = null;
+
+    function triggerLightning() {
+      lightning.classList.add('flash');
+      document.body.classList.add('flash-active');
+      setTimeout(() => {
+        lightning.classList.remove('flash');
+        document.body.classList.remove('flash-active');
+      }, 200);
+    }
+
+    function startLightning(severe = false) {
+      stopLightning();
+      const minDelay = severe ? 2000 : 5000;
+      const maxDelay = severe ? 6000 : 15000;
+
+      function scheduleLightning() {
+        const delay = Math.random() * (maxDelay - minDelay) + minDelay;
+        lightningInterval = setTimeout(() => {
+          if (document.body.classList.contains('thunderstorm')) {
+            triggerLightning();
+            scheduleLightning();
+          }
+        }, delay);
+      }
+      scheduleLightning();
+      setTimeout(triggerLightning, 1000);
+    }
+
+    function stopLightning() {
+      if (lightningInterval) {
+        clearTimeout(lightningInterval);
+        lightningInterval = null;
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // PULL TO REFRESH
+    // ═══════════════════════════════════════════════════════════════
+    (function() {
+      const ptr = document.getElementById('ptr');
+      let y0 = null;
+      const TH = 70, MAX = 100;
+
+      window.addEventListener('touchstart', e => {
+        if (window.scrollY === 0) y0 = e.touches[0].clientY;
+      }, { passive: true });
+
+      window.addEventListener('touchmove', e => {
+        if (y0 === null) return;
+        const dy = e.touches[0].clientY - y0;
+        if (dy > 0) {
+          e.preventDefault();
+          ptr.style.height = Math.min(dy, MAX) + 'px';
+          ptr.classList.add('show');
+        }
+      }, { passive: false });
+
+      window.addEventListener('touchend', async () => {
+        if (y0 === null) return;
+        const fired = parseInt(ptr.style.height, 10) > TH;
+        y0 = null;
+        if (fired) {
+          ptr.classList.add('spin');
+          await refresh();
+          ptr.classList.remove('spin');
+        }
+        ptr.classList.remove('show');
+        ptr.style.height = 0;
+      });
+    })();
+
+    // ═══════════════════════════════════════════════════════════════
+    // TOAST
+    // ═══════════════════════════════════════════════════════════════
+    const toast = document.getElementById('toast');
+    function showToast(txt) {
+      toast.textContent = txt;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // WEATHER STATE MANAGEMENT
+    // ═══════════════════════════════════════════════════════════════
+    // Top gradient colors (for status bar) - day and night variants
+    const themeColors = {
+      sunny: '#0ea5e9',
+      'sunny-night': '#020617',
+      rain: '#1e293b',
+      'rain-night': '#000000',
+      snow: '#e2e8f0',
+      'snow-night': '#0f172a',
+      mixed: '#374151',
+      'mixed-night': '#030712',
+      thunderstorm: '#0f172a',
+      'thunderstorm-night': '#000000',
+      unknown: '#374151',
+      'unknown-night': '#030712',
+      inflight: '#0ea5e9',
+      'inflight-night': '#020617'
+    };
+
+    // All possible weather state classes
+    const allWeatherStates = [
+      'sunny', 'sunny-night',
+      'rain', 'rain-night',
+      'snow', 'snow-night',
+      'mixed', 'mixed-night',
+      'thunderstorm', 'thunderstorm-night',
+      'unknown', 'unknown-night',
+      'inflight', 'inflight-night'
+    ];
+
+    function setWeatherState(state) {
+      document.body.classList.remove(...allWeatherStates);
+      document.body.classList.add(state);
+
+      // Update iOS/Android status bar color to match theme
+      const themeColor = themeColors[state] || themeColors.sunny;
+      document.querySelector('meta[name="theme-color"]').setAttribute('content', themeColor);
+
+      // Handle lightning for thunderstorm (day or night)
+      if (state === 'thunderstorm' || state === 'thunderstorm-night') {
+        startLightning(currentData?.thunderstorm_state === 'severe');
+      } else {
+        stopLightning();
+      }
+    }
+
+    function getWeatherState(data) {
+      if (data.coords?.in_flight) return 'inflight';
+      if (data.precipitating === null) return 'unknown';
+      if (!data.precipitating) return 'sunny';
+      if (data.thunderstorm) return 'thunderstorm';
+      if (data.precipitation_type === 'snow') return 'snow';
+      if (data.precipitation_type === 'both') return 'mixed';
+      return 'rain';
+    }
+
+    /**
+     * Determine if it's currently night based on sunrise/sunset times.
+     * @param {string|null} sunrise - ISO8601 sunrise time (local timezone from API)
+     * @param {string|null} sunset - ISO8601 sunset time (local timezone from API)
+     * @returns {boolean} True if it's night (before sunrise or after sunset)
+     */
+    function isNightTime(sunrise, sunset) {
+      // If no sunrise/sunset data, fall back to simple hour-based check
+      if (!sunrise || !sunset) {
+        const hour = new Date().getHours();
+        return hour < 6 || hour >= 20; // Fallback: night = 8pm-6am
+      }
+
+      const now = new Date();
+      const sunriseTime = new Date(sunrise);
+      const sunsetTime = new Date(sunset);
+
+      // It's night if current time is before sunrise OR after sunset
+      return now < sunriseTime || now > sunsetTime;
+    }
+
+    /**
+     * Get the weather state with day/night suffix based on sunrise/sunset.
+     * @param {object} data - API response data
+     * @returns {string} Weather state (e.g., "sunny" or "sunny-night")
+     */
+    function getWeatherStateWithDayNight(data) {
+      const baseState = getWeatherState(data);
+      const isNight = isNightTime(data.sunrise, data.sunset);
+      return isNight ? baseState + '-night' : baseState;
+    }
+
+    function getWeatherIcon(state) {
+      const icons = {
+        sunny: '☀️',
+        'sunny-night': '🌙',
+        rain: '🌧',
+        'rain-night': '🌧',
+        snow: '🌨',
+        'snow-night': '🌨',
+        mixed: '🌨🌧',
+        'mixed-night': '🌨🌧',
+        thunderstorm: '⛈️',
+        'thunderstorm-night': '⛈️',
+        unknown: '🤷',
+        'unknown-night': '🤷',
+        inflight: '✈️',
+        'inflight-night': '✈️'
+      };
+      return icons[state] || '🤷';
+    }
+
+    function getSubtitle(state, data) {
+      // Strip -night suffix for subtitle lookup
+      const baseState = state.replace('-night', '');
+      const subtitles = {
+        sunny: "Not raining on Trump",
+        rain: "It's raining on Trump",
+        snow: "It's snowing on Trump",
+        mixed: "Rain and snow on Trump",
+        thunderstorm: "Thunderstorm on Trump!",
+        unknown: "Location unknown",
+        inflight: "In flight - no weather check"
+      };
+      return subtitles[baseState] || "";
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // API REFRESH
+    // ═══════════════════════════════════════════════════════════════
+    async function refresh() {
+      try {
+        const response = await fetch(ENDPT, { cache: 'no-store' });
+        if (!response.ok) throw new Error('API error');
+
+        const data = await response.json();
+        currentData = data;
+
+        // Update live status
+        document.getElementById('statusDot').classList.remove('offline');
+        document.getElementById('statusText').textContent = 'Live';
+
+        // Update time
+        const local = new Date(data.timestamp).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+        document.getElementById('updatedTime').textContent = `Updated ${local}`;
+
+        // Determine weather state (with day/night)
+        const state = getWeatherStateWithDayNight(data);
+        setWeatherState(state);
+
+        // Update UI
+        document.getElementById('weatherIcon').textContent = getWeatherIcon(state);
+        document.getElementById('answer').textContent = data.precipitating ? 'YES' : (data.precipitating === false ? 'NO' : '???');
+        document.getElementById('subtitle').textContent = getSubtitle(state, data);
+
+        // Rate display
+        const totalPrecip = (data.mmh || 0) + (data.snow || 0);
+        document.getElementById('rateValue').textContent = totalPrecip.toFixed(1);
+
+        // Location
+        const coords = data.coords || {};
+        document.getElementById('locationName').textContent = coords.name || 'Unknown';
+        document.getElementById('locationSource').textContent = coords.source_display || '';
+
+        // Sheet links
+        document.getElementById('sheetTitle').textContent = coords.name || 'Location';
+        if (coords.lat && coords.lon) {
+          document.getElementById('linkRadar').href = `https://www.rainviewer.com/map.html?loc=${coords.lat},${coords.lon},8`;
+          document.getElementById('linkMap').href = `https://www.openstreetmap.org/?mlat=${coords.lat}&mlon=${coords.lon}#map=12/${coords.lat}/${coords.lon}`;
+        }
+        document.getElementById('linkSource').href = coords.source_url || '#';
+        document.getElementById('sourceDesc').textContent = coords.source_display || 'Location source';
+
+        // Update source icon based on reason
+        const sourceIcons = {
+          flight_opensky: '✈️',
+          flight_adsbfi: '✈️',
+          calendar_alias: '📅',
+          calendar_nominatim: '📅',
+          newswire: '📰',
+          arrival: '📍',
+          tfr: '🚫'
+        };
+        const sourceIcon = sourceIcons[coords.reason] || '📍';
+        document.querySelector('#linkSource .sheet-link-icon').textContent = sourceIcon;
+
+      } catch (err) {
+        // Offline state
+        document.getElementById('statusDot').classList.add('offline');
+        document.getElementById('statusText').textContent = 'Offline';
+        console.error('Refresh failed:', err);
+      }
+    }
+
+    // Initial load and interval
+    refresh();
+    setInterval(refresh, 60000);
+
+    // ═══════════════════════════════════════════════════════════════
+    // SLIDE-UP SHEET
+    // ═══════════════════════════════════════════════════════════════
+    const locationBar = document.getElementById('locationBar');
+    const sheetOverlay = document.getElementById('sheetOverlay');
+
+    locationBar.addEventListener('click', () => {
+      sheetOverlay.classList.add('open');
+      locationBar.classList.add('expanded');
+    });
+
+    sheetOverlay.addEventListener('click', (e) => {
+      if (e.target === sheetOverlay) {
+        sheetOverlay.classList.remove('open');
+        locationBar.classList.remove('expanded');
+      }
+    });
+
+    // ═══════════════════════════════════════════════════════════════
+    // PUSH NOTIFICATIONS & SETTINGS
+    // ═══════════════════════════════════════════════════════════════
+    const notifyBtn = document.getElementById('notifyBtn');
+    const settingsOverlay = document.getElementById('settingsOverlay');
+    const settingsContent = document.getElementById('settingsContent');
+    const firstLaunchPopup = document.getElementById('firstLaunchPopup');
+
+    let isSubscribed = localStorage.getItem('pushSubscribed') === 'true';
+    let currentSubscription = null; // Will hold the actual PushSubscription object
+
+    // Default preferences (all ON)
+    const DEFAULT_PREFS = { rain_start: true, rain_stop: true, thunderstorm: true };
+
+    function getLocalPreferences() {
+      try {
+        const stored = localStorage.getItem('notificationPrefs');
+        return stored ? JSON.parse(stored) : { ...DEFAULT_PREFS };
+      } catch {
+        return { ...DEFAULT_PREFS };
+      }
+    }
+
+    function setLocalPreferences(prefs) {
+      localStorage.setItem('notificationPrefs', JSON.stringify(prefs));
+    }
+
+    function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+      const rawData = window.atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+      for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+      }
+      return outputArray;
+    }
+
+    async function subscribeToNotifications() {
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+          showToast('Notification permission denied');
+          return false;
+        }
+
+        const registration = await navigator.serviceWorker.ready;
+
+        // Add timeout because Chrome sometimes hangs on subscribe()
+        const subscribePromise = registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC)
+        });
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Subscribe timeout')), 10000)
+        );
+        const subscription = await Promise.race([subscribePromise, timeoutPromise]);
+        currentSubscription = subscription;
+
+        // Send to server and receive preferences
+        const response = await fetch(BASE + '/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(subscription.toJSON())
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.preferences) {
+            setLocalPreferences(data.preferences);
+          }
+        }
+
+        isSubscribed = true;
+        localStorage.setItem('pushSubscribed', 'true');
+        updateNotifyButton();
+        showToast('Notifications enabled!');
+        return true;
+      } catch (err) {
+        console.error('Subscription failed:', err);
+        showToast('Failed to enable notifications');
+        return false;
+      }
+    }
+
+    async function unsubscribeFromNotifications() {
+      try {
+        // Unsubscribe from browser push
+        if (currentSubscription) {
+          const endpoint = currentSubscription.endpoint;
+          await currentSubscription.unsubscribe();
+
+          // Tell server to remove subscription
+          await fetch(BASE + '/subscribe', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ endpoint })
+          });
+        }
+
+        currentSubscription = null;
+        isSubscribed = false;
+        localStorage.setItem('pushSubscribed', 'false');
+        localStorage.removeItem('notificationPrefs');
+        updateNotifyButton();
+        closeSettings();
+        showToast('Notifications disabled');
+      } catch (err) {
+        console.error('Unsubscribe failed:', err);
+        showToast('Failed to unsubscribe');
+      }
+    }
+
+    async function syncPreference(key, value) {
+      // Optimistic UI update
+      const prefs = getLocalPreferences();
+      prefs[key] = value;
+      setLocalPreferences(prefs);
+
+      // Update thunderstorm toggle state if needed
+      updateThunderstormToggleState();
+
+      // Sync to server
+      if (currentSubscription) {
+        try {
+          await fetch(BASE + '/preferences', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              endpoint: currentSubscription.endpoint,
+              preferences: { [key]: value }
+            })
+          });
+        } catch (err) {
+          console.error('Failed to sync preference:', err);
+          // Revert on failure
+          prefs[key] = !value;
+          setLocalPreferences(prefs);
+          renderSettingsContent();
+          showToast('Failed to save preference');
+        }
+      }
+    }
+
+    function updateThunderstormToggleState() {
+      const prefs = getLocalPreferences();
+      const thunderstormToggle = document.getElementById('toggle-thunderstorm');
+      if (thunderstormToggle) {
+        // Thunderstorm requires at least one of rain_start or rain_stop to be ON
+        const canUseThunderstorm = prefs.rain_start || prefs.rain_stop;
+        thunderstormToggle.disabled = !canUseThunderstorm;
+      }
+    }
+
+    function renderSettingsContent() {
+      if (!isSubscribed) {
+        // Show subscribe prompt
+        settingsContent.innerHTML = `
+          <div class="subscribe-prompt">
+            <div class="subscribe-prompt-icon">🔔</div>
+            <div class="subscribe-prompt-title">Enable Notifications</div>
+            <div class="subscribe-prompt-desc">
+              Get notified when weather conditions change for Trump's location.
+            </div>
+            <button class="subscribe-prompt-btn" id="settingsSubscribeBtn">Enable Notifications</button>
+          </div>
+        `;
+        document.getElementById('settingsSubscribeBtn').addEventListener('click', async () => {
+          const success = await subscribeToNotifications();
+          if (success) {
+            renderSettingsContent();
+          }
+        });
+        return;
+      }
+
+      // Show preference toggles
+      const prefs = getLocalPreferences();
+      const canUseThunderstorm = prefs.rain_start || prefs.rain_stop;
+
+      settingsContent.innerHTML = `
+        <div class="settings-group">
+          <div class="settings-group-title">Notify me when...</div>
+          <div class="setting-row">
+            <div class="setting-label">
+              <div class="setting-title">Rain Starts</div>
+              <div class="setting-desc">Precipitation begins at Trump's location</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="toggle-rain_start" ${prefs.rain_start ? 'checked' : ''}>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-label">
+              <div class="setting-title">Rain Stops</div>
+              <div class="setting-desc">Precipitation ends at Trump's location</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="toggle-rain_stop" ${prefs.rain_stop ? 'checked' : ''}>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-label">
+              <div class="setting-title">Thunderstorms</div>
+              <div class="setting-desc">${canUseThunderstorm ? 'Extra alerts for thunderstorms' : 'Requires rain alerts to be enabled'}</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="toggle-thunderstorm" ${prefs.thunderstorm ? 'checked' : ''} ${!canUseThunderstorm ? 'disabled' : ''}>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        <button class="unsubscribe-btn" id="unsubscribeBtn">Turn Off All Notifications</button>
+      `;
+
+      // Add event listeners
+      document.getElementById('toggle-rain_start').addEventListener('change', (e) => {
+        syncPreference('rain_start', e.target.checked);
+      });
+      document.getElementById('toggle-rain_stop').addEventListener('change', (e) => {
+        syncPreference('rain_stop', e.target.checked);
+      });
+      document.getElementById('toggle-thunderstorm').addEventListener('change', (e) => {
+        syncPreference('thunderstorm', e.target.checked);
+      });
+      document.getElementById('unsubscribeBtn').addEventListener('click', () => {
+        if (confirm('Turn off all notifications?')) {
+          unsubscribeFromNotifications();
+        }
+      });
+    }
+
+    function openSettings() {
+      renderSettingsContent();
+      settingsOverlay.classList.add('open');
+    }
+
+    function closeSettings() {
+      settingsOverlay.classList.remove('open');
+    }
+
+    function updateNotifyButton() {
+      notifyBtn.classList.toggle('subscribed', isSubscribed);
+      document.getElementById('notifyIcon').textContent = isSubscribed ? '⚙️' : '🔔';
+      document.getElementById('notifyText').textContent = isSubscribed ? 'Settings' : 'Notify';
+    }
+
+    // Dual-purpose button: Notify when unsubscribed, Settings when subscribed
+    notifyBtn.addEventListener('click', async () => {
+      if (!isSubscribed) {
+        // iOS Safari requires PWA install for push notifications
+        if (isIOSBrowser()) {
+          showIOSInstallPrompt();
+          return;
+        }
+        // Confirm before enabling notifications
+        if (confirm('Enable rain notifications?')) {
+          await subscribeToNotifications();
+        }
+      } else {
+        openSettings();
+      }
+    });
+
+    // Settings sheet close on overlay click
+    settingsOverlay.addEventListener('click', (e) => {
+      if (e.target === settingsOverlay) {
+        closeSettings();
+      }
+    });
+
+    // ═══════════════════════════════════════════════════════════════
+    // SWIPE-DOWN GESTURE FOR SHEETS
+    // ═══════════════════════════════════════════════════════════════
+    function addSwipeDownGesture(overlayEl, closeCallback) {
+      const sheet = overlayEl.querySelector('.sheet');
+      if (!sheet) return;
+
+      let startY = null;
+      let currentY = 0;
+
+      sheet.addEventListener('touchstart', (e) => {
+        // Only start swipe from the handle area (top 60px)
+        const rect = sheet.getBoundingClientRect();
+        const touchY = e.touches[0].clientY - rect.top;
+        if (touchY < 60) {
+          startY = e.touches[0].clientY;
+        }
+      }, { passive: true });
+
+      sheet.addEventListener('touchmove', (e) => {
+        if (startY === null) return;
+        currentY = e.touches[0].clientY - startY;
+        if (currentY > 0) {
+          sheet.style.transform = `translateY(${currentY}px)`;
+        }
+      }, { passive: true });
+
+      sheet.addEventListener('touchend', () => {
+        if (startY === null) return;
+        if (currentY > 80) {
+          closeCallback();
+        }
+        sheet.style.transform = '';
+        startY = null;
+        currentY = 0;
+      });
+    }
+
+    // Add swipe gestures to both sheets
+    addSwipeDownGesture(sheetOverlay, () => {
+      sheetOverlay.classList.remove('open');
+      locationBar.classList.remove('expanded');
+    });
+    addSwipeDownGesture(settingsOverlay, closeSettings);
+
+    // ═══════════════════════════════════════════════════════════════
+    // FIRST LAUNCH POPUP
+    // ═══════════════════════════════════════════════════════════════
+    const iosInstallPopup = document.getElementById('iosInstallPopup');
+
+    function checkFirstLaunch() {
+      // Show popup only if: first visit AND not already subscribed AND push is supported
+      const hasVisited = localStorage.getItem('hasVisited');
+      if (!hasVisited && !isSubscribed && 'PushManager' in window) {
+        // Delay popup slightly for better UX
+        setTimeout(() => {
+          // iOS browser: show install instructions instead of subscribe prompt
+          if (isIOSBrowser()) {
+            showIOSInstallPrompt();
+          } else {
+            firstLaunchPopup.classList.add('open');
+          }
+        }, 2000);
+      }
+      localStorage.setItem('hasVisited', 'true');
+    }
+
+    document.getElementById('popupEnableBtn').addEventListener('click', async () => {
+      firstLaunchPopup.classList.remove('open');
+      await subscribeToNotifications();
+    });
+
+    document.getElementById('popupDismissBtn').addEventListener('click', () => {
+      firstLaunchPopup.classList.remove('open');
+    });
+
+    // Close popup on overlay click
+    firstLaunchPopup.addEventListener('click', (e) => {
+      if (e.target === firstLaunchPopup) {
+        firstLaunchPopup.classList.remove('open');
+      }
+    });
+
+    // iOS install popup dismiss handlers
+    document.getElementById('iosInstallDismissBtn').addEventListener('click', () => {
+      hideIOSInstallPrompt();
+    });
+
+    iosInstallPopup.addEventListener('click', (e) => {
+      if (e.target === iosInstallPopup) {
+        hideIOSInstallPrompt();
+      }
+    });
+
+    // ═══════════════════════════════════════════════════════════════
+    // SERVICE WORKER & SUBSCRIPTION INITIALIZATION
+    // ═══════════════════════════════════════════════════════════════
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      // Register service worker first
+      navigator.serviceWorker.register('sw.js').catch(err => {
+        console.warn('Service worker registration failed:', err);
+      });
+
+      // Wait for SW to be ready (active), then check subscription
+      navigator.serviceWorker.ready.then(async (registration) => {
+        try {
+          const subscription = await registration.pushManager.getSubscription();
+          if (subscription) {
+            currentSubscription = subscription;
+            isSubscribed = true;
+            localStorage.setItem('pushSubscribed', 'true');
+          }
+        } catch (err) {
+          // Ignore errors - localStorage will be used as fallback
+        }
+        updateNotifyButton();
+        checkFirstLaunch();
+      });
+    } else {
+      // No push support - still update button to show correct initial state
+      updateNotifyButton();
+    }
+
+    // Update button immediately based on localStorage (don't wait for SW)
+    updateNotifyButton();
+  </script>
+</body>
+</html>

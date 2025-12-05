@@ -1,0 +1,70 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# pytest cache
+.pytest_cache/
+
+# ruff cache
+.ruff_cache/
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtualenv
+.venv/
+venv/
+ENV/
+env/
+
+# IDEs and editors
+.idea/
+.vscode/
+*.sw?
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.*
+*.env
+
+# Local data folder (we mount /data in prod)
+backend/local_data/
+
+# Fly/Terraform state, lock files
+.fly/
+
+# BROADCAST_TOKEN
+/backend/broadcast_token.txt
+
+# Claude Code configuration and project instructions
+.claude/
+CLAUDE.md
+HANDOFF.md
+
+# Code quality tool configs (project-specific, not committed)
+.flake8
+
+# Backup files
+*.backup

@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>About · Is It Raining on Trump?</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Simple responsive layout */
+    body {
+      font-family: 'Space Grotesk', Arial, sans-serif;
+      margin: 0;
+      padding: 2rem 1rem;
+      line-height: 1.6;
+      color: #333;
+      background: #f9f9f9;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    h1 {
+      font-size: 2rem;
+      margin: 0;
+    }
+    main {
+      max-width: 640px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    a {
+      color: #0066cc;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .section {
+      margin-bottom: 1.5rem;
+    }
+    .section:last-child {
+      margin-bottom: 0;
+    }
+    footer {
+      text-align: center;
+      margin-top: 2rem;
+      font-size: 0.9rem;
+      color: #666;
+    }
+    /* Contact form styles */
+    #contact-form label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 0.3rem;
+    }
+    #contact-form input,
+    #contact-form textarea {
+      width: 100%;
+      max-width: 400px;
+      font-size: 1rem;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+    }
+    #contact-form button {
+      background-color: #007aff;
+      color: #fff;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #contact-form button:hover {
+      background-color: #005bb5;
+    }
+    .debug-link {
+      display: block;
+      margin-top: 1rem;
+      font-size: 0.8rem;
+      color: #999;
+    }
+    .debug-link:hover {
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>About “Is It Raining on Trump?”</h1>
+  </header>
+
+  <main>
+    <section class="section">
+      <h2>What This Project Does</h2>
+      <p>
+        "Is It Raining on Trump?" estimates Donald J. Trump's current location
+        using public data sources (primarily his published schedule from Factba.se,
+        supplemented by aircraft tracking when available), then queries weather
+        APIs to determine if it's raining there. A minimalist interface displays
+        a large <strong>YES</strong> or <strong>NO</strong>, the rain rate
+        in mm/h, and a link to view the provenance of the location.
+      </p>
+      <p style="margin-top: 1rem; font-style: italic; color: #555;">
+        Whether a rainy notification brightens your day or prompts you to send
+        thoughts and prayers, we don't judge.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Current Status</h2>
+      <p>
+        This project is live and publicly accessible. The source code is
+        open-source under the <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank">AGPL-3.0 license</a>.
+        View the code on <a href="https://github.com/VraethrDalkr/rain-on-trump" target="_blank">GitHub</a>.
+      </p>
+      <p style="font-size: 0.9rem; color: #666; margin-top: 1rem;">
+        <strong>Version:</strong> <span id="version-display">Loading...</span>
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Support This Project</h2>
+      <p style="font-size: 0.95rem; color: #555;">
+        This project is free and ad-free. If you enjoy it, consider supporting its development:
+      </p>
+      <p style="margin-top: 0.5rem;">
+        <a href="https://ko-fi.com/vraethrdalkr" target="_blank">☕ Ko-fi</a> ·
+        <a href="https://github.com/sponsors/VraethrDalkr" target="_blank">💜 GitHub Sponsors</a>
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Feedback &amp; Issues</h2>
+      <p>
+        Found a bug? Have a feature request? The best way to reach me is through
+        <a href="https://github.com/VraethrDalkr/rain-on-trump/issues" target="_blank">GitHub Issues</a>.
+        This keeps discussions public and helps others who might have the same question.
+      </p>
+      <p style="margin-top: 1rem;">
+        <a href="https://github.com/VraethrDalkr/rain-on-trump/issues/new" target="_blank" style="display: inline-block; background: #24292e; color: #fff; padding: 0.5rem 1rem; border-radius: 4px; text-decoration: none;">Open an Issue on GitHub</a>
+      </p>
+
+      <details style="margin-top: 1.5rem;">
+        <summary style="cursor: pointer; color: #666;">Prefer email? Use the contact form</summary>
+        <div style="margin-top: 1rem;">
+          <!-- Spam-trap field: hidden from users, used to catch bots -->
+          <input type="text" name="_gotcha" style="display:none">
+
+          <form action="https://formspree.io/f/xqabkkvw" method="POST" id="contact-form">
+            <label for="name">Your name (or GitHub username):</label>
+            <input id="name" type="text" name="name" required>
+
+            <label for="email">Your email (so I can reply):</label>
+            <input id="email" type="email" name="_replyto" required placeholder="you@example.com">
+
+            <label for="message">Message:</label>
+            <textarea id="message" name="message" rows="4" required></textarea>
+
+            <p></p>
+
+            <button type="submit">Send Message</button>
+          </form>
+        </div>
+      </details>
+    </section>
+
+    <section class="section">
+      <h2>Data Sources &amp; Methodology</h2>
+      <p>
+        <strong>1. Aircraft Tracking:</strong>
+        Checks ADS-B feeds (OpenSky → adsb.fi) for Trump’s jet. If airborne,
+        we assume no rain until arrival; if grounded, we save the last arrival
+        coordinates to cache.
+      </p>
+      <p>
+        <strong>2. Public Schedule (Factba.se):</strong>
+        When grounded or no plane data is available, we fetch Trump's JSON
+        schedule from Factba.se. We pick the most recent event with a valid
+        location and apply a 72-hour linear confidence decay. If no event
+        appears within 72 hours, the location is marked "unknown," but a
+        "last known" fallback is preserved.
+      </p>
+      <p>
+        <strong>2b. Overnight Inference:</strong>
+        During overnight hours (9PM–8AM Eastern), if both the last evening event
+        and the next morning event are in the same region, we infer the overnight
+        location: White House for DC, Mar-a-Lago for Florida, or Bedminster for
+        New Jersey (the "Summer White House"). This fills the gap between events
+        with ~85% accuracy based on historical schedule patterns.
+      </p>
+      <p>
+        <strong>3. Weather Data:</strong>
+        With coordinates determined, we query Open-Meteo for current hourly
+        precipitation (both rain and snow). Any precipitation rate > 0 mm/h
+        yields "🌧 YES" in the UI; otherwise "☀ NO."
+      </p>
+      <p>
+        <strong>4. Thunderstorm Detection:</strong>
+        Thunderstorm activity is detected using Open-Meteo weather codes
+        (WMO standard 95-99). Code 95 indicates a moderate thunderstorm, while
+        codes 96, 97, and 99 indicate severe thunderstorms with possible hail.
+        State changes (start, escalation, end) trigger push notifications.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Limitations</h2>
+      <p>This is a best-effort estimate, not real-time surveillance:</p>
+      <ul>
+        <li><strong>Location accuracy:</strong> Derived from public schedule and
+            flight data. Confidence decreases over time since the last known event.</li>
+        <li><strong>Weather granularity:</strong> Open-Meteo provides hourly data,
+            so brief showers may be missed or delayed.</li>
+        <li><strong>In-flight:</strong> No weather check while airborne. We report
+            "not raining" until landing.</li>
+        <li><strong>Unknown state:</strong> If no fresh data exists within 72 hours,
+            the app displays "Unknown" with the last known location.</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>License &amp; Credits</h2>
+      <p>
+        This project is licensed under the <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank">GNU Affero General Public License v3.0</a> (AGPL-3.0).
+      </p>
+      <p>Data source attributions:</p>
+      <ul>
+        <li><a href="https://open-meteo.com/" target="_blank">Open-Meteo</a> – weather data</li>
+        <li><a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> / <a href="https://nominatim.org/" target="_blank">Nominatim</a> – geocoding</li>
+        <li><a href="https://opensky-network.org/" target="_blank">OpenSky Network</a> – ADS-B flight tracking</li>
+        <li><a href="https://adsb.fi/" target="_blank">adsb.fi</a> – backup ADS-B feed</li>
+        <li><a href="https://rollcall.com/factbase/trump/topic/calendar/" target="_blank">Factba.se</a> – public schedule data</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2025 "Is It Raining on Trump?" · Licensed under <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank">AGPL-3.0</a></p>
+    <a href="debug.html" class="debug-link">🐞 Debug</a>
+  </footer>
+
+  <script>
+    // Pull version from sw.js VERSION constant
+    fetch('sw.js')
+      .then(r => r.text())
+      .then(text => {
+        const match = text.match(/const\s+VERSION\s*=\s*['"]([^'"]+)['"]/);
+        if (match) {
+          // Convert '2-9-1' to '2.9.1' for display
+          const version = match[1].replace(/-/g, '.');
+          document.getElementById('version-display').textContent = version;
+        } else {
+          document.getElementById('version-display').textContent = 'unknown';
+        }
+      })
+      .catch(() => {
+        document.getElementById('version-display').textContent = 'unavailable';
+      });
+  </script>
+</body>
+</html>

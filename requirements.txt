@@ -1,0 +1,11 @@
+fastapi>=0.95
+uvicorn>=0.22
+httpx>=0.27
+python-dotenv>=1.0
+opensky-api @ git+https://github.com/openskynetwork/opensky-api.git#egg=opensky-api&subdirectory=python
+python-dateutil>=2.8
+geopy>=2.4
+beautifulsoup4>=4.12
+lxml>=5.4.0
+pywebpush>=1.14
+slowapi>=0.1.9

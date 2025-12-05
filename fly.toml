@@ -1,0 +1,25 @@
+# fly.toml
+app = "rain-api"
+primary_region = "yul"
+
+[build]
+  dockerfile = "backend/Dockerfile"
+
+[http_service]
+  internal_port       = 8080
+  force_https         = true
+  auto_stop_machines  = false
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+[[vm]]
+  size   = "shared-cpu-1x"
+  memory = 512
+
+[[mounts]]
+  source      = "push_data"
+  destination = "/data"
+
+[env]
+  LOG_LEVEL = "info"

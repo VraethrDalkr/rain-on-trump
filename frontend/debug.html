@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<script>
+function apiBase() {
+  // 1) direct hit on Fly API domain → same-origin
+  if (location.hostname === "rain-api.fly.dev") {
+    return location.origin;
+  }
+  // 2) localhost / LAN dev → map to port 8000
+  const LAN = /^(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+)$/;
+  if (LAN.test(location.hostname)) {
+    return `${location.protocol}//${location.hostname}:8000`;
+  }
+  // 3) everything else = Cloudflare Pages in production
+  return "https://rain-api.fly.dev";
+}
+</script>
+<head>
+  <meta charset="UTF-8">
+  <title>Debug · Rain-on-Trump</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body  { margin:0; font-family:monospace; height:100vh; display:flex; flex-direction:column; }
+    #top  { display:flex; align-items:center; padding:0 1rem; }
+    #top a { font-size:1.2rem; text-decoration:none; }
+    #back { margin-right:1rem; }
+    pre   { flex:1; margin:0; padding:1rem; overflow:auto;
+             background:#f9f9f9; border-top:1px solid #ddd; white-space:pre-wrap; }
+    .err  { color:#d00; font-weight:600; }
+  </style>
+</head>
+<body>
+  <div id="top">
+    <a id="back" href="index.html">← Back</a>
+    <a id="geocode" href="#" style="margin-left:auto;">Geocode Log</a>
+    <a id="history" href="#" style="margin-left:1rem;">History →</a>
+  </div>
+
+  <h3>Debug info</h3>
+  <pre id="dbg">Loading…</pre>
+
+  <script>
+  const BASE = apiBase();
+
+  // Set debug page links to API endpoints
+  document.getElementById('history').href = BASE + '/debug/history';
+  document.getElementById('geocode').href = BASE + '/debug/geocode';
+
+  /** Pretty-print + highlight `"errors": […]` **/
+  function pretty(json){
+    return JSON.stringify(json, null, 2)
+             .replace(/"errors":\s*\[[^\]]*\]/g,
+                      m => `<span class="err">${m}</span>`);
+  }
+
+  /* main trace --------------------------------------------------------------*/
+  fetch(BASE + '/debug.json', { cache: 'no-store' })
+    .then(r => r.json())
+    .then(j => {
+      document.getElementById('dbg').innerHTML = pretty(j);
+    })
+    .catch(e => {
+      document.getElementById('dbg').textContent = 'Error: ' + e;
+    });
+  </script>
+</body>
+</html>
