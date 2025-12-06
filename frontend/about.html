@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- v2.14.3 -->
+<!-- v2.14.4 -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -164,6 +164,12 @@
       color: var(--text-subtle);
     }
     .share-btn {
+      /* iOS Safari requires appearance:none for custom button styling */
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      /* Explicit fallback color before CSS variable */
+      background-color: #007aff;
       background-color: var(--btn-bg);
       color: #fff;
       border: none;
@@ -172,8 +178,13 @@
       cursor: pointer;
       font-family: inherit;
       font-size: 1rem;
+      /* Ensure button doesn't collapse */
+      display: inline-block;
+      min-height: 44px;
+      line-height: 1.4;
     }
     .share-btn:hover {
+      background-color: #005bb5;
       background-color: var(--btn-hover);
     }
     /* Toast notification */

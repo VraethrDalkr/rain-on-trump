@@ -1,7 +1,7 @@
 /* rain-on-trump service-worker
    – separate icon cache, stale-while-revalidate, notification clicks */
 
-const VERSION     = '2-14-3';  // Fix SW cache key mismatch for /about vs /about.html
+const VERSION     = '2-14-4';  // Fix iOS Safari button rendering with -webkit-appearance
 const SHELL_CACHE = `rain-on-trump-shell-${VERSION}`;
 const ICON_CACHE  = `rain-on-trump-icons-${VERSION}`;
 const SHELL       = '/index.html';
