@@ -3,20 +3,53 @@
 <head>
   <meta charset="utf-8">
   <title>About · Is It Raining on Trump?</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     /* Simple responsive layout */
+    :root {
+      --bg: #f9f9f9;
+      --text: #333;
+      --text-muted: #666;
+      --text-subtle: #555;
+      --card-bg: #fff;
+      --card-shadow: rgba(0,0,0,0.1);
+      --link: #0066cc;
+      --input-border: #ccc;
+      --input-bg: #fff;
+      --btn-bg: #007aff;
+      --btn-hover: #005bb5;
+      --github-btn: #24292e;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1a1a2e;
+        --text: #e0e0e0;
+        --text-muted: #999;
+        --text-subtle: #aaa;
+        --card-bg: #252540;
+        --card-shadow: rgba(0,0,0,0.3);
+        --link: #66b3ff;
+        --input-border: #444;
+        --input-bg: #1e1e32;
+        --btn-bg: #0066cc;
+        --btn-hover: #0055aa;
+        --github-btn: #444;
+      }
+    }
+
     body {
       font-family: 'Space Grotesk', Arial, sans-serif;
       margin: 0;
       padding: 2rem 1rem;
+      padding-top: calc(2rem + env(safe-area-inset-top, 2rem));
       line-height: 1.6;
-      color: #333;
-      background: #f9f9f9;
+      color: var(--text);
+      background: var(--bg);
     }
     header {
       text-align: center;
@@ -26,16 +59,28 @@
       font-size: 2rem;
       margin: 0;
     }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+      color: var(--link);
+      text-decoration: none;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
     main {
       max-width: 640px;
       margin: 0 auto;
-      background: #fff;
+      background: var(--card-bg);
       padding: 1.5rem;
       border-radius: 6px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 4px var(--card-shadow);
     }
     a {
-      color: #0066cc;
+      color: var(--link);
       text-decoration: none;
     }
     a:hover {
@@ -51,7 +96,7 @@
       text-align: center;
       margin-top: 2rem;
       font-size: 0.9rem;
-      color: #666;
+      color: var(--text-muted);
     }
     /* Contact form styles */
     #contact-form label {
@@ -65,12 +110,14 @@
       max-width: 400px;
       font-size: 1rem;
       padding: 0.5rem;
-      border: 1px solid #ccc;
+      border: 1px solid var(--input-border);
       border-radius: 4px;
       margin-bottom: 1rem;
+      background: var(--input-bg);
+      color: var(--text);
     }
     #contact-form button {
-      background-color: #007aff;
+      background-color: var(--btn-bg);
       color: #fff;
       border: none;
       padding: 0.6rem 1.2rem;
@@ -78,22 +125,49 @@
       cursor: pointer;
     }
     #contact-form button:hover {
-      background-color: #005bb5;
+      background-color: var(--btn-hover);
+    }
+    .github-btn {
+      display: inline-block;
+      background: var(--github-btn);
+      color: #fff !important;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      text-decoration: none;
+    }
+    .github-btn:hover {
+      text-decoration: none;
+      opacity: 0.9;
     }
     .debug-link {
       display: block;
       margin-top: 1rem;
       font-size: 0.8rem;
-      color: #999;
+      color: var(--text-muted);
     }
     .debug-link:hover {
-      color: #666;
+      color: var(--text);
+    }
+    details summary {
+      color: var(--text-muted);
+      cursor: pointer;
+      user-select: none;
+    }
+    details summary::marker {
+      color: var(--link);
+    }
+    .muted {
+      color: var(--text-muted);
+    }
+    .subtle {
+      color: var(--text-subtle);
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>About “Is It Raining on Trump?”</h1>
+    <a href="index.html" class="back-link">&larr; Back</a>
+    <h1>About "Is It Raining on Trump?"</h1>
   </header>
 
   <main>
@@ -107,7 +181,7 @@
         a large <strong>YES</strong> or <strong>NO</strong>, the rain rate
         in mm/h, and a link to view the provenance of the location.
       </p>
-      <p style="margin-top: 1rem; font-style: italic; color: #555;">
+      <p style="margin-top: 1rem; font-style: italic;" class="subtle">
         Whether a rainy notification brightens your day or prompts you to send
         thoughts and prayers, we don't judge.
       </p>
@@ -120,14 +194,14 @@
         open-source under the <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank">AGPL-3.0 license</a>.
         View the code on <a href="https://github.com/VraethrDalkr/rain-on-trump" target="_blank">GitHub</a>.
       </p>
-      <p style="font-size: 0.9rem; color: #666; margin-top: 1rem;">
+      <p style="font-size: 0.9rem; margin-top: 1rem;" class="muted">
         <strong>Version:</strong> <span id="version-display">Loading...</span>
       </p>
     </section>
 
     <section class="section">
       <h2>Support This Project</h2>
-      <p style="font-size: 0.95rem; color: #555;">
+      <p style="font-size: 0.95rem;" class="subtle">
         This project is free and ad-free. If you enjoy it, consider supporting its development:
       </p>
       <p style="margin-top: 0.5rem;">
@@ -144,11 +218,11 @@
         This keeps discussions public and helps others who might have the same question.
       </p>
       <p style="margin-top: 1rem;">
-        <a href="https://github.com/VraethrDalkr/rain-on-trump/issues/new" target="_blank" style="display: inline-block; background: #24292e; color: #fff; padding: 0.5rem 1rem; border-radius: 4px; text-decoration: none;">Open an Issue on GitHub</a>
+        <a href="https://github.com/VraethrDalkr/rain-on-trump/issues/new" target="_blank" class="github-btn">Open an Issue on GitHub</a>
       </p>
 
       <details style="margin-top: 1.5rem;">
-        <summary style="cursor: pointer; color: #666;">Prefer email? Use the contact form</summary>
+        <summary>Prefer email? Click here to expand contact form</summary>
         <div style="margin-top: 1rem;">
           <!-- Spam-trap field: hidden from users, used to catch bots -->
           <input type="text" name="_gotcha" style="display:none">
