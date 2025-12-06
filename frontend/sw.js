@@ -1,7 +1,7 @@
 /* rain-on-trump service-worker
    – separate icon cache, stale-while-revalidate, notification clicks */
 
-const VERSION     = '2-14-7';  // Plain link share button (no class styling)
+const VERSION     = '2-14-9';  // Tighter footer/location-bar spacing, github-btn share
 const SHELL_CACHE = `rain-on-trump-shell-${VERSION}`;
 const ICON_CACHE  = `rain-on-trump-icons-${VERSION}`;
 const SHELL       = '/index.html';
