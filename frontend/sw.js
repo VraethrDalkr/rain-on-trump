@@ -1,7 +1,7 @@
 /* rain-on-trump service-worker
    – separate icon cache, stale-while-revalidate, notification clicks */
 
-const VERSION     = '2-13-12';  // Link to issues list instead of new issue
+const VERSION     = '2-13-14';  // Remove pull-to-refresh (redundant with refresh-on-return)
 const SHELL_CACHE = `rain-on-trump-shell-${VERSION}`;
 const ICON_CACHE  = `rain-on-trump-icons-${VERSION}`;
 const SHELL       = '/index.html';

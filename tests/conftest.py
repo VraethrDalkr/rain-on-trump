@@ -20,6 +20,24 @@ pytest_plugins = ["pytest_asyncio"]
 
 
 @pytest.fixture(autouse=True)
+def clear_calendar_cache() -> None:
+    """
+    Clear the calendar_service cache before each test.
+
+    The _fetch_events() function caches results for 15 minutes, which can
+    cause monkeypatched httpx.get to be bypassed if stale cache data exists.
+    """
+    from app import calendar_service as cal
+
+    if hasattr(cal._fetch_events, "cache_clear"):
+        cal._fetch_events.cache_clear()
+    yield
+    # Clear again after test to avoid cross-test pollution
+    if hasattr(cal._fetch_events, "cache_clear"):
+        cal._fetch_events.cache_clear()
+
+
+@pytest.fixture(autouse=True)
 def isolate_arrival_cache_tmp(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """
     Redirect ``arrival_cache.FILE`` & ``arrival_cache.DIR`` to *tmp_path*

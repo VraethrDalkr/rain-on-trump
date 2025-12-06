@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="rain-on-trump",
-    version="0.3.0",
+    version="0.3.1",
     description="Is It Raining on Trump? backend",
     package_dir={"": "backend"},
     packages=find_packages(where="backend"),

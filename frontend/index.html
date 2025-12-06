@@ -451,33 +451,6 @@
       opacity: 0.7;
     }
 
-    /* Pull to refresh */
-    .ptr {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 0;
-      overflow: hidden;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: rgba(255,255,255,0.1);
-      backdrop-filter: blur(10px);
-      color: inherit;
-      font-size: 1.5rem;
-      transition: height 0.2s;
-      z-index: 100;
-    }
-
-    .ptr.show { height: 60px; }
-    .ptr.spin { animation: spin 1s linear infinite; }
-
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-
     /* Center content */
     .center {
       flex: 1;
@@ -1113,9 +1086,6 @@
   </div>
   <div class="lightning" id="lightning"></div>
 
-  <!-- Pull to refresh -->
-  <div class="ptr" id="ptr">&#8635;</div>
-
   <!-- Main UI -->
   <div class="main">
     <div class="top-bar">
@@ -1475,42 +1445,6 @@
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // PULL TO REFRESH
-    // ═══════════════════════════════════════════════════════════════
-    (function() {
-      const ptr = document.getElementById('ptr');
-      let y0 = null;
-      const TH = 70, MAX = 100;
-
-      window.addEventListener('touchstart', e => {
-        if (window.scrollY === 0) y0 = e.touches[0].clientY;
-      }, { passive: true });
-
-      window.addEventListener('touchmove', e => {
-        if (y0 === null) return;
-        const dy = e.touches[0].clientY - y0;
-        if (dy > 0) {
-          e.preventDefault();
-          ptr.style.height = Math.min(dy, MAX) + 'px';
-          ptr.classList.add('show');
-        }
-      }, { passive: false });
-
-      window.addEventListener('touchend', async () => {
-        if (y0 === null) return;
-        const fired = parseInt(ptr.style.height, 10) > TH;
-        y0 = null;
-        if (fired) {
-          ptr.classList.add('spin');
-          await refresh();
-          ptr.classList.remove('spin');
-        }
-        ptr.classList.remove('show');
-        ptr.style.height = 0;
-      });
-    })();
-
-    // ═══════════════════════════════════════════════════════════════
     // TOAST
     // ═══════════════════════════════════════════════════════════════
     const toast = document.getElementById('toast');
@@ -1713,8 +1647,35 @@
     }
 
     // Initial load and interval
-    refresh();
+    let lastRefresh = Date.now();
+    refresh().then(() => { lastRefresh = Date.now(); });
     setInterval(refresh, 60000);
+
+    // ═══════════════════════════════════════════════════════════════
+    // REFRESH-ON-RETURN (visibility, pageshow, focus)
+    // ═══════════════════════════════════════════════════════════════
+    const MIN_REFRESH_INTERVAL = 5000; // 5-second debounce
+
+    function handleReturn() {
+      const now = Date.now();
+      if (now - lastRefresh >= MIN_REFRESH_INTERVAL) {
+        lastRefresh = now;
+        refresh();
+      }
+    }
+
+    // Primary: Page Visibility API (works on most browsers)
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) handleReturn();
+    });
+
+    // iOS bfcache: pageshow with persisted flag
+    window.addEventListener('pageshow', (e) => {
+      if (e.persisted) handleReturn();
+    });
+
+    // Fallback: focus event (catches remaining edge cases)
+    window.addEventListener('focus', handleReturn);
 
     // ═══════════════════════════════════════════════════════════════
     // SLIDE-UP SHEET

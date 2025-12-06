@@ -500,6 +500,20 @@ app.add_middleware(
 )
 
 
+# Cache-Control middleware for JSON endpoints -------------------------
+@app.middleware("http")
+async def add_cache_headers(request: Request, call_next):
+    """Add Cache-Control headers for JSON API responses.
+
+    Enables browser/CDN caching with 30-second max-age to reduce
+    duplicate requests during rapid tab switches while keeping data fresh.
+    """
+    response = await call_next(request)
+    if request.url.path.endswith(".json"):
+        response.headers["Cache-Control"] = "public, max-age=30"
+    return response
+
+
 # Health probe --------------------------------------------------------
 @app.get("/healthz", response_class=PlainTextResponse)
 async def healthz() -> PlainTextResponse:

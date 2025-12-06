@@ -3,8 +3,9 @@ tests/test_calendar_service.py
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Exercises calendar_service.current_event() and _fetch_events() logic.
 
-NOTE: Removed the old fixture that tried to clear `_fetch_events.cache_clear()`,
-since `_fetch_events` is no longer wrapped and has no `cache_clear` method.
+NOTE: The _fetch_events() function uses a @_memo() cache. The conftest.py
+autouse fixture `clear_calendar_cache` clears this cache before each test
+to ensure monkeypatched httpx.get is actually called.
 """
 
 import datetime as dt
