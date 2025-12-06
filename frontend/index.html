@@ -579,8 +579,9 @@
       display: flex;
       justify-content: center;
       gap: 0.75rem;
-      padding: 0 1rem;
-      padding-bottom: env(safe-area-inset-bottom, 0.5rem);
+      padding: 0.5rem 1rem;
+      padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+      margin-bottom: 1.25rem;
     }
 
     .footer-btn {
@@ -1130,7 +1131,7 @@
       <button class="footer-btn footer-btn-icon" id="shareBtn" aria-label="Share">
         <span>🔗</span>
       </button>
-      <a href="about.html?v=2.15.1" class="footer-btn footer-btn-icon" aria-label="About">
+      <a href="about.html?v=2.15.2" class="footer-btn footer-btn-icon" aria-label="About">
         <span>ℹ️</span>
       </a>
     </div>
