@@ -1,16 +1,18 @@
 /* rain-on-trump service-worker
    – separate icon cache, stale-while-revalidate, notification clicks */
 
-const VERSION     = '2-14-2';  // Move footer up, fix about.html caching
+const VERSION     = '2-14-3';  // Fix SW cache key mismatch for /about vs /about.html
 const SHELL_CACHE = `rain-on-trump-shell-${VERSION}`;
 const ICON_CACHE  = `rain-on-trump-icons-${VERSION}`;
 const SHELL       = '/index.html';
 
 // Assets we rarely change (shell + manifest)
+// Note: Cloudflare Pages redirects /about.html → /about, so cache both paths
 const STATIC_SHELL = [
   SHELL,
   '/manifest.webmanifest',
-  '/about.html'
+  '/about.html',
+  '/about'
 ];
 
 // Big binaries we almost never bump
