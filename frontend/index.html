@@ -181,8 +181,8 @@
 
     .sun-glow {
       position: absolute;
-      top: 50px;
-      right: 20px;
+      top: calc(40px + env(safe-area-inset-top));
+      right: 5px;
       width: 140px;
       height: 140px;
       background: radial-gradient(circle, rgba(255,225,100,1) 0%, rgba(255,200,50,0.6) 30%, rgba(255,180,50,0.2) 55%, transparent 75%);
@@ -193,8 +193,8 @@
 
     .sun-rays {
       position: absolute;
-      top: 120px;
-      left: calc(100% - 90px);
+      top: calc(110px + env(safe-area-inset-top));
+      left: calc(100% - 75px);
       width: 300vmax;
       height: 300vmax;
       transform: translate(-50%, -50%);
@@ -315,7 +315,7 @@
 
     .moon {
       position: absolute;
-      top: calc(80px + env(safe-area-inset-top));
+      top: calc(60px + env(safe-area-inset-top));
       right: 25px;
       width: 100px;
       height: 100px;
@@ -1317,9 +1317,14 @@
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
+    // Rain drift: drops move right as they fall. To cover lower-left,
+    // spawn from negative X (off-screen left) so they drift into view.
+    // Drift ratio: +2 horizontal per frame, ~25 vertical per frame = ~8% of height
+    const driftOffset = () => window.innerHeight * 0.15;  // extra margin
+
     for (let i = 0; i < 150; i++) {
       drops.push({
-        x: Math.random() * window.innerWidth,
+        x: Math.random() * (window.innerWidth + driftOffset()) - driftOffset(),
         y: Math.random() * window.innerHeight,
         length: Math.random() * 25 + 15,
         speed: Math.random() * 15 + 20,
@@ -1331,6 +1336,7 @@
       ctx.clearRect(0, 0, rainCanvas.width, rainCanvas.height);
       const isThunderstorm = document.body.classList.contains('thunderstorm');
       const baseColor = isThunderstorm ? '180, 200, 255' : '200, 220, 255';
+      const offset = driftOffset();
 
       drops.forEach(drop => {
         ctx.beginPath();
@@ -1341,9 +1347,10 @@
         ctx.stroke();
         drop.y += drop.speed;
         drop.x += 2;
-        if (drop.y > rainCanvas.height) {
+        // Reset when off bottom OR off right edge
+        if (drop.y > rainCanvas.height || drop.x > rainCanvas.width + 10) {
           drop.y = -drop.length;
-          drop.x = Math.random() * rainCanvas.width;
+          drop.x = Math.random() * (rainCanvas.width + offset) - offset;
         }
       });
       requestAnimationFrame(animateRain);
@@ -1605,8 +1612,8 @@
 
     function getWeatherIcon(state) {
       const icons = {
-        sunny: '☀️',
-        'sunny-night': '🌙',
+        sunny: '',  // CSS sun graphic is sufficient
+        'sunny-night': '',  // CSS moon graphic is sufficient
         rain: '🌧',
         'rain-night': '🌧',
         snow: '🌨',
