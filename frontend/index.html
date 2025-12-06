@@ -315,7 +315,7 @@
 
     .moon {
       position: absolute;
-      top: 40px;
+      top: calc(80px + env(safe-area-inset-top));
       right: 25px;
       width: 100px;
       height: 100px;
@@ -1356,16 +1356,23 @@
     const snowContainer = document.getElementById('snowContainer');
     const snowflakes = ['❄', '❅', '❆', '•'];
 
-    for (let i = 0; i < 50; i++) {
-      const flake = document.createElement('div');
-      flake.className = 'snowflake';
-      flake.textContent = snowflakes[Math.floor(Math.random() * snowflakes.length)];
-      flake.style.left = Math.random() * 100 + '%';
-      flake.style.fontSize = (Math.random() * 0.8 + 0.6) + 'rem';
-      flake.style.animationDuration = (Math.random() * 5 + 8) + 's';
-      flake.style.animationDelay = Math.random() * 10 + 's';
-      flake.style.opacity = Math.random() * 0.5 + 0.3;
-      snowContainer.appendChild(flake);
+    // Use stratified distribution for even snow coverage
+    const snowColumns = 10;
+    const flakesPerColumn = 5;
+    for (let col = 0; col < snowColumns; col++) {
+      for (let i = 0; i < flakesPerColumn; i++) {
+        const flake = document.createElement('div');
+        flake.className = 'snowflake';
+        flake.textContent = snowflakes[Math.floor(Math.random() * snowflakes.length)];
+        // Position within column using vw units
+        const colWidth = 100 / snowColumns;
+        flake.style.left = (col * colWidth + Math.random() * colWidth) + 'vw';
+        flake.style.fontSize = (Math.random() * 0.8 + 0.6) + 'rem';
+        flake.style.animationDuration = (Math.random() * 5 + 8) + 's';
+        flake.style.animationDelay = Math.random() * 10 + 's';
+        flake.style.opacity = Math.random() * 0.5 + 0.3;
+        snowContainer.appendChild(flake);
+      }
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -1375,20 +1382,44 @@
 
     function createStars() {
       starsContainer.innerHTML = '';
-      const starCount = 120;
+      // Use stratified random distribution for even coverage
+      const columns = 10;
+      const rows = 10;
+      const starsPerCell = 2;
+      const extraStars = 30; // Additional random stars
+      const maxHeight = 100; // Cover full viewport height
 
-      for (let i = 0; i < starCount; i++) {
-        const star = document.createElement('div');
-        const rand = Math.random();
-        if (rand > 0.95) {
-          star.className = 'star bright';
-        } else if (rand > 0.85) {
-          star.className = 'star large';
-        } else {
-          star.className = 'star';
+      // Grid-based stars for even distribution
+      for (let col = 0; col < columns; col++) {
+        for (let row = 0; row < rows; row++) {
+          for (let s = 0; s < starsPerCell; s++) {
+            const star = document.createElement('div');
+            const rand = Math.random();
+            if (rand > 0.95) {
+              star.className = 'star bright';
+            } else if (rand > 0.85) {
+              star.className = 'star large';
+            } else {
+              star.className = 'star';
+            }
+            // Position within this grid cell with some randomness
+            const cellWidth = 100 / columns;
+            const cellHeight = maxHeight / rows;
+            star.style.left = (col * cellWidth + Math.random() * cellWidth) + 'vw';
+            star.style.top = (row * cellHeight + Math.random() * cellHeight) + 'vh';
+            star.style.animationDuration = (Math.random() * 3 + 2) + 's';
+            star.style.animationDelay = Math.random() * 5 + 's';
+            starsContainer.appendChild(star);
+          }
         }
-        star.style.left = Math.random() * 100 + '%';
-        star.style.top = Math.random() * 65 + '%';
+      }
+
+      // Add some extra random stars for natural variation
+      for (let i = 0; i < extraStars; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        star.style.left = Math.random() * 100 + 'vw';
+        star.style.top = Math.random() * maxHeight + 'vh';
         star.style.animationDuration = (Math.random() * 3 + 2) + 's';
         star.style.animationDelay = Math.random() * 5 + 's';
         starsContainer.appendChild(star);
