@@ -162,6 +162,36 @@
     .subtle {
       color: var(--text-subtle);
     }
+    .share-btn {
+      background-color: var(--btn-bg);
+      color: #fff;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 1rem;
+    }
+    .share-btn:hover {
+      background-color: var(--btn-hover);
+    }
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: white;
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      z-index: 100;
+    }
+    .toast.show { opacity: 1; }
   </style>
 </head>
 <body>
@@ -207,6 +237,16 @@
       <p style="margin-top: 0.5rem;">
         <a href="https://ko-fi.com/vraethrdalkr" target="_blank">☕ Ko-fi</a> ·
         <a href="https://github.com/sponsors/VraethrDalkr" target="_blank">💜 GitHub Sponsors</a>
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Share This App</h2>
+      <p style="font-size: 0.95rem;" class="subtle">
+        Know someone who'd appreciate real-time Trump rain updates? Spread the word:
+      </p>
+      <p style="margin-top: 0.75rem;">
+        <button id="shareBtn" class="share-btn">📤 Share</button>
       </p>
     </section>
 
@@ -319,6 +359,61 @@
     <p>© 2025 "Is It Raining on Trump?" · Licensed under <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank">AGPL-3.0</a></p>
     <a href="debug.html" class="debug-link">🐞 Debug</a>
   </footer>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // Toast notification
+    const toast = document.getElementById('toast');
+    function showToast(txt) {
+      toast.textContent = txt;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // Share button
+    const shareBtn = document.getElementById('shareBtn');
+
+    async function copyToClipboard(url) {
+      try {
+        await navigator.clipboard.writeText(url);
+      } catch (err) {
+        const textArea = document.createElement('textarea');
+        textArea.value = url;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+      showToast('Link copied to clipboard!');
+    }
+
+    async function handleShare() {
+      const shareData = {
+        title: 'Is It Raining on Trump?',
+        text: 'Real-time rain tracking for Trump\'s location',
+        url: 'https://rain-on-trump.pages.dev/'
+      };
+
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      if (isMobile && navigator.share) {
+        try {
+          await navigator.share(shareData);
+        } catch (err) {
+          if (err.name !== 'AbortError') {
+            await copyToClipboard(shareData.url);
+          }
+        }
+      } else {
+        await copyToClipboard(shareData.url);
+      }
+    }
+
+    shareBtn.addEventListener('click', handleShare);
+  </script>
 
   <script>
     // Pull version from sw.js VERSION constant

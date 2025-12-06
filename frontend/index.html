@@ -610,6 +610,10 @@
       border-color: rgba(34, 197, 94, 0.4);
     }
 
+    .footer-btn-icon {
+      padding: 0.6rem 0.9rem;
+    }
+
     body.snow .footer-btn {
       background: rgba(0,0,0,0.1);
       border-color: rgba(0,0,0,0.15);
@@ -1122,6 +1126,9 @@
       <button class="footer-btn" id="notifyBtn">
         <span id="notifyIcon">🔕</span>
         <span id="notifyText">Notify</span>
+      </button>
+      <button class="footer-btn footer-btn-icon" id="shareBtn" aria-label="Share">
+        <span>📤</span>
       </button>
       <a href="about.html" class="footer-btn">
         <span>ℹ️</span>
@@ -2116,6 +2123,55 @@
 
     // Update button immediately based on localStorage (don't wait for SW)
     updateNotifyButton();
+
+    // ═══════════════════════════════════════════════════════════════
+    // SHARE BUTTON
+    // ═══════════════════════════════════════════════════════════════
+    const shareBtn = document.getElementById('shareBtn');
+
+    async function copyToClipboard(url) {
+      try {
+        await navigator.clipboard.writeText(url);
+      } catch (err) {
+        // Final fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = url;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+      showToast('Link copied to clipboard!');
+    }
+
+    async function handleShare() {
+      const shareData = {
+        title: 'Is It Raining on Trump?',
+        text: 'Real-time rain tracking for Trump\'s location',
+        url: 'https://rain-on-trump.pages.dev/'
+      };
+
+      // Use native Web Share API only on mobile (desktop support is inconsistent)
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      if (isMobile && navigator.share) {
+        try {
+          await navigator.share(shareData);
+        } catch (err) {
+          // User cancelled (AbortError) - do nothing
+          // Other errors - fall back to clipboard
+          if (err.name !== 'AbortError') {
+            await copyToClipboard(shareData.url);
+          }
+        }
+      } else {
+        // Desktop: always use clipboard
+        await copyToClipboard(shareData.url);
+      }
+    }
+
+    shareBtn.addEventListener('click', handleShare);
   </script>
 </body>
 </html>
