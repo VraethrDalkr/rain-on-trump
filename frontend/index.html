@@ -29,6 +29,9 @@
       transition: background 1s ease;
       -webkit-user-select: none;
       user-select: none;
+      /* Prevent iOS overscroll bounce */
+      overscroll-behavior: none;
+      -webkit-overflow-scrolling: auto;
     }
 
     /* Theme backgrounds */
@@ -1443,6 +1446,26 @@
         lightningInterval = null;
       }
     }
+
+    // ═══════════════════════════════════════════════════════════════
+    // PREVENT iOS OVERSCROLL BOUNCE
+    // ═══════════════════════════════════════════════════════════════
+    // CSS overscroll-behavior doesn't fully work on iOS Safari PWAs,
+    // so we need this minimal JS handler to prevent the rubber-band effect
+    (function() {
+      let startY = 0;
+      document.addEventListener('touchstart', (e) => {
+        startY = e.touches[0].clientY;
+      }, { passive: true });
+
+      document.addEventListener('touchmove', (e) => {
+        const dy = e.touches[0].clientY - startY;
+        // Prevent pull-down bounce when at top of page
+        if (window.scrollY === 0 && dy > 0) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+    })();
 
     // ═══════════════════════════════════════════════════════════════
     // TOAST
