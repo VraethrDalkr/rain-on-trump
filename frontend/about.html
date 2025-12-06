@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- v2.14.4 -->
+<!-- v2.14.5 -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -164,28 +164,20 @@
       color: var(--text-subtle);
     }
     .share-btn {
-      /* iOS Safari requires appearance:none for custom button styling */
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      appearance: none;
-      /* Explicit fallback color before CSS variable */
-      background-color: #007aff;
-      background-color: var(--btn-bg);
-      color: #fff;
-      border: none;
+      /* Use same pattern as working .github-btn */
+      display: inline-block;
+      background: #007aff;
+      background: var(--btn-bg);
+      color: #fff !important;
       padding: 0.6rem 1.2rem;
       border-radius: 4px;
-      cursor: pointer;
-      font-family: inherit;
+      text-decoration: none;
       font-size: 1rem;
-      /* Ensure button doesn't collapse */
-      display: inline-block;
-      min-height: 44px;
-      line-height: 1.4;
+      cursor: pointer;
     }
     .share-btn:hover {
-      background-color: #005bb5;
-      background-color: var(--btn-hover);
+      text-decoration: none;
+      opacity: 0.9;
     }
     /* Toast notification */
     .toast {
@@ -258,7 +250,7 @@
         Know someone who'd appreciate real-time Trump rain updates? Spread the word:
       </p>
       <p style="margin-top: 0.75rem;">
-        <button id="shareBtn" class="share-btn">🔗 Share</button>
+        <a href="#" id="shareBtn" class="share-btn" role="button">🔗 Share</a>
       </p>
     </section>
 
@@ -424,7 +416,10 @@
       }
     }
 
-    shareBtn.addEventListener('click', handleShare);
+    shareBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      handleShare();
+    });
   </script>
 
   <script>

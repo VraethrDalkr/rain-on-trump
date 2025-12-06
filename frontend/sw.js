@@ -1,7 +1,7 @@
 /* rain-on-trump service-worker
    – separate icon cache, stale-while-revalidate, notification clicks */
 
-const VERSION     = '2-14-4';  // Fix iOS Safari button rendering with -webkit-appearance
+const VERSION     = '2-14-5';  // Use <a> tag instead of <button> for iOS Safari compatibility
 const SHELL_CACHE = `rain-on-trump-shell-${VERSION}`;
 const ICON_CACHE  = `rain-on-trump-icons-${VERSION}`;
 const SHELL       = '/index.html';
