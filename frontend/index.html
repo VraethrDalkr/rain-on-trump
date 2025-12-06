@@ -1627,7 +1627,7 @@
         inflight: '✈️',
         'inflight-night': '✈️'
       };
-      return icons[state] || '🤷';
+      return icons[state] ?? '🤷';  // Use ?? to allow empty string for sunny states
     }
 
     function getSubtitle(state, data) {

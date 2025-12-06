@@ -1,7 +1,7 @@
 /* rain-on-trump service-worker
    – separate icon cache, stale-while-revalidate, notification clicks */
 
-const VERSION     = '2-13-10';  // About page: dark mode, back button, safe-area fix
+const VERSION     = '2-13-11';  // Fix empty icon fallback bug (|| vs ??)
 const SHELL_CACHE = `rain-on-trump-shell-${VERSION}`;
 const ICON_CACHE  = `rain-on-trump-icons-${VERSION}`;
 const SHELL       = '/index.html';
@@ -9,7 +9,8 @@ const SHELL       = '/index.html';
 // Assets we rarely change (shell + manifest)
 const STATIC_SHELL = [
   SHELL,
-  '/manifest.webmanifest'
+  '/manifest.webmanifest',
+  '/about.html'
 ];
 
 // Big binaries we almost never bump
