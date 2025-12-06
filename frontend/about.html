@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- v2.14.9 -->
+<!-- v2.15.0 -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -408,7 +408,7 @@
 
   <script>
     // Pull version from sw.js VERSION constant
-    fetch('sw.js')
+    fetch('sw.js', { cache: 'no-store' })
       .then(r => r.text())
       .then(text => {
         const match = text.match(/const\s+VERSION\s*=\s*['"]([^'"]+)['"]/);
