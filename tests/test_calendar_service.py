@@ -360,3 +360,217 @@ class TestGetOvernightBase:
         result = cal.get_overnight_base(now=fake_now)
 
         assert result is None  # No morning event to match
+
+
+# ── Tests for get_context_events() ───────────────────────────────────────────
+
+
+class TestGetContextEvents:
+    """Tests for get_context_events() schedule context extraction."""
+
+    def test_returns_coords_and_timestamps_from_aliased_events(self, monkeypatch):
+        """Should return lat, lon, dt dicts for events resolved via aliases."""
+        target_dt = dt.datetime(2025, 12, 9, 20, 0, tzinfo=UTC)
+        target_event = {
+            "dtstart_utc": target_dt,
+            "summary": "VP Christmas Reception",
+            "location": "Some Unknown Location",
+        }
+
+        # Context events with aliased locations (White House is in aliases)
+        events = [
+            target_event,
+            {
+                "dtstart_utc": target_dt - dt.timedelta(hours=2),
+                "summary": "Earlier Event",
+                "location": "The White House",
+            },
+            {
+                "dtstart_utc": target_dt + dt.timedelta(hours=3),
+                "summary": "Later Event",
+                "location": "Oval Office",
+            },
+        ]
+        monkeypatch.setattr(cal, "_fetch_events", lambda: events)
+
+        result = cal.get_context_events(target_event, min_context=2)
+
+        assert len(result) == 2
+        # Each result should have lat, lon, dt
+        for ctx in result:
+            assert "lat" in ctx
+            assert "lon" in ctx
+            assert "dt" in ctx
+            assert isinstance(ctx["dt"], dt.datetime)
+        # Coords should be White House area
+        assert result[0]["lat"] == pytest.approx(38.897676, abs=0.01)
+
+    def test_sorts_by_temporal_distance(self, monkeypatch):
+        """Should prefer events closest in time to target."""
+        target_dt = dt.datetime(2025, 12, 9, 12, 0, tzinfo=UTC)
+        target_event = {
+            "dtstart_utc": target_dt,
+            "summary": "Target Event",
+            "location": "Unknown",
+        }
+
+        events = [
+            target_event,
+            {
+                "dtstart_utc": target_dt - dt.timedelta(hours=10),
+                "summary": "Far Past",
+                "location": "The White House",
+            },
+            {
+                "dtstart_utc": target_dt - dt.timedelta(hours=1),
+                "summary": "Near Past",
+                "location": "Oval Office",
+            },
+            {
+                "dtstart_utc": target_dt + dt.timedelta(hours=5),
+                "summary": "Far Future",
+                "location": "Cabinet Room",
+            },
+        ]
+        monkeypatch.setattr(cal, "_fetch_events", lambda: events)
+
+        result = cal.get_context_events(target_event, min_context=2)
+
+        # Should pick "Near Past" (1h) and "Far Future" (5h), not "Far Past" (10h)
+        assert len(result) == 2
+        timestamps = [ctx["dt"] for ctx in result]
+        # Near Past should be first (closest)
+        assert timestamps[0] == target_dt - dt.timedelta(hours=1)
+
+    def test_expands_until_min_context_found(self, monkeypatch):
+        """Should skip unresolved events and keep searching until min_context met."""
+        target_dt = dt.datetime(2025, 12, 9, 12, 0, tzinfo=UTC)
+        target_event = {
+            "dtstart_utc": target_dt,
+            "summary": "Target Event",
+            "location": "Unknown Location X",
+        }
+
+        # First two nearby events have unknown locations, third is far but aliased
+        events = [
+            target_event,
+            {
+                "dtstart_utc": target_dt - dt.timedelta(hours=1),
+                "summary": "Near Unknown 1",
+                "location": "Some Random Place",  # Not in aliases
+            },
+            {
+                "dtstart_utc": target_dt + dt.timedelta(hours=2),
+                "summary": "Near Unknown 2",
+                "location": "Another Random Place",  # Not in aliases
+            },
+            {
+                "dtstart_utc": target_dt - dt.timedelta(hours=24),
+                "summary": "Far But Aliased 1",
+                "location": "The White House",
+            },
+            {
+                "dtstart_utc": target_dt + dt.timedelta(hours=30),
+                "summary": "Far But Aliased 2",
+                "location": "Mar-a-Lago",
+            },
+        ]
+        monkeypatch.setattr(cal, "_fetch_events", lambda: events)
+
+        result = cal.get_context_events(target_event, min_context=2)
+
+        # Should skip the unknown ones and find White House + Mar-a-Lago
+        assert len(result) == 2
+        # White House is closer (24h vs 30h)
+        assert result[0]["lat"] == pytest.approx(38.897676, abs=0.01)  # White House
+        assert result[1]["lat"] == pytest.approx(26.6758, abs=0.01)  # Mar-a-Lago
+
+    def test_skips_target_event(self, monkeypatch):
+        """Should not include the target event itself in context."""
+        target_dt = dt.datetime(2025, 12, 9, 12, 0, tzinfo=UTC)
+        # Target event has an aliased location - should still be skipped
+        target_event = {
+            "dtstart_utc": target_dt,
+            "summary": "Target",
+            "location": "The White House",
+        }
+
+        events = [
+            target_event,
+            {
+                "dtstart_utc": target_dt - dt.timedelta(hours=1),
+                "summary": "Other",
+                "location": "Oval Office",
+            },
+        ]
+        monkeypatch.setattr(cal, "_fetch_events", lambda: events)
+
+        result = cal.get_context_events(target_event, min_context=2)
+
+        # Should only find 1, not 2 (target excluded even though it has alias)
+        assert len(result) == 1
+
+    def test_returns_empty_when_no_aliased_events(self, monkeypatch):
+        """Should return empty list if no events can be resolved via aliases."""
+        target_dt = dt.datetime(2025, 12, 9, 12, 0, tzinfo=UTC)
+        target_event = {
+            "dtstart_utc": target_dt,
+            "summary": "Target",
+            "location": "Unknown",
+        }
+
+        events = [
+            target_event,
+            {
+                "dtstart_utc": target_dt - dt.timedelta(hours=1),
+                "summary": "Unknown 1",
+                "location": "Random Place A",
+            },
+            {
+                "dtstart_utc": target_dt + dt.timedelta(hours=1),
+                "summary": "Unknown 2",
+                "location": "Random Place B",
+            },
+        ]
+        monkeypatch.setattr(cal, "_fetch_events", lambda: events)
+
+        result = cal.get_context_events(target_event, min_context=2)
+
+        assert len(result) == 0
+
+    def test_respects_min_context_parameter(self, monkeypatch):
+        """Should stop searching once min_context is reached."""
+        target_dt = dt.datetime(2025, 12, 9, 12, 0, tzinfo=UTC)
+        target_event = {
+            "dtstart_utc": target_dt,
+            "summary": "Target",
+            "location": "Unknown",
+        }
+
+        events = [
+            target_event,
+            {
+                "dtstart_utc": target_dt - dt.timedelta(hours=1),
+                "summary": "E1",
+                "location": "The White House",
+            },
+            {
+                "dtstart_utc": target_dt - dt.timedelta(hours=2),
+                "summary": "E2",
+                "location": "Oval Office",
+            },
+            {
+                "dtstart_utc": target_dt - dt.timedelta(hours=3),
+                "summary": "E3",
+                "location": "Cabinet Room",
+            },
+        ]
+        monkeypatch.setattr(cal, "_fetch_events", lambda: events)
+
+        # Request only 2
+        result = cal.get_context_events(target_event, min_context=2)
+        assert len(result) == 2
+
+        # Request 3
+        result = cal.get_context_events(target_event, min_context=3)
+        assert len(result) == 3

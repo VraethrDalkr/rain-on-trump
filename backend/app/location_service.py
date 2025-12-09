@@ -44,12 +44,14 @@ from .api_logging import logged_request_async
 from .arrival_cache import load as load_last, save as save_last
 from .event_service import (
     LOW_IMPORTANCE_THRESHOLD,
+    emit_all_results_infeasible,
     emit_flight_detected,
     emit_geocode_failure,
     emit_landing_detected,
     emit_location_changed,
     emit_low_confidence,
     emit_low_importance_geocode,
+    emit_suspicious_geocode,
 )
 from .flight_service import get_plane_state
 from .gdelt_service import get_latest_location
@@ -78,6 +80,11 @@ R_EARTH_KM = 6_371.0
 CAL_BASE_CONF = 70
 CAL_MIN_CONF = 30
 CAL_WINDOW_H = 72.0  # hours
+
+# Physical feasibility constants for geocoding disambiguation
+MAX_TRAVEL_SPEED_KMH = 800.0  # Generous estimate for Air Force One effective speed
+MIN_TIME_GAP_H = 0.1  # Minimum 6 minutes to avoid division issues
+SUSPICIOUS_DISTANCE_KM = 500.0  # Alert if best result is this far from context
 
 TRANSLATE = str.maketrans({"\u00a0": " ", "\u2011": "-", "\u2013": "-", "\u2014": "-"})
 
@@ -321,6 +328,151 @@ def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     return 2 * R_EARTH_KM * math.asin(math.sqrt(a))
 
 
+def _is_physically_feasible(
+    result_lat: float,
+    result_lon: float,
+    context_events: list[dict],
+    target_dt: dt.datetime,
+    max_speed_kmh: float = MAX_TRAVEL_SPEED_KMH,
+) -> bool:
+    """
+    Check if a location is physically reachable from any context event.
+
+    Uses generous speed estimate (800 km/h by default) to avoid false positives.
+    Returns True if reachable from at least one context event.
+
+    Args:
+        result_lat: Latitude of the geocode result to check.
+        result_lon: Longitude of the geocode result to check.
+        context_events: List of nearby resolved events with coords and timestamps.
+            Each dict must have {"lat": float, "lon": float, "dt": datetime}.
+        target_dt: Timestamp of the event being geocoded.
+        max_speed_kmh: Maximum travel speed in km/h (default: 800 for AF1).
+
+    Returns:
+        True if the location is reachable from at least one context event,
+        or if context_events is empty (no data to contradict).
+    """
+    if not context_events:
+        return True  # No context → can't determine infeasibility
+
+    for ctx in context_events:
+        time_gap_h = abs((ctx["dt"] - target_dt).total_seconds() / 3600)
+        if time_gap_h < MIN_TIME_GAP_H:
+            time_gap_h = MIN_TIME_GAP_H  # Minimum threshold to avoid edge cases
+
+        max_distance_km = time_gap_h * max_speed_kmh
+        actual_distance_km = _haversine_km(
+            ctx["lat"], ctx["lon"], result_lat, result_lon
+        )
+
+        if actual_distance_km <= max_distance_km:
+            return True  # Reachable from this context event
+
+    return False  # Unreachable from all context events
+
+
+def _compute_centroid(coords: list[tuple[float, float]]) -> tuple[float, float]:
+    """
+    Compute geographic centroid of coordinate list.
+
+    Args:
+        coords: List of (lat, lon) tuples.
+
+    Returns:
+        (lat, lon) tuple representing the centroid.
+        Returns (0.0, 0.0) if coords is empty.
+    """
+    if not coords:
+        return (0.0, 0.0)
+    avg_lat = sum(c[0] for c in coords) / len(coords)
+    avg_lon = sum(c[1] for c in coords) / len(coords)
+    return (avg_lat, avg_lon)
+
+
+def _disambiguate_results(
+    results: list,
+    context_events: list[dict],
+    target_dt: dt.datetime,
+) -> tuple[object, dict | None]:
+    """
+    Apply hybrid 3-layer disambiguation to geocoding results.
+
+    Layer 1: Filter physically infeasible results
+    Layer 2: Rank by proximity to context centroid
+    Layer 3: Flag suspicious distances (>500km from context)
+
+    Args:
+        results: List of geopy Location objects from Nominatim.
+        context_events: Nearby resolved events with {"lat", "lon", "dt"}.
+        target_dt: Timestamp of the event being geocoded.
+
+    Returns:
+        Tuple of (best_result, alert_dict or None).
+        alert_dict has keys: type, distance_km, query, etc.
+    """
+    if not results:
+        return None, None
+
+    # Single result: use as-is
+    if len(results) == 1:
+        result = results[0]
+        # Check Layer 3 even for single result if we have context
+        if context_events:
+            context_coords = [(ev["lat"], ev["lon"]) for ev in context_events]
+            centroid = _compute_centroid(context_coords)
+            distance_km = _haversine_km(
+                centroid[0], centroid[1], result.latitude, result.longitude
+            )
+            if distance_km > SUSPICIOUS_DISTANCE_KM:
+                return result, {
+                    "type": "suspicious_distance",
+                    "distance_km": distance_km,
+                    "centroid": centroid,
+                }
+        return result, None
+
+    # No context: fall back to highest importance
+    if not context_events:
+        best = max(results, key=lambda r: r.raw.get("importance", 0))
+        return best, None
+
+    # === LAYER 1: Physical Feasibility Filter ===
+    feasible_results = [
+        r for r in results
+        if _is_physically_feasible(r.latitude, r.longitude, context_events, target_dt)
+    ]
+
+    if not feasible_results:
+        # All results are physically impossible!
+        best = max(results, key=lambda r: r.raw.get("importance", 0))
+        return best, {
+            "type": "all_infeasible",
+            "results_count": len(results),
+        }
+
+    # === LAYER 2: Context Proximity Ranking ===
+    context_coords = [(ev["lat"], ev["lon"]) for ev in context_events]
+    centroid = _compute_centroid(context_coords)
+    best = min(
+        feasible_results,
+        key=lambda r: _haversine_km(centroid[0], centroid[1], r.latitude, r.longitude),
+    )
+
+    # === LAYER 3: Suspicious Distance Alert ===
+    distance_km = _haversine_km(
+        centroid[0], centroid[1], best.latitude, best.longitude
+    )
+    if distance_km > SUSPICIOUS_DISTANCE_KM:
+        return best, {
+            "type": "suspicious_distance",
+            "distance_km": distance_km,
+            "centroid": centroid,
+        }
+
+    return best, None
+
+
 def _likely_trump_tfr(rec: dict) -> bool:
     """Heuristic: is a SECURITY TFR likely linked to Trump?"""
 
@@ -347,22 +499,58 @@ def _should_skip_geocode(location: str) -> bool:
     return cleaned in SKIP_LOCATIONS
 
 
-def _smart_geocode(query: str, timeout: int = 10):
+# ── Geocode result cache ─────────────────────────────────────────────────
+# Prevents redundant Nominatim calls for the same query within TTL period.
+# Keyed by cleaned query string; stores (timestamp, result) tuples.
+_geocode_cache: dict[str, tuple[dt.datetime, object]] = {}
+GEOCODE_CACHE_TTL_S: Final = 900  # 15 minutes (matches calendar cache)
+
+
+def _get_cached_geocode(query: str) -> object | None:
+    """Return cached geocode result if still valid, else None."""
+    key = _clean(query)
+    if key not in _geocode_cache:
+        return None
+    ts, result = _geocode_cache[key]
+    if (dt.datetime.now(UTC) - ts).total_seconds() < GEOCODE_CACHE_TTL_S:
+        _geocode_log.debug("Cache hit for: %r", query)
+        return result
+    # Expired
+    del _geocode_cache[key]
+    return None
+
+
+def _set_cached_geocode(query: str, result: object) -> None:
+    """Store geocode result in cache."""
+    key = _clean(query)
+    _geocode_cache[key] = (dt.datetime.now(UTC), result)
+
+
+def _smart_geocode(
+    query: str,
+    timeout: int = 10,
+    context_events: list[dict] | None = None,
+    target_dt: dt.datetime | None = None,
+):
     """
-    Geocode with US-first strategy and international fallback.
+    Geocode with US-first strategy, context disambiguation, and international fallback.
 
     Args:
         query: Location string to geocode.
         timeout: Timeout in seconds.
+        context_events: Optional nearby resolved events with {"lat", "lon", "dt"}.
+            When provided, enables multi-result disambiguation.
+        target_dt: Timestamp of the event being geocoded (required if context_events).
 
     Returns:
         geopy.Location or None.
 
     Strategy:
         1. Skip if query matches skip list
-        2. Try US-restricted search first (country_codes='us')
-        3. If US returns nothing, try international search
-        4. Log result for monitoring and alias curation
+        2. Try US-restricted search (with multiple results if context provided)
+        3. If context provided, use hybrid 3-layer disambiguation
+        4. If US returns nothing, try international search
+        5. Log result for monitoring and alias curation
     """
     # Check skip list
     if _should_skip_geocode(query):
@@ -370,15 +558,88 @@ def _smart_geocode(query: str, timeout: int = 10):
         add_geocode_entry(query=query, result_type="skipped")
         return None
 
+    # Check cache first (avoids redundant Nominatim calls)
+    cached = _get_cached_geocode(query)
+    if cached is not None:
+        return cached
+
+    # Determine if we should use multi-result mode
+    use_disambiguation = bool(context_events and target_dt)
+
     # Try US-first
     try:
-        result = _geocode_raw(
-            query,
-            timeout=timeout,
-            country_codes="us",
-            addressdetails=True,
-        )
-        if result:
+        if use_disambiguation:
+            # Multi-result mode for disambiguation
+            results = _geocode_raw(
+                query,
+                timeout=timeout,
+                country_codes="us",
+                addressdetails=True,
+                exactly_one=False,
+                limit=5,
+            )
+            # Convert generator to list if needed
+            results = list(results) if results else []
+        else:
+            # Single-result mode (legacy behavior)
+            result = _geocode_raw(
+                query,
+                timeout=timeout,
+                country_codes="us",
+                addressdetails=True,
+            )
+            results = [result] if result else []
+
+        if results:
+            # Apply disambiguation if we have context
+            if use_disambiguation and len(results) > 1:
+                result, alert = _disambiguate_results(
+                    results=results,
+                    context_events=context_events,
+                    target_dt=target_dt,
+                )
+                # Emit alerts
+                if alert:
+                    if alert["type"] == "suspicious_distance":
+                        emit_suspicious_geocode(
+                            query=query,
+                            best_lat=result.latitude,
+                            best_lon=result.longitude,
+                            centroid=alert["centroid"],
+                            distance_km=alert["distance_km"],
+                        )
+                    elif alert["type"] == "all_infeasible":
+                        emit_all_results_infeasible(
+                            query=query,
+                            results_count=alert["results_count"],
+                            context_events=context_events,
+                            target_dt=target_dt,
+                        )
+                _geocode_log.info(
+                    "Geocoded (US, disambiguated from %d): %r → %.4f, %.4f",
+                    len(results),
+                    query,
+                    result.latitude,
+                    result.longitude,
+                )
+            else:
+                result = results[0]
+                # Check for suspicious distance even with single result
+                if use_disambiguation:
+                    _, alert = _disambiguate_results(
+                        results=results,
+                        context_events=context_events,
+                        target_dt=target_dt,
+                    )
+                    if alert and alert["type"] == "suspicious_distance":
+                        emit_suspicious_geocode(
+                            query=query,
+                            best_lat=result.latitude,
+                            best_lon=result.longitude,
+                            centroid=alert["centroid"],
+                            distance_km=alert["distance_km"],
+                        )
+
             addr = result.raw.get("address", {})
             state = addr.get("state", "")
             city = addr.get("city") or addr.get("town") or addr.get("county", "")
@@ -411,6 +672,7 @@ def _smart_geocode(query: str, timeout: int = 10):
                     lon=result.longitude,
                     display_name=result.address,
                 )
+            _set_cached_geocode(query, result)
             return result
     except Exception as e:  # noqa: BLE001
         _geocode_log.warning("US geocode failed for %r: %s", query, e)
@@ -456,6 +718,7 @@ def _smart_geocode(query: str, timeout: int = 10):
                     lon=result.longitude,
                     display_name=result.address,
                 )
+            _set_cached_geocode(query, result)
             return result
     except Exception as e:  # noqa: BLE001
         _geocode_log.warning("International geocode failed for %r: %s", query, e)
@@ -677,8 +940,11 @@ async def current_coords(
     last_known_calendar: Optional[dict] = None
 
     if event:
-        desc = _clean(event.get("location", "") or "")
-        summ = _clean(event.get("summary", "") or "")
+        # Keep raw versions for display, cleaned versions for matching
+        raw_location = (event.get("location", "") or "").strip()
+        raw_summary = event.get("summary", "")
+        desc = _clean(raw_location)
+        summ = _clean(raw_summary)
         age_cal = _age_h(event["dtstart_utc"])
         if "no public events scheduled" not in summ:
             cal_conf = CAL_BASE_CONF - (
@@ -686,9 +952,6 @@ async def current_coords(
                 * min(age_cal, CAL_WINDOW_H)
                 / CAL_WINDOW_H
             )
-
-            # Get raw summary for event_summary field (not cleaned version)
-            raw_summary = event.get("summary", "")
 
             # 2a. Alias on location
             for key, alias in PLACE_ALIASES.items():
@@ -725,15 +988,41 @@ async def current_coords(
                         if cal_conf < CAL_MIN_CONF:
                             last_known_calendar = coords_cal
                         break
-            # 2c. Geocode fallback (US-first with international fallback)
+            # 2c. Geocode fallback (US-first with hybrid disambiguation)
             if desc and not coords_cal:
-                geocoded = _smart_geocode(desc, timeout=10)
+                # Get context events for disambiguation (coords + timestamps)
+                context_events = cal.get_context_events(event)
+
+                # Log context retrieval for debug endpoint
+                trace_log.append({
+                    "ts": ts_now,
+                    "phase": "loc",
+                    "step": "geocode_context",
+                    "query": raw_location,
+                    "context_count": len(context_events),
+                })
+
+                geocoded = _smart_geocode(
+                    desc,
+                    timeout=10,
+                    context_events=context_events,
+                    target_dt=event["dtstart_utc"],
+                )
                 if geocoded:
+                    # Log geocode result for debug endpoint
+                    trace_log.append({
+                        "ts": ts_now,
+                        "phase": "loc",
+                        "step": "geocode_result",
+                        "coords": {"lat": geocoded.latitude, "lon": geocoded.longitude},
+                        "display_name": getattr(geocoded, "address", raw_location),
+                    })
+
                     coords_cal = _stamp(
                         {
                             "lat": geocoded.latitude,
                             "lon": geocoded.longitude,
-                            "name": desc,
+                            "name": raw_location,  # Preserve original case
                             "confidence": cal_conf,
                             "reason": "calendar_geocode",
                             "event_summary": raw_summary,

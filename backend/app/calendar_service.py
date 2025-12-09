@@ -314,3 +314,62 @@ def get_overnight_base(now: dt.datetime | None = None) -> dict[str, object] | No
         return dict(OVERNIGHT_BASES[evening_region]["coords"])
 
     return None  # Different regions or unknown region = likely traveling
+
+
+# ── Constants for geocoding context ───────────────────────────────────────────
+MIN_CONTEXT_EVENTS: Final[int] = 2  # Minimum nearby resolved events for disambiguation
+
+
+def get_context_events(
+    target_event: dict,
+    all_events: list[dict] | None = None,
+    min_context: int = MIN_CONTEXT_EVENTS,
+) -> list[dict]:
+    """
+    Get resolved events near target_event with coords AND timestamps.
+
+    Used for geocoding disambiguation: expands outward from target until
+    min_context resolved coordinates are found.
+
+    Args:
+        target_event: Event needing geocoding (must have dtstart_utc).
+        all_events: Full event list (defaults to _fetch_events()).
+        min_context: Minimum context events to find before stopping.
+
+    Returns:
+        List of {"lat": float, "lon": float, "dt": datetime} dicts,
+        sorted by temporal distance from target (closest first).
+    """
+    if all_events is None:
+        all_events = _fetch_events()
+
+    target_dt = target_event["dtstart_utc"]
+
+    # Sort events by temporal distance from target
+    sorted_events = sorted(
+        all_events,
+        key=lambda e: abs((e["dtstart_utc"] - target_dt).total_seconds()),
+    )
+
+    context: list[dict] = []
+    for ev in sorted_events:
+        # Skip the target event itself
+        if ev is target_event:
+            continue
+
+        # Try to resolve via alias
+        location = ev.get("location", "")
+        coords = _resolve_location_to_coords(location)
+        if coords:
+            context.append(
+                {
+                    "lat": coords[0],
+                    "lon": coords[1],
+                    "dt": ev["dtstart_utc"],
+                }
+            )
+
+        if len(context) >= min_context:
+            break
+
+    return context

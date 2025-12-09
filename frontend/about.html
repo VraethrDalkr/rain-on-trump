@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- v2.15.2 -->
+<!-- v2.15.3 -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -213,7 +213,7 @@
         View the code on <a href="https://github.com/VraethrDalkr/rain-on-trump" target="_blank">GitHub</a>.
       </p>
       <p style="font-size: 0.9rem; margin-top: 1rem;" class="muted">
-        <strong>Version:</strong> 2.15.2
+        <strong>Version:</strong> 2.15.3
       </p>
     </section>
 
@@ -296,6 +296,16 @@
         location: White House for DC, Mar-a-Lago for Florida, or Bedminster for
         New Jersey (the "Summer White House"). This fills the gap between events
         with ~85% accuracy based on historical schedule patterns.
+      </p>
+      <p>
+        <strong>2c. Context-Based Geocoding:</strong>
+        When the schedule contains ambiguous location names that aren't in our
+        curated alias list, we use nearby scheduled events to disambiguate. The
+        system fetches multiple geocoding candidates and filters out physically
+        impossible locations (e.g., can't travel DC to Arizona in 2 hours), then
+        picks the result closest to where other recent events occurred. This
+        prevents misresolutions like "Naval Observatory" matching Arizona
+        instead of DC.
       </p>
       <p>
         <strong>3. Weather Data:</strong>

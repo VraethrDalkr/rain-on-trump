@@ -508,3 +508,65 @@ def emit_machine_started(version: str | None = None) -> None:
     }
     _fire_and_forget(embed)
     LOG.info("[event] machine_started: commit=%s", commit_hash or "unknown")
+
+
+def emit_suspicious_geocode(
+    query: str,
+    best_lat: float,
+    best_lon: float,
+    centroid: tuple[float, float],
+    distance_km: float,
+) -> None:
+    """Alert when geocoded result is far from schedule context (Layer 3)."""
+    embed = {
+        "title": "⚠️ Suspicious Geocode Result",
+        "color": 0xFFA500,  # Orange
+        "fields": [
+            {"name": "Query", "value": query[:100], "inline": False},
+            {"name": "Distance from Context", "value": f"{distance_km:.0f} km", "inline": True},
+            {"name": "Result Coords", "value": f"{best_lat:.4f}, {best_lon:.4f}", "inline": True},
+            {"name": "Context Centroid", "value": f"{centroid[0]:.4f}, {centroid[1]:.4f}", "inline": True},
+        ],
+        "footer": {"text": "Consider adding to place_aliases.py"},
+        "timestamp": dt.datetime.now(UTC).isoformat(),
+    }
+    _fire_and_forget(embed)
+    LOG.warning(
+        "[event] suspicious_geocode: %r is %.0fkm from context centroid",
+        query,
+        distance_km,
+    )
+
+
+def emit_all_results_infeasible(
+    query: str,
+    results_count: int,
+    context_events: list[dict],
+    target_dt: dt.datetime,
+) -> None:
+    """Alert when ALL Nominatim results are physically impossible (Layer 1 failure)."""
+    context_summary = ", ".join(
+        f"({ev['lat']:.2f}, {ev['lon']:.2f})" for ev in context_events[:3]
+    )
+    if len(context_events) > 3:
+        context_summary += f" +{len(context_events) - 3} more"
+
+    embed = {
+        "title": "🚨 All Geocode Results Infeasible",
+        "color": 0xFF0000,  # Red - more serious
+        "description": "No Nominatim result is physically reachable. Likely bad OSM data.",
+        "fields": [
+            {"name": "Query", "value": query[:100], "inline": False},
+            {"name": "Target Time", "value": target_dt.strftime("%Y-%m-%d %H:%M UTC"), "inline": True},
+            {"name": "Results Checked", "value": str(results_count), "inline": True},
+            {"name": "Context Events", "value": context_summary or "None", "inline": False},
+        ],
+        "footer": {"text": "MUST add alias to place_aliases.py"},
+        "timestamp": dt.datetime.now(UTC).isoformat(),
+    }
+    _fire_and_forget(embed)
+    LOG.error(
+        "[event] all_results_infeasible: %r - all %d results physically impossible",
+        query,
+        results_count,
+    )

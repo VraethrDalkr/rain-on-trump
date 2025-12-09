@@ -114,6 +114,19 @@ PLACE_ALIASES: dict[str, dict[str, float | str]] = {
         "lon": -77.036529,
         "name": "The White House",
     },
+    "rose garden": {"lat": 38.8975, "lon": -77.0371, "name": "Rose Garden, WH"},
+    "north lawn": {"lat": 38.8982, "lon": -77.0355, "name": "North Lawn, WH"},
+    # ─── DC landmarks that Nominatim misresolves ─────────────────────
+    "u.s. naval observatory": {
+        "lat": 38.9217,
+        "lon": -77.0669,
+        "name": "U.S. Naval Observatory (VP Residence), DC",
+    },
+    "mount vernon": {
+        "lat": 38.7102,
+        "lon": -77.0888,
+        "name": "George Washington's Mount Vernon, VA",
+    },
     # ─── Presidential retreat ─────────────────────────────────────────
     "camp david": {"lat": 39.6481, "lon": -77.4650, "name": "Camp David, MD"},
     # ─── Airports / transport ──────────────────────────────────────────
