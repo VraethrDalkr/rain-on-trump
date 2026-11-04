@@ -3,5 +3,5 @@ pytest>=7.0
 pytest-asyncio>=0.23
 pytest-httpx>=0.23
 pytest-env>=0.8
-black>=22.0
+black>=26,<27  # pinned major: style changes yearly
 flake8>=5.0

@@ -1,0 +1,374 @@
+[
+ {
+  "date": "2026-03-26",
+  "time": "08:00:00",
+  "details": "The President participates in Executive Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-03-26",
+  "time": "09:00:00",
+  "details": "In-Town Pool Call Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-03-26",
+  "time": "10:00:00",
+  "details": "The President participates in a Cabinet Meeting",
+  "location": "Cabinet Room"
+ },
+ {
+  "date": "2026-03-26",
+  "time": "12:39:00",
+  "details": "White House Press Office: Lunch lid until 1:30 PM",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-03-26",
+  "time": "16:00:00",
+  "details": "The President delivers Remarks at the Greek Independence Day Celebration",
+  "location": "East Room"
+ },
+ {
+  "date": "2026-03-26",
+  "time": "17:14:00",
+  "details": "The President calls into Fox News' The Five for a live interview",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-03-26",
+  "time": "17:45:00",
+  "details": "The President participates in Signing Time",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-03-26",
+  "time": "18:08:00",
+  "details": "White House Press Office: Travel/Photo lid called",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-03-27",
+  "time": null,
+  "details": "TBD: The President departs the White House en route Miami, Florida",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-03-27",
+  "time": null,
+  "details": "TBD: The President departs Miami, Florida en route Palm Beach, Florida",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-03-27",
+  "time": "08:00:00",
+  "details": "The President participates in Executive Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-03-27",
+  "time": "09:00:00",
+  "details": "In-Town Pool Call Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-03-27",
+  "time": "12:30:00",
+  "details": "The President delivers Remarks to Farmers",
+  "location": "South Lawn"
+ },
+ {
+  "date": "2026-03-27",
+  "time": "12:45:00",
+  "details": "Out-of-Town Travel Pool Call Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-03-27",
+  "time": "13:23:00",
+  "details": "The President departs the White House for Joint Base Andrews",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-03-27",
+  "time": "13:42:00",
+  "details": "The President arrives at Joint Base Andrews",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-03-27",
+  "time": "13:56:00",
+  "details": "The President departs Joint Base Andrews for Miami International Airport",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-03-27",
+  "time": "16:28:00",
+  "details": "The President arrives at Miami International Airport",
+  "location": "Miami International Airport"
+ },
+ {
+  "date": "2026-03-27",
+  "time": "16:45:00",
+  "details": "The President departs Miami International Airport for Miami Beach",
+  "location": "Miami International Airport"
+ },
+ {
+  "date": "2026-03-27",
+  "time": "17:08:00",
+  "details": "The President arrives at Faena Hotel & Forum in Miami Beach, Florida",
+  "location": "Faena Hotel & Forum, Miami Beach, FL"
+ },
+ {
+  "date": "2026-03-27",
+  "time": "17:30:00",
+  "details": "The President delivers Remarks at the Future Investment Initiative",
+  "location": "Faena Hotel & Forum, Miami Beach, FL"
+ },
+ {
+  "date": "2026-03-27",
+  "time": "18:55:00",
+  "details": "The President departs the Faena Hotel & Forum in Miami Beach, Florida for Miami International Airport",
+  "location": "Faena Hotel & Forum, Miami Beach, FL"
+ },
+ {
+  "date": "2026-03-27",
+  "time": "19:15:00",
+  "details": "The President arrives at Miami International Airport",
+  "location": "Miami International Airport"
+ },
+ {
+  "date": "2026-03-27",
+  "time": "19:25:00",
+  "details": "The President departs Miami International Airport for Palm Beach International Airport",
+  "location": "Miami International Airport"
+ },
+ {
+  "date": "2026-03-27",
+  "time": "19:42:00",
+  "details": "The President arrives at Palm Beach International Airport",
+  "location": "Palm Beach International Airport"
+ },
+ {
+  "date": "2026-03-27",
+  "time": "19:59:00",
+  "details": "The President departs Palm Beach International Airport for Mar-a-Lago",
+  "location": "Palm Beach International Airport"
+ },
+ {
+  "date": "2026-03-27",
+  "time": "20:09:00",
+  "details": "The President arrives at Mar-a-Lago",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-03-27",
+  "time": "20:10:00",
+  "details": "White House Press Office: Travel/Photo lid called",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-03-28",
+  "time": "07:30:00",
+  "details": "Out-of-Town Travel Pool Call Time",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-03-28",
+  "time": "08:00:00",
+  "details": "The President participates in Executive Time",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-03-28",
+  "time": "08:55:00",
+  "details": "The President departs Mar-a-Lago for his golf club",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-03-28",
+  "time": "09:02:00",
+  "details": "The President arrives at Trump International Golf Club West Palm Beach",
+  "location": "Trump International Golf Club West Palm Beach"
+ },
+ {
+  "date": "2026-03-28",
+  "time": "14:24:00",
+  "details": "The President departs Trump International Golf Club West Palm Beach for Mar-a-Lago",
+  "location": "Trump International Golf Club West Palm Beach"
+ },
+ {
+  "date": "2026-03-28",
+  "time": "14:33:00",
+  "details": "The President arrives at Mar-a-Lago",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-03-28",
+  "time": "14:42:00",
+  "details": "White House Press Office: Travel/Photo lid called",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-03-28",
+  "time": "18:30:00",
+  "details": "The President participates in a MAGA Inc. Meeting",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-03-28",
+  "time": "19:00:00",
+  "details": "The President participates in a Dinner",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-03-29",
+  "time": null,
+  "details": "TBD: The President departs Palm Beach, Florida, en route the White House",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-03-29",
+  "time": null,
+  "details": "TBD: The President arrives the White House",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-03-29",
+  "time": "07:30:00",
+  "details": "Out-of-Town Travel Pool Call Time",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-03-29",
+  "time": "08:00:00",
+  "details": "The President participates in Executive Time",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-03-29",
+  "time": "08:47:00",
+  "details": "The President departs Mar-a-Lago for his golf club",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-03-29",
+  "time": "08:55:00",
+  "details": "The President arrives at Trump International Golf Club West Palm Beach",
+  "location": "Trump International Golf Club West Palm Beach"
+ },
+ {
+  "date": "2026-03-29",
+  "time": "14:15:00",
+  "details": "The President departs Trump International Golf Club West Palm Beach for Mar-a-Lago",
+  "location": "Trump International Golf Club West Palm Beach"
+ },
+ {
+  "date": "2026-03-29",
+  "time": "14:24:00",
+  "details": "The President arrives at Mar-a-Lago",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-03-29",
+  "time": "14:26:00",
+  "details": "White House Press Office: Lunch lid until 5:00 PM",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-03-29",
+  "time": "18:28:00",
+  "details": "The President departs Mar-a-Lago for Palm Beach International Airport",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-03-29",
+  "time": "18:35:00",
+  "details": "The President arrives at Palm Beach International Airport",
+  "location": "Palm Beach International Airport"
+ },
+ {
+  "date": "2026-03-29",
+  "time": "18:50:00",
+  "details": "The President departs Palm Beach International Airport for Joint Base Andrews",
+  "location": "Palm Beach International Airport"
+ },
+ {
+  "date": "2026-03-29",
+  "time": "20:00:00",
+  "details": "In Town Pool Call Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-03-29",
+  "time": "20:40:00",
+  "details": "The President arrives at Joint Base Andrews",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-03-29",
+  "time": "21:02:00",
+  "details": "The President departs Joint Base Andrews for the White House",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-03-29",
+  "time": "21:11:00",
+  "details": "The President arrives at the White House",
+  "location": "South Lawn"
+ },
+ {
+  "date": "2026-03-29",
+  "time": "21:20:00",
+  "details": "White House Press Office: Travel/Photo lid called",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-03-30",
+  "time": "08:00:00",
+  "details": "The President participates in Executive Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-03-30",
+  "time": "09:00:00",
+  "details": "In-Town Pool Call Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-03-30",
+  "time": "10:15:00",
+  "details": "The President participates in a White House Internship Program Class Photo",
+  "location": "East Room"
+ },
+ {
+  "date": "2026-03-30",
+  "time": "11:31:00",
+  "details": "White House Press Office: Lunch lid until 12:30 PM",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-03-30",
+  "time": "13:00:00",
+  "details": "Press Briefing by the White House Press Secretary Karoline Leavitt",
+  "location": "James S. Brady Press Briefing Room"
+ },
+ {
+  "date": "2026-03-30",
+  "time": "13:30:00",
+  "details": "The President participates in a Policy Meeting",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-03-30",
+  "time": "16:00:00",
+  "details": "The President participates in Signing Time",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-03-30",
+  "time": "18:02:00",
+  "details": "White House Press Office: Travel/Photo lid called",
+  "location": "The White House"
+ }
+]

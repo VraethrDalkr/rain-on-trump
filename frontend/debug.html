@@ -47,15 +47,19 @@ function apiBase() {
   document.getElementById('geocode').href = BASE + '/debug/geocode';
 
   /** Pretty-print + highlight `"errors": […]` **/
+  function esc(t){
+    return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
   function pretty(json){
-    return JSON.stringify(json, null, 2)
-             .replace(/"errors":\s*\[[^\]]*\]/g,
+    // Escape first, then highlight (errors arrays; tolerates nested brackets one level deep)
+    return esc(JSON.stringify(json, null, 2))
+             .replace(/"errors":\s*\[(?:[^\[\]]|\[[^\]]*\])*\]/g,
                       m => `<span class="err">${m}</span>`);
   }
 
   /* main trace --------------------------------------------------------------*/
   fetch(BASE + '/debug.json', { cache: 'no-store' })
-    .then(r => r.json())
+    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(j => {
       document.getElementById('dbg').innerHTML = pretty(j);
     })

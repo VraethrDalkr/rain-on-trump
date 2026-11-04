@@ -15,8 +15,8 @@ from __future__ import annotations
 import datetime as dt
 import json
 
-import pytest
 from app import push_service
+from push_keys import AUTH, P256DH
 
 
 def test_subscription_includes_timestamp(tmp_path, monkeypatch):
@@ -26,7 +26,7 @@ def test_subscription_includes_timestamp(tmp_path, monkeypatch):
 
     sub = {
         "endpoint": "https://fcm.googleapis.com/fcm/send/test123",
-        "keys": {"p256dh": "abc", "auth": "def"},
+        "keys": {"p256dh": P256DH, "auth": AUTH},
     }
 
     push_service.add_subscription(sub)
@@ -49,7 +49,7 @@ def test_resubscribe_refreshes_timestamp(tmp_path, monkeypatch):
     subs = [
         {
             "endpoint": "https://fcm.googleapis.com/existing",
-            "keys": {"p256dh": "abc", "auth": "def"},
+            "keys": {"p256dh": P256DH, "auth": AUTH},
             "subscription_date": old_date,
         }
     ]
@@ -59,7 +59,7 @@ def test_resubscribe_refreshes_timestamp(tmp_path, monkeypatch):
     push_service.add_subscription(
         {
             "endpoint": "https://fcm.googleapis.com/existing",
-            "keys": {"p256dh": "abc", "auth": "def"},
+            "keys": {"p256dh": P256DH, "auth": AUTH},
         }
     )
 
@@ -107,7 +107,8 @@ def test_cleanup_uses_365_day_default(tmp_path, monkeypatch):
 
 
 def test_never_remove_if_last_delivery_exists(tmp_path, monkeypatch):
-    """Subscriptions with last_delivery should NEVER be removed by time-based cleanup."""
+    """Subscriptions with last_delivery should NEVER be removed by time-based
+    cleanup."""
     sub_file = tmp_path / "subs.json"
     monkeypatch.setattr(push_service, "SUB_FILE", sub_file)
 
@@ -137,7 +138,8 @@ def test_never_remove_if_last_delivery_exists(tmp_path, monkeypatch):
 
 
 def test_only_cleanup_never_delivered_subscriptions(tmp_path, monkeypatch):
-    """Time-based cleanup should only apply to subscriptions that never received a notification."""
+    """Time-based cleanup should only apply to subscriptions that never received
+    a notification."""
     sub_file = tmp_path / "subs.json"
     monkeypatch.setattr(push_service, "SUB_FILE", sub_file)
 

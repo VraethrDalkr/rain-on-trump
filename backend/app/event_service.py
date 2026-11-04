@@ -21,10 +21,11 @@ Event Types:
 from __future__ import annotations
 
 import asyncio
+import threading
 import datetime as dt
 import logging
 import os
-from typing import Any
+from typing import Any, Callable
 
 import httpx
 from dateutil import tz
@@ -43,7 +44,11 @@ API_ERROR_COOLDOWN_SEC = 3600  # 1 hour
 # Track when we last warned about low confidence (avoid spam)
 _last_low_confidence_warning: dt.datetime | None = None
 LOW_CONFIDENCE_COOLDOWN_SEC = 3600  # 1 hour
-LOW_CONFIDENCE_THRESHOLD = 40  # Warn below this confidence level
+# Warn below this confidence level. Reviewed for the fusion scale
+# (round(100 × R × stay)): a timed alias event drops under 40 after ~3 days, a
+# corroborated landing never does within its 7-day life near a base (dwell
+# floor 50), uncorroborated / weak claims always do. Kept at 40.
+LOW_CONFIDENCE_THRESHOLD = 40
 
 
 # ── Event Emitters ────────────────────────────────────────────────────────
@@ -54,10 +59,24 @@ def _is_configured() -> bool:
     return bool(DISCORD_WEBHOOK_URL.strip())
 
 
-async def _post_webhook(embed: dict[str, Any]) -> None:
-    """Post an embed to Discord webhook. Fire-and-forget with error logging."""
+# Strong references to in-flight webhook tasks (asyncio only keeps weak ones).
+_tasks: set[asyncio.Task] = set()
+
+
+def _prune_cooldowns(
+    seen: dict[str, dt.datetime], now: dt.datetime, cooldown_sec: float
+) -> None:
+    """Drop entries whose cooldown has already expired."""
+    for key in [
+        k for k, t in seen.items() if (now - t).total_seconds() >= cooldown_sec
+    ]:
+        del seen[key]
+
+
+async def _post_webhook(embed: dict[str, Any]) -> bool:
+    """Post an embed to Discord webhook. Returns True on success."""
     if not _is_configured():
-        return
+        return False
 
     payload = {"embeds": [embed]}
 
@@ -70,21 +89,62 @@ async def _post_webhook(embed: dict[str, Any]) -> None:
                     resp.status_code,
                     resp.text[:200],
                 )
+                return False
+            return True
     except Exception as exc:
         LOG.warning("Discord webhook failed: %s", exc)
+        return False
 
 
-def _fire_and_forget(embed: dict[str, Any]) -> None:
-    """Schedule webhook post without blocking."""
+async def _post_then(
+    embed: dict[str, Any], on_failure: Callable[[], None] | None
+) -> None:
+    """Post *embed*; call *on_failure* (e.g. to undo a cooldown stamp) if it fails."""
+    ok = await _post_webhook(embed)
+    if not ok and on_failure is not None:
+        on_failure()
+
+
+#: The application's event loop (set by main's lifespan), so worker threads
+#: (geocoding, ADS-B fetches) can hand webhook posts to it
+_main_loop: asyncio.AbstractEventLoop | None = None
+
+
+def set_main_loop(loop: asyncio.AbstractEventLoop | None) -> None:
+    """Register (or clear) the loop that runs webhook posts from threads."""
+    global _main_loop
+    _main_loop = loop
+
+
+def _fire_and_forget(
+    embed: dict[str, Any], on_failure: Callable[[], None] | None = None
+) -> None:
+    """Schedule a webhook post without ever blocking the caller.
+
+    On the event loop: a task. From a worker thread: handed to the main loop
+    (``run_coroutine_threadsafe``), else posted from a daemon thread.
+    """
     if not _is_configured():
         return
 
     try:
         loop = asyncio.get_running_loop()
-        loop.create_task(_post_webhook(embed))
     except RuntimeError:
-        # No running loop - run synchronously (shouldn't happen in FastAPI)
-        asyncio.run(_post_webhook(embed))
+        loop = None
+    if loop is not None:
+        task = loop.create_task(_post_then(embed, on_failure))
+        _tasks.add(task)
+        task.add_done_callback(_tasks.discard)
+        return
+    main = _main_loop
+    if main is not None and main.is_running() and not main.is_closed():
+        asyncio.run_coroutine_threadsafe(_post_then(embed, on_failure), main)
+        return
+    threading.Thread(
+        target=lambda: asyncio.run(_post_then(embed, on_failure)),
+        name="discord-webhook",
+        daemon=True,
+    ).start()
 
 
 def emit_flight_detected(
@@ -159,6 +219,13 @@ def emit_location_changed(
         "tfr_json": "FAA TFR",
         "newswire": "GDELT News",
         "last_arrival": "Last Arrival Cache",
+        "last_known": "Last known landing",
+        "landing": "ADS-B landing",
+        "landing_base": "ADS-B landing (base)",
+        "landing_destination": "ADS-B landing (venue)",
+        "landing_inferred": "ADS-B inferred landing",
+        "en_route": "In flight (last fix / schedule)",
+        "departure_dest": "Calendar (departure destination)",
         "unknown": "Unknown",
     }
 
@@ -173,9 +240,7 @@ def emit_location_changed(
     ]
 
     if event_summary:
-        fields.append(
-            {"name": "Event", "value": event_summary[:100], "inline": False}
-        )
+        fields.append({"name": "Event", "value": event_summary[:100], "inline": False})
 
     if lat is not None and lon is not None:
         fields.append(
@@ -283,6 +348,9 @@ def emit_low_confidence(
         "calendar_geocoded": "Calendar (geocoded)",
         "newswire": "Newswire",
         "last_arrival": "Last arrival cache",
+        "last_known": "Last known landing",
+        "en_route": "In flight (last fix / schedule)",
+        "departure_dest": "Calendar (departure destination)",
     }
     reason_display = reason_labels.get(reason, reason)
 
@@ -326,7 +394,8 @@ def emit_geocode_failure(
     result_type: str,
     error: str | None = None,
 ) -> None:
-    """Emit event when geocoding fails or returns no results (deduplicated per query)."""
+    """Emit event when geocoding fails or returns no results
+    (deduplicated per query)."""
     now = dt.datetime.now(UTC)
 
     # Check cooldown to avoid spam (same query within 24h)
@@ -341,6 +410,7 @@ def emit_geocode_failure(
             )
             return
 
+    _prune_cooldowns(_last_geocode_error, now, GEOCODE_ERROR_COOLDOWN_SEC)
     _last_geocode_error[query] = now
 
     # Choose color based on result type
@@ -373,7 +443,7 @@ def emit_geocode_failure(
         "fields": fields,
         "timestamp": now.isoformat(),
     }
-    _fire_and_forget(embed)
+    _fire_and_forget(embed, lambda: _last_geocode_error.pop(query, None))
     LOG.info("[event] geocode_failure: %r (%s)", query, result_type)
 
 
@@ -384,7 +454,8 @@ def emit_low_importance_geocode(
     lon: float,
     display_name: str | None = None,
 ) -> None:
-    """Emit event when geocoding returns a low-importance result (deduplicated per query).
+    """Emit event when geocoding returns a low-importance result
+    (deduplicated per query).
 
     Low importance scores (< LOW_IMPORTANCE_THRESHOLD) often indicate:
     - Ambiguous queries resolved to wrong locations
@@ -406,6 +477,7 @@ def emit_low_importance_geocode(
             )
             return
 
+    _prune_cooldowns(_last_geocode_error, now, GEOCODE_ERROR_COOLDOWN_SEC)
     _last_geocode_error[query] = now
 
     fields = [
@@ -434,10 +506,8 @@ def emit_low_importance_geocode(
         "fields": fields,
         "timestamp": now.isoformat(),
     }
-    _fire_and_forget(embed)
-    LOG.info(
-        "[event] low_importance_geocode: %r (importance=%.3f)", query, importance
-    )
+    _fire_and_forget(embed, lambda: _last_geocode_error.pop(query, None))
+    LOG.info("[event] low_importance_geocode: %r (importance=%.3f)", query, importance)
 
 
 def emit_api_error(api_name: str, error_message: str) -> None:
@@ -456,6 +526,7 @@ def emit_api_error(api_name: str, error_message: str) -> None:
             )
             return
 
+    _prune_cooldowns(_last_api_error, now, API_ERROR_COOLDOWN_SEC)
     _last_api_error[api_name] = now
 
     embed = {
@@ -467,7 +538,7 @@ def emit_api_error(api_name: str, error_message: str) -> None:
         ],
         "timestamp": now.isoformat(),
     }
-    _fire_and_forget(embed)
+    _fire_and_forget(embed, lambda: _last_api_error.pop(api_name, None))
     LOG.info("[event] api_error: %s - %s", api_name, error_message[:100])
 
 
@@ -491,7 +562,11 @@ def emit_machine_started(version: str | None = None) -> None:
 
     fields = [
         {"name": "Event", "value": "Machine Started", "inline": True},
-        {"name": "Time", "value": f"<t:{int(dt.datetime.now(UTC).timestamp())}:R>", "inline": True},
+        {
+            "name": "Time",
+            "value": f"<t:{int(dt.datetime.now(UTC).timestamp())}:R>",
+            "inline": True,
+        },
     ]
 
     if commit_hash:
@@ -523,9 +598,21 @@ def emit_suspicious_geocode(
         "color": 0xFFA500,  # Orange
         "fields": [
             {"name": "Query", "value": query[:100], "inline": False},
-            {"name": "Distance from Context", "value": f"{distance_km:.0f} km", "inline": True},
-            {"name": "Result Coords", "value": f"{best_lat:.4f}, {best_lon:.4f}", "inline": True},
-            {"name": "Context Centroid", "value": f"{centroid[0]:.4f}, {centroid[1]:.4f}", "inline": True},
+            {
+                "name": "Distance from Context",
+                "value": f"{distance_km:.0f} km",
+                "inline": True,
+            },
+            {
+                "name": "Result Coords",
+                "value": f"{best_lat:.4f}, {best_lon:.4f}",
+                "inline": True,
+            },
+            {
+                "name": "Context Centroid",
+                "value": f"{centroid[0]:.4f}, {centroid[1]:.4f}",
+                "inline": True,
+            },
         ],
         "footer": {"text": "Consider adding to place_aliases.py"},
         "timestamp": dt.datetime.now(UTC).isoformat(),
@@ -554,12 +641,21 @@ def emit_all_results_infeasible(
     embed = {
         "title": "🚨 All Geocode Results Infeasible",
         "color": 0xFF0000,  # Red - more serious
-        "description": "No Nominatim result is physically reachable. Likely bad OSM data.",
+        "description": "No Nominatim result is physically reachable. "
+        "Likely bad OSM data.",
         "fields": [
             {"name": "Query", "value": query[:100], "inline": False},
-            {"name": "Target Time", "value": target_dt.strftime("%Y-%m-%d %H:%M UTC"), "inline": True},
+            {
+                "name": "Target Time",
+                "value": target_dt.strftime("%Y-%m-%d %H:%M UTC"),
+                "inline": True,
+            },
             {"name": "Results Checked", "value": str(results_count), "inline": True},
-            {"name": "Context Events", "value": context_summary or "None", "inline": False},
+            {
+                "name": "Context Events",
+                "value": context_summary or "None",
+                "inline": False,
+            },
         ],
         "footer": {"text": "MUST add alias to place_aliases.py"},
         "timestamp": dt.datetime.now(UTC).isoformat(),

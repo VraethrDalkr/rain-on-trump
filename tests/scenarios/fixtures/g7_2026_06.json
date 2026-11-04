@@ -1,0 +1,470 @@
+[
+ {
+  "date": "2026-06-12",
+  "time": "08:00:00",
+  "details": "The President participates in Executive Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-06-12",
+  "time": "09:00:00",
+  "details": "In-Town Pool Call Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-06-12",
+  "time": "11:00:00",
+  "details": "The President participates in a Pre-Tape Podcast with The Second Lady",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-06-12",
+  "time": "12:14:00",
+  "details": "White House Press Office: Lunch lid until 1:15 PM",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-06-12",
+  "time": "14:30:00",
+  "details": "The President participates in Signing Time",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-06-12",
+  "time": "17:30:00",
+  "details": "The President participates in a Pre-Tape Interview",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-06-12",
+  "time": "18:28:00",
+  "details": "White House Press Office: Travel/Photo lid called",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-06-13",
+  "time": "08:00:00",
+  "details": "The President participates in Executive Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-06-13",
+  "time": "08:30:00",
+  "details": "In-Town Pool Call Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-06-13",
+  "time": "11:31:00",
+  "details": "The President departs the White House en route to Trump National Golf Club Washington DC",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-06-13",
+  "time": "12:04:00",
+  "details": "The President arrives at Trump National Golf Club Washington DC",
+  "location": "Trump National Golf Club Washington DC"
+ },
+ {
+  "date": "2026-06-13",
+  "time": "19:00:00",
+  "details": "The President participates in a MAGA Inc. Dinner",
+  "location": "Trump National Golf Club Washington DC"
+ },
+ {
+  "date": "2026-06-14",
+  "time": "08:00:00",
+  "details": "The President participates in Executive Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-06-14",
+  "time": "15:00:00",
+  "details": "In-Town Pool Call Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-06-14",
+  "time": "17:30:00",
+  "details": "The President participates in a Family Dinner",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-06-14",
+  "time": "19:00:00",
+  "details": "The President participates in a UFC Freedom 250 VIP Reception",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-06-14",
+  "time": "19:45:00",
+  "details": "The President attends UFC Freedom 250",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-06-14",
+  "time": "22:30:00",
+  "details": "Out-of-Town Travel Pool Call Time",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-06-15",
+  "time": null,
+  "details": "TBD: The President departs the White House en route Evian Resort, Evian-les-Baines, France",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-06-15",
+  "time": null,
+  "details": "TBD: The President arrives Evian Resort, Evian-les-Baines, France",
+  "location": "Geneva Airport"
+ },
+ {
+  "date": "2026-06-15",
+  "time": "02:41:00",
+  "details": "The President departs the White House en route to Joint Base Andrews",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-06-15",
+  "time": "03:01:00",
+  "details": "The President arrives at Joint Base Andrews",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-06-15",
+  "time": "03:17:00",
+  "details": "The President departs Joint Base Andrews for Geneva Airport",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-06-15",
+  "time": "09:56:00",
+  "details": "The President arrives at Geneva Airport [3:56 PM Local]",
+  "location": "Geneva Airport"
+ },
+ {
+  "date": "2026-06-15",
+  "time": "10:18:00",
+  "details": "The President departs Geneva Airport en route to Evian Resort, Evian-les-Baines, France [4:18 PM Local]",
+  "location": "Geneva Airport"
+ },
+ {
+  "date": "2026-06-15",
+  "time": "10:44:00",
+  "details": "The President arrives at Evian Resort, Evian-les-Baines, France [4:44 PM Local]",
+  "location": "Evian Resort, Evian-les-Baines, France"
+ },
+ {
+  "date": "2026-06-15",
+  "time": "10:57:00",
+  "details": "The President departs Evian Resort, Evian-les-Baines, France en route to Hôtel Royal, Evian-les-Baines, France [4:57 PM Local]",
+  "location": "Evian Resort, Evian-les-Baines, France"
+ },
+ {
+  "date": "2026-06-15",
+  "time": "11:01:00",
+  "details": "The President arrives at Hôtel Royal, Evian-les-Baines, France [5:01 PM Local]",
+  "location": "Hôtel Royal, Evian-les-Baines, France"
+ },
+ {
+  "date": "2026-06-15",
+  "time": "11:30:00",
+  "details": "The President participates in a Bilateral Meeting with The President of the French Republic [5:30 PM Local]",
+  "location": "Evian Resort, Evian-les-Baines, France"
+ },
+ {
+  "date": "2026-06-15",
+  "time": "13:00:00",
+  "details": "The President participates in an Official Greeting with G7 Leaders [7:00 PM Local]",
+  "location": "Evian Resort, Evian-les-Baines, France"
+ },
+ {
+  "date": "2026-06-15",
+  "time": "13:30:00",
+  "details": "The President participates in a G7 Leaders' Working Dinner [7:30 PM Local]",
+  "location": "Evian Resort, Evian-les-Baines, France"
+ },
+ {
+  "date": "2026-06-15",
+  "time": "14:32:00",
+  "details": "White House Press Office: Travel/Photo lid called [8:32 PM Local]",
+  "location": "Hôtel Royal, Evian-les-Baines, France"
+ },
+ {
+  "date": "2026-06-16",
+  "time": "00:15:00",
+  "details": "Out-of-Town Travel Pool Call Time [6:15 AM Local]",
+  "location": "Evian Resort, Evian-les-Baines, France"
+ },
+ {
+  "date": "2026-06-16",
+  "time": "02:00:00",
+  "details": "The President participates in Executive Time [8:00 AM Local]",
+  "location": "Evian Resort, Evian-les-Baines, France"
+ },
+ {
+  "date": "2026-06-16",
+  "time": "03:00:00",
+  "details": "The President participates in a Working Session with G7 Leaders and Ukraine [9:00 AM Local]",
+  "location": "Evian Resort, Evian-les-Baines, France"
+ },
+ {
+  "date": "2026-06-16",
+  "time": "04:30:00",
+  "details": "The President participates in a Bilateral Meeting with the Emir of the State of Qatar [10:30 AM Local]",
+  "location": "Evian Resort, Evian-les-Baines, France"
+ },
+ {
+  "date": "2026-06-16",
+  "time": "05:15:00",
+  "details": "The President participates in a Bilateral Meeting with The President of the United Arab Emirates [11:15 AM Local]",
+  "location": "Evian Resort, Evian-les-Baines, France"
+ },
+ {
+  "date": "2026-06-16",
+  "time": "06:00:00",
+  "details": "The President participates in a Working Lunch with G7 Leaders and the Middle East [12:00 PM Local]",
+  "location": "Evian Resort, Evian-les-Baines, France"
+ },
+ {
+  "date": "2026-06-16",
+  "time": "09:00:00",
+  "details": "The President participates in a Working Session with G7 Leaders and Development Countries [3:00 PM Local]",
+  "location": "Evian Resort, Evian-les-Baines, France"
+ },
+ {
+  "date": "2026-06-16",
+  "time": "13:15:00",
+  "details": "The President participates in a Cultural Performance and Concert [7:15 PM Local]",
+  "location": "Evian Resort, Evian-les-Baines, France"
+ },
+ {
+  "date": "2026-06-16",
+  "time": "13:58:00",
+  "details": "White House Press Office: Travel/Photo lid called [7:58 PM Local]",
+  "location": "Hôtel Royal, Evian-les-Baines, France"
+ },
+ {
+  "date": "2026-06-16",
+  "time": "14:15:00",
+  "details": "The President participates in a G7 Leaders' Social Dinner [8:15 PM Local]",
+  "location": "Evian Resort, Evian-les-Baines, France"
+ },
+ {
+  "date": "2026-06-17",
+  "time": null,
+  "details": "TBD: The President departs Evian Resort, Evian-les-Baines, France en route Versailles, France",
+  "location": "Evian Resort, Evian-les-Baines, France"
+ },
+ {
+  "date": "2026-06-17",
+  "time": null,
+  "details": "TBD: The President arrives Versailles, France",
+  "location": "Palace of Versailles, France"
+ },
+ {
+  "date": "2026-06-17",
+  "time": null,
+  "details": "The President departs Versailles, France en route the White House",
+  "location": "Palace of Versailles, France"
+ },
+ {
+  "date": "2026-06-17",
+  "time": null,
+  "details": "TBD: The President arrives the White House",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-06-17",
+  "time": "01:00:00",
+  "details": "Out-of-Town Travel Pool Call Time [7:00 AM Local]",
+  "location": "Evian Resort, Evian-les-Baines, France"
+ },
+ {
+  "date": "2026-06-17",
+  "time": "02:00:00",
+  "details": "The President participates in Executive Time [8:00 AM Local]",
+  "location": "Evian Resort, Evian-les-Baines, France"
+ },
+ {
+  "date": "2026-06-17",
+  "time": "03:30:00",
+  "details": "The President participates in a Working Session with G7 Leaders and Development Countries [9:30 AM Local]",
+  "location": "Evian Resort, Evian-les-Baines, France"
+ },
+ {
+  "date": "2026-06-17",
+  "time": "05:30:00",
+  "details": "The President participates in a Bilateral Meeting with The President of the Arab Republic of Egypt [11:30 AM Local]",
+  "location": "Evian Resort, Evian-les-Baines, France"
+ },
+ {
+  "date": "2026-06-17",
+  "time": "06:30:00",
+  "details": "The President participates in a Working Lunch with G7 Leaders, Development Countries, and Global Tech CEOs [12:30 PM Local]",
+  "location": "Evian Resort, Evian-les-Baines, France"
+ },
+ {
+  "date": "2026-06-17",
+  "time": "08:45:00",
+  "details": "The President participates in a Bilateral Meeting with the Prime Minister of the Republic of India [2:45 PM Local]",
+  "location": "Evian Resort, Evian-les-Baines, France"
+ },
+ {
+  "date": "2026-06-17",
+  "time": "10:30:00",
+  "details": "The President holds a Press Conference [4:30 PM Local]",
+  "location": "Evian Resort, Evian-les-Baines, France"
+ },
+ {
+  "date": "2026-06-17",
+  "time": "13:00:00",
+  "details": "The President participates in a Bilateral Dinner with The President of the French Republic [7:00 PM Local]",
+  "location": "Palace of Versailles, France"
+ },
+ {
+  "date": "2026-06-17",
+  "time": "13:18:00",
+  "details": "The President departs Hôtel Royal, Evian-les-Baines, France en route to the Evian Resort track field, Evian-les-Baines, France [7:18 PM Local]",
+  "location": "Hôtel Royal, Evian-les-Baines, France"
+ },
+ {
+  "date": "2026-06-17",
+  "time": "13:23:00",
+  "details": "The President arrives at the track field at Evian Resort, Evian-les-Baines, France for Marine One departure [7:23 PM Local]",
+  "location": "Evian Resort, Evian-les-Baines, France"
+ },
+ {
+  "date": "2026-06-17",
+  "time": "13:30:00",
+  "details": "The President departs Evian Resort, Evian-les-Baines, France en route to Geneva Airport [7:30 PM Local]",
+  "location": "Evian Resort, Evian-les-Baines, France"
+ },
+ {
+  "date": "2026-06-17",
+  "time": "13:43:00",
+  "details": "The President arrives at Geneva Airport [7:43 PM Local]",
+  "location": "Geneva Airport"
+ },
+ {
+  "date": "2026-06-17",
+  "time": "14:05:00",
+  "details": "The President departs Geneva Airport for Paris Orly Airport [8:05 PM Local]",
+  "location": "Geneva Airport"
+ },
+ {
+  "date": "2026-06-17",
+  "time": "14:51:00",
+  "details": "The President arrives at Paris Orly Airport [8:51 PM Local]",
+  "location": "Paris Orly Airport"
+ },
+ {
+  "date": "2026-06-17",
+  "time": "15:17:00",
+  "details": "The President departs Paris Orly Airport en route to Palace of Versailles, France [9:17 PM Local]",
+  "location": "Paris Orly Airport"
+ },
+ {
+  "date": "2026-06-17",
+  "time": "15:55:00",
+  "details": "The President arrives at the Palace of Versailles, France [9:55 PM Local]",
+  "location": "Palace of Versailles, France"
+ },
+ {
+  "date": "2026-06-17",
+  "time": "19:09:00",
+  "details": "The President departs the Palace of Versailles, France en route to Paris Orly Airport [1:09 AM 6/18 Local]",
+  "location": "Palace of Versailles, France"
+ },
+ {
+  "date": "2026-06-17",
+  "time": "19:40:00",
+  "details": "The President arrives at Paris Orly Airport [1:40 AM 6/18 Local]",
+  "location": "Paris Orly Airport"
+ },
+ {
+  "date": "2026-06-17",
+  "time": "19:57:00",
+  "details": "The President departs Paris Orly Airport for Joint Base Andrews [1:57 AM 6/18 Local]",
+  "location": "Paris Orly Airport"
+ },
+ {
+  "date": "2026-06-18",
+  "time": null,
+  "details": "TBD: The President arrives the White House",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-06-18",
+  "time": "03:21:00",
+  "details": "The President arrives at Joint Base Andrews",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-06-18",
+  "time": "03:41:00",
+  "details": "The President departs Joint Base Andrews en route to the White House",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-06-18",
+  "time": "04:01:00",
+  "details": "The President arrives at the White House",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-06-18",
+  "time": "04:01:01",
+  "details": "White House Press Office: Travel/Photo lid called for June 17, 2026",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-06-18",
+  "time": "08:00:00",
+  "details": "The President participates in Executive Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-06-18",
+  "time": "09:00:00",
+  "details": "In-Town Pool Call Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-06-18",
+  "time": "11:00:00",
+  "details": "Press Briefing by the Vice President JD Vance",
+  "location": "James S. Brady Press Briefing Room"
+ },
+ {
+  "date": "2026-06-18",
+  "time": "12:30:00",
+  "details": "White House Press Office: Lunch lid until 1:15 PM",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-06-18",
+  "time": "14:00:00",
+  "details": "The President participates in a Pre-Tape Interview [Note: Marc Caputo, for The Axios Show]",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-06-18",
+  "time": "15:00:00",
+  "details": "The President receives his Intelligence Briefing",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-06-18",
+  "time": "16:00:00",
+  "details": "The President participates in a Medal of Honor Ceremony",
+  "location": "East Room"
+ },
+ {
+  "date": "2026-06-18",
+  "time": "18:04:00",
+  "details": "White House Press Office: Travel/Photo lid called",
+  "location": "The White House"
+ }
+]

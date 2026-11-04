@@ -58,14 +58,11 @@ backend/local_data/
 # BROADCAST_TOKEN
 /backend/broadcast_token.txt
 
-# Claude Code configuration and project instructions
-.claude/
-CLAUDE.md
 HANDOFF.md
-
-# Code quality tool configs (project-specific, not committed)
-.flake8
 
 # Backup files
 *.backup
 frontend/theme-test.html
+
+# Wrangler local state/cache
+.wrangler/

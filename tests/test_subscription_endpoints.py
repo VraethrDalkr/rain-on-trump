@@ -1,7 +1,8 @@
 """
 tests/test_subscription_endpoints.py
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Test subscription-related API endpoints: POST /subscribe, DELETE /subscribe, PATCH /preferences.
+Test subscription-related API endpoints: POST /subscribe, DELETE /subscribe,
+PATCH /preferences.
 
 TDD: These tests are written BEFORE implementation.
 Run to verify RED phase, then implement to achieve GREEN.
@@ -11,11 +12,11 @@ from __future__ import annotations
 
 import json
 
-import pytest
 from fastapi.testclient import TestClient
 
 from app import main
 from app import push_service as ps
+from push_keys import AUTH, P256DH
 
 
 # ------------------------------------------------------------------ #
@@ -25,7 +26,7 @@ def _make_sub(endpoint_id: int = 1, prefs: dict | None = None) -> dict:
     """Create a valid subscription dict with optional preferences."""
     sub = {
         "endpoint": f"https://fcm.googleapis.com/{endpoint_id}",
-        "keys": {"p256dh": "test_key", "auth": "test_auth"},
+        "keys": {"p256dh": P256DH, "auth": AUTH},
     }
     if prefs is not None:
         sub["preferences"] = prefs
@@ -53,7 +54,11 @@ def test_subscribe_new_returns_default_preferences(tmp_path, monkeypatch):
     assert resp.status_code == 200
     data = resp.json()
     assert data["ok"] is True
-    assert data["preferences"] == {"rain_start": True, "rain_stop": True, "thunderstorm": True}
+    assert data["preferences"] == {
+        "rain_start": True,
+        "rain_stop": True,
+        "thunderstorm": True,
+    }
 
 
 def test_subscribe_with_custom_preferences(tmp_path, monkeypatch):
@@ -62,13 +67,19 @@ def test_subscribe_with_custom_preferences(tmp_path, monkeypatch):
     monkeypatch.setattr(ps, "SUB_FILE", sub_file)
 
     client = _build_client()
-    sub = _make_sub(1, prefs={"rain_start": True, "rain_stop": False, "thunderstorm": False})
+    sub = _make_sub(
+        1, prefs={"rain_start": True, "rain_stop": False, "thunderstorm": False}
+    )
 
     resp = client.post("/subscribe", json=sub)
 
     assert resp.status_code == 200
     data = resp.json()
-    assert data["preferences"] == {"rain_start": True, "rain_stop": False, "thunderstorm": False}
+    assert data["preferences"] == {
+        "rain_start": True,
+        "rain_stop": False,
+        "thunderstorm": False,
+    }
 
 
 def test_subscribe_refresh_returns_existing_preferences(tmp_path, monkeypatch):
@@ -79,7 +90,9 @@ def test_subscribe_refresh_returns_existing_preferences(tmp_path, monkeypatch):
     client = _build_client()
 
     # First subscription with custom prefs
-    sub = _make_sub(1, prefs={"rain_start": True, "rain_stop": False, "thunderstorm": False})
+    sub = _make_sub(
+        1, prefs={"rain_start": True, "rain_stop": False, "thunderstorm": False}
+    )
     client.post("/subscribe", json=sub)
 
     # Refresh (same endpoint, no prefs in request)
@@ -89,7 +102,11 @@ def test_subscribe_refresh_returns_existing_preferences(tmp_path, monkeypatch):
     assert resp.status_code == 200
     data = resp.json()
     # Should return existing prefs, not overwrite with defaults
-    assert data["preferences"] == {"rain_start": True, "rain_stop": False, "thunderstorm": False}
+    assert data["preferences"] == {
+        "rain_start": True,
+        "rain_stop": False,
+        "thunderstorm": False,
+    }
 
 
 def test_subscribe_invalid_returns_400(tmp_path, monkeypatch):
@@ -141,7 +158,9 @@ def test_unsubscribe_nonexistent_returns_404(tmp_path, monkeypatch):
 
     client = _build_client()
 
-    resp = client.request("DELETE", "/subscribe", json={"endpoint": "https://unknown/123"})
+    resp = client.request(
+        "DELETE", "/subscribe", json={"endpoint": "https://unknown/123"}
+    )
 
     assert resp.status_code == 404
 
@@ -173,10 +192,10 @@ def test_patch_preferences_updates_successfully(tmp_path, monkeypatch):
     client.post("/subscribe", json=sub)
 
     # Update rain_stop to False
-    resp = client.patch("/preferences", json={
-        "endpoint": sub["endpoint"],
-        "preferences": {"rain_stop": False}
-    })
+    resp = client.patch(
+        "/preferences",
+        json={"endpoint": sub["endpoint"], "preferences": {"rain_stop": False}},
+    )
 
     assert resp.status_code == 200
     data = resp.json()
@@ -194,18 +213,24 @@ def test_patch_preferences_partial_update(tmp_path, monkeypatch):
     client = _build_client()
 
     # Add subscription
-    sub = _make_sub(1, prefs={"rain_start": True, "rain_stop": True, "thunderstorm": True})
+    sub = _make_sub(
+        1, prefs={"rain_start": True, "rain_stop": True, "thunderstorm": True}
+    )
     client.post("/subscribe", json=sub)
 
     # Only update thunderstorm
-    resp = client.patch("/preferences", json={
-        "endpoint": sub["endpoint"],
-        "preferences": {"thunderstorm": False}
-    })
+    resp = client.patch(
+        "/preferences",
+        json={"endpoint": sub["endpoint"], "preferences": {"thunderstorm": False}},
+    )
 
     assert resp.status_code == 200
     data = resp.json()
-    assert data["preferences"] == {"rain_start": True, "rain_stop": True, "thunderstorm": False}
+    assert data["preferences"] == {
+        "rain_start": True,
+        "rain_stop": True,
+        "thunderstorm": False,
+    }
 
 
 def test_patch_preferences_nonexistent_returns_404(tmp_path, monkeypatch):
@@ -215,10 +240,10 @@ def test_patch_preferences_nonexistent_returns_404(tmp_path, monkeypatch):
 
     client = _build_client()
 
-    resp = client.patch("/preferences", json={
-        "endpoint": "https://unknown/123",
-        "preferences": {"rain_stop": False}
-    })
+    resp = client.patch(
+        "/preferences",
+        json={"endpoint": "https://unknown/123", "preferences": {"rain_stop": False}},
+    )
 
     assert resp.status_code == 404
 
@@ -235,10 +260,13 @@ def test_patch_preferences_invalid_types_returns_400(tmp_path, monkeypatch):
     client.post("/subscribe", json=sub)
 
     # Try to update with non-boolean
-    resp = client.patch("/preferences", json={
-        "endpoint": sub["endpoint"],
-        "preferences": {"rain_stop": "yes"}  # String instead of bool
-    })
+    resp = client.patch(
+        "/preferences",
+        json={
+            "endpoint": sub["endpoint"],
+            "preferences": {"rain_stop": "yes"},  # String instead of bool
+        },
+    )
 
     assert resp.status_code == 400
 
@@ -250,8 +278,6 @@ def test_patch_preferences_requires_endpoint(tmp_path, monkeypatch):
 
     client = _build_client()
 
-    resp = client.patch("/preferences", json={
-        "preferences": {"rain_stop": False}
-    })
+    resp = client.patch("/preferences", json={"preferences": {"rain_stop": False}})
 
     assert resp.status_code == 400

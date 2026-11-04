@@ -26,8 +26,7 @@ class TestNominatimAPI:
     def geocoder(self) -> RateLimiter:
         """Get rate-limited geocoder instance."""
         return RateLimiter(
-            Nominatim(user_agent="rain-on-trump-test").geocode,
-            min_delay_seconds=1
+            Nominatim(user_agent="rain-on-trump-test").geocode, min_delay_seconds=1
         )
 
     def test_known_location_geocodes_correctly(self, geocoder: RateLimiter) -> None:
@@ -35,8 +34,12 @@ class TestNominatimAPI:
         result = geocoder("White House, Washington DC", timeout=10)
 
         assert result is not None, "White House should be geocodable"
-        assert 38.0 < result.latitude < 40.0, f"Latitude out of range: {result.latitude}"
-        assert -78.0 < result.longitude < -76.0, f"Longitude out of range: {result.longitude}"
+        assert (
+            38.0 < result.latitude < 40.0
+        ), f"Latitude out of range: {result.latitude}"
+        assert (
+            -78.0 < result.longitude < -76.0
+        ), f"Longitude out of range: {result.longitude}"
 
     def test_mar_a_lago_geocodes_correctly(self, geocoder: RateLimiter) -> None:
         """Mar-a-Lago should geocode to Palm Beach, FL area."""
@@ -44,8 +47,12 @@ class TestNominatimAPI:
         result = geocoder("Mar-a-Lago, Palm Beach, Florida", timeout=10)
 
         assert result is not None, "Mar-a-Lago should be geocodable"
-        assert 26.0 < result.latitude < 27.0, f"Latitude out of range: {result.latitude}"
-        assert -81.0 < result.longitude < -79.0, f"Longitude out of range: {result.longitude}"
+        assert (
+            26.0 < result.latitude < 27.0
+        ), f"Latitude out of range: {result.latitude}"
+        assert (
+            -81.0 < result.longitude < -79.0
+        ), f"Longitude out of range: {result.longitude}"
 
     def test_unknown_location_returns_none(self, geocoder: RateLimiter) -> None:
         """Nonsense location should return None gracefully."""
@@ -61,8 +68,12 @@ class TestNominatimAPI:
 
         assert result is not None, "JFK Airport should be geocodable"
         # JFK is in Queens, NY
-        assert 40.0 < result.latitude < 41.0, f"Latitude out of range: {result.latitude}"
-        assert -74.0 < result.longitude < -73.0, f"Longitude out of range: {result.longitude}"
+        assert (
+            40.0 < result.latitude < 41.0
+        ), f"Latitude out of range: {result.latitude}"
+        assert (
+            -74.0 < result.longitude < -73.0
+        ), f"Longitude out of range: {result.longitude}"
 
     def test_address_returns_coordinates(self, geocoder: RateLimiter) -> None:
         """Street address should return valid coordinates."""

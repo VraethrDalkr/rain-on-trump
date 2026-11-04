@@ -5,7 +5,6 @@ Tests for /debug/history and /debug/history.json endpoints.
 """
 
 import datetime as dt
-import json
 
 import pytest
 from fastapi.testclient import TestClient

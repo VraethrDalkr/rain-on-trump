@@ -1,0 +1,398 @@
+[
+ {
+  "date": "2026-08-12",
+  "time": "08:00:00",
+  "details": "The President participates in Executive Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-08-12",
+  "time": "09:00:00",
+  "details": "In-Town Pool Call Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-08-12",
+  "time": "10:30:00",
+  "details": "The President participates in a Greeting with Law Enforcement and Military Service Members",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-08-12",
+  "time": "11:00:00",
+  "details": "The President participates in a Policy Meeting",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-08-12",
+  "time": "12:01:00",
+  "details": "White House Press Office: Lunch lid until 1:00 PM",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-08-12",
+  "time": "12:30:00",
+  "details": "The President participates in a Policy Meeting",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-08-12",
+  "time": "14:30:00",
+  "details": "The President participates in Signing Time",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-08-12",
+  "time": "16:00:00",
+  "details": "The President participates in a Policy Meeting",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-08-12",
+  "time": "17:00:00",
+  "details": "The President participates in a Policy Meeting",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-08-12",
+  "time": "18:02:00",
+  "details": "White House Press Office: Travel/Photo lid called",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-08-13",
+  "time": "08:00:00",
+  "details": "The President participates in Executive Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-08-13",
+  "time": "09:00:00",
+  "details": "In-Town Pool Call Time",
+  "location": null
+ },
+ {
+  "date": "2026-08-13",
+  "time": "11:00:00",
+  "details": "The President receives his Intelligence Briefing",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-08-13",
+  "time": "11:24:00",
+  "details": "Peter Navarro briefs reporters at The Sticks",
+  "location": "The Sticks - The White House"
+ },
+ {
+  "date": "2026-08-13",
+  "time": "12:00:00",
+  "details": "White House Press Office: Lunch lid until 1:00 PM",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-08-13",
+  "time": "14:00:00",
+  "details": "The President participates in Signing Time",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-08-13",
+  "time": "15:00:00",
+  "details": "The President participates in Signing Time",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-08-13",
+  "time": "17:00:00",
+  "details": "The President participates in a Policy Meeting",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-08-13",
+  "time": "18:01:00",
+  "details": "White House Press Office: Travel/Photo lid called",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-08-14",
+  "time": null,
+  "details": "TBD: The President departs the White House en route Garden City, New York",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-08-14",
+  "time": null,
+  "details": "TBD: The President arrives Garden City, New York",
+  "location": "David S. Mack Center for Training and Intelligence, Garden City, NY"
+ },
+ {
+  "date": "2026-08-14",
+  "time": null,
+  "details": "TBD: The President departs Garden City, New York en route Bedminster, New Jersey",
+  "location": "David S. Mack Center for Training and Intelligence, Garden City, NY"
+ },
+ {
+  "date": "2026-08-14",
+  "time": null,
+  "details": "TBD: The President arrives Bedminster, New Jersey",
+  "location": "Trump National Golf Club Bedminster"
+ },
+ {
+  "date": "2026-08-14",
+  "time": "08:00:00",
+  "details": "The President participates in Executive Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-08-14",
+  "time": "09:00:00",
+  "details": "In-Town Pool Call Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-08-14",
+  "time": "11:00:00",
+  "details": "The President participates in a Policy Meeting",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-08-14",
+  "time": "11:40:00",
+  "details": "Out-of-Town Travel Pool Call Time",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-08-14",
+  "time": "12:00:00",
+  "details": "The President participates in Signing Time",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-08-14",
+  "time": "12:45:00",
+  "details": "The President arrives at The Ellipse",
+  "location": "The Ellipse"
+ },
+ {
+  "date": "2026-08-14",
+  "time": "12:52:00",
+  "details": "The President departs The Ellipse en route to Joint Base Andrews",
+  "location": "The Ellipse"
+ },
+ {
+  "date": "2026-08-14",
+  "time": "13:02:00",
+  "details": "The President arrives at Joint Base Andrews",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-08-14",
+  "time": "13:24:00",
+  "details": "The President departs Joint Base Andrews for John F. Kennedy International Airport",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-08-14",
+  "time": "14:00:00",
+  "details": "The President arrives at John F. Kennedy International Airport",
+  "location": "John F. Kennedy International Airport"
+ },
+ {
+  "date": "2026-08-14",
+  "time": "14:10:00",
+  "details": "The President departs John F. Kennedy International Airport en route to Mitchel County Park, Uniondale, NY",
+  "location": "John F. Kennedy International Airport"
+ },
+ {
+  "date": "2026-08-14",
+  "time": "14:30:00",
+  "details": "The President arrives at Mitchel County Park, Uniondale, NY",
+  "location": "Mitchel County Park, Uniondale, NY"
+ },
+ {
+  "date": "2026-08-14",
+  "time": "14:34:00",
+  "details": "The President departs Mitchel County Park, Uniondale, NY en route to David S. Mack Center for Training and Intelligence, Garden City, NY",
+  "location": "Mitchel County Park, Uniondale, NY"
+ },
+ {
+  "date": "2026-08-14",
+  "time": "14:48:00",
+  "details": "The President arrives at David S. Mack Center for Training and Intelligence, Garden City, NY",
+  "location": "David S. Mack Center for Training and Intelligence, Garden City, NY"
+ },
+ {
+  "date": "2026-08-14",
+  "time": "15:00:00",
+  "details": "The President delivers Remarks",
+  "location": "David S. Mack Center for Training and Intelligence, Garden City, NY"
+ },
+ {
+  "date": "2026-08-14",
+  "time": "16:46:00",
+  "details": "The President departs Mitchel County Park, Uniondale, NY en route to Trump National Golf Club Bedminster",
+  "location": "Mitchel County Park, Uniondale, NY"
+ },
+ {
+  "date": "2026-08-14",
+  "time": "17:17:00",
+  "details": "The President arrives at Trump National Golf Club Bedminster",
+  "location": "Trump National Golf Club Bedminster"
+ },
+ {
+  "date": "2026-08-14",
+  "time": "17:25:00",
+  "details": "White House Press Office: Travel/Photo lid called",
+  "location": "Trump National Golf Club Bedminster"
+ },
+ {
+  "date": "2026-08-15",
+  "time": "08:00:00",
+  "details": "The President participates in Executive Time",
+  "location": "Trump National Golf Club Bedminster"
+ },
+ {
+  "date": "2026-08-15",
+  "time": "11:49:00",
+  "details": "White House Press Office: Travel/Photo lid called",
+  "location": "Trump National Golf Club Bedminster"
+ },
+ {
+  "date": "2026-08-15",
+  "time": "12:00:00",
+  "details": "Out-of-Town Travel Pool Call Time",
+  "location": "Trump National Golf Club Bedminster"
+ },
+ {
+  "date": "2026-08-15",
+  "time": "14:30:00",
+  "details": "The President participates in a Policy Meeting",
+  "location": "Trump National Golf Club Bedminster"
+ },
+ {
+  "date": "2026-08-16",
+  "time": null,
+  "details": "TBD: The President departs Bedminster, New Jersey en route the White House",
+  "location": "Trump National Golf Club Bedminster"
+ },
+ {
+  "date": "2026-08-16",
+  "time": null,
+  "details": "TBD: The President arrives the White House",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-08-16",
+  "time": "08:00:00",
+  "details": "The President participates in Executive Time",
+  "location": "Trump National Golf Club Bedminster"
+ },
+ {
+  "date": "2026-08-16",
+  "time": "12:00:00",
+  "details": "Out-of-Town Travel Pool Call Time",
+  "location": "Trump National Golf Club Bedminster"
+ },
+ {
+  "date": "2026-08-16",
+  "time": "15:40:00",
+  "details": "The President departs Trump National Golf Club Bedminster en route to Morristown Municipal Airport",
+  "location": "Trump National Golf Club Bedminster"
+ },
+ {
+  "date": "2026-08-16",
+  "time": "16:00:00",
+  "details": "The President arrives at Morristown Municipal Airport",
+  "location": "Morristown Municipal Airport"
+ },
+ {
+  "date": "2026-08-16",
+  "time": "16:16:00",
+  "details": "The President departs Morristown Municipal Airport for Joint Base Andrews",
+  "location": "Morristown Municipal Airport"
+ },
+ {
+  "date": "2026-08-16",
+  "time": "16:52:00",
+  "details": "The President arrives at Joint Base Andrews",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-08-16",
+  "time": "17:10:00",
+  "details": "The President departs Joint Base Andrews en route to The Ellipse",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-08-16",
+  "time": "17:25:00",
+  "details": "The President arrives at The Ellipse",
+  "location": "The Ellipse"
+ },
+ {
+  "date": "2026-08-16",
+  "time": "17:27:00",
+  "details": "The President departs The Ellipse en route to The White House",
+  "location": "The Ellipse"
+ },
+ {
+  "date": "2026-08-16",
+  "time": "17:29:00",
+  "details": "The President arrives at The White House",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-08-16",
+  "time": "17:33:00",
+  "details": "White House Press Office: Travel/Photo lid called",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-08-16",
+  "time": "19:00:00",
+  "details": "In-Town Pool Call Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-08-17",
+  "time": "08:00:00",
+  "details": "The President participates in Executive Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-08-17",
+  "time": "09:00:00",
+  "details": "In-Town Pool Call Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-08-17",
+  "time": "11:00:00",
+  "details": "The President receives his Intelligence Briefing",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-08-17",
+  "time": "11:48:00",
+  "details": "White House Press Office: Lunch lid until 12:45 PM",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-08-17",
+  "time": "13:00:00",
+  "details": "The President greets Lifeguard Ryder Williams",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-08-17",
+  "time": "16:00:00",
+  "details": "The President participates in a Policy Meeting",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-08-17",
+  "time": "18:22:00",
+  "details": "White House Press Office: Travel/Photo lid called",
+  "location": "The White House"
+ }
+]

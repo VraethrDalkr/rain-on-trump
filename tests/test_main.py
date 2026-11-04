@@ -58,7 +58,9 @@ def test_is_it_raining(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_broadcast_ok(monkeypatch: pytest.MonkeyPatch) -> None:
     calls: list[tuple[str, str, str | None]] = []
 
-    def mock_broadcast(title: str, body: str, notification_type: str | None = None) -> int:
+    def mock_broadcast(
+        title: str, body: str, notification_type: str | None = None
+    ) -> int:
         calls.append((title, body, notification_type))
         return 1  # Return sent_count
 
@@ -177,7 +179,9 @@ def test_thunderstorm_notification_on_start(monkeypatch: pytest.MonkeyPatch) -> 
     """Notification should be sent when thunderstorm starts."""
     notifications: list[tuple[str, str]] = []
 
-    def _capture_broadcast(title: str, body: str, notification_type: str | None = None) -> None:
+    def _capture_broadcast(
+        title: str, body: str, notification_type: str | None = None
+    ) -> None:
         notifications.append((title, body))
 
     monkeypatch.setattr(main, "broadcast", _capture_broadcast, raising=True)
@@ -205,7 +209,9 @@ def test_thunderstorm_notification_on_escalation(
     """Notification should be sent when thunderstorm escalates to severe."""
     notifications: list[tuple[str, str]] = []
 
-    def _capture_broadcast(title: str, body: str, notification_type: str | None = None) -> None:
+    def _capture_broadcast(
+        title: str, body: str, notification_type: str | None = None
+    ) -> None:
         notifications.append((title, body))
 
     monkeypatch.setattr(main, "broadcast", _capture_broadcast, raising=True)
@@ -229,7 +235,9 @@ def test_thunderstorm_notification_on_end(monkeypatch: pytest.MonkeyPatch) -> No
     """Notification should be sent when thunderstorm ends."""
     notifications: list[tuple[str, str]] = []
 
-    def _capture_broadcast(title: str, body: str, notification_type: str | None = None) -> None:
+    def _capture_broadcast(
+        title: str, body: str, notification_type: str | None = None
+    ) -> None:
         notifications.append((title, body))
 
     monkeypatch.setattr(main, "broadcast", _capture_broadcast, raising=True)
@@ -254,7 +262,9 @@ def test_thunderstorm_no_notification_same_state(
     """No notification when state doesn't change."""
     notifications: list[tuple[str, str]] = []
 
-    def _capture_broadcast(title: str, body: str, notification_type: str | None = None) -> None:
+    def _capture_broadcast(
+        title: str, body: str, notification_type: str | None = None
+    ) -> None:
         notifications.append((title, body))
 
     monkeypatch.setattr(main, "broadcast", _capture_broadcast, raising=True)
@@ -270,3 +280,36 @@ def test_thunderstorm_no_notification_same_state(
     main._maybe_send_thunderstorm_notification(MockApp, precip, coords)
 
     assert len(notifications) == 0  # No notification sent
+
+
+# ------------------------------------------------------------------ #
+# CORS
+# ------------------------------------------------------------------ #
+@pytest.mark.parametrize(
+    "origin",
+    ["https://rain-on-trump.pages.dev", "https://rain-on-trump-dev.pages.dev"],
+)
+def test_cors_allows_production_and_dev_pwa(
+    monkeypatch: pytest.MonkeyPatch, origin: str
+) -> None:
+    """Both the production PWA and the dev PWA may call the API."""
+    client = _build_client(monkeypatch)
+    r = client.options(
+        "/is_it_raining.json",
+        headers={"Origin": origin, "Access-Control-Request-Method": "GET"},
+    )
+    assert r.status_code == 200
+    assert r.headers["access-control-allow-origin"] == origin
+
+
+def test_cors_rejects_unknown_origin(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Origins outside the allowlist get no CORS grant."""
+    client = _build_client(monkeypatch)
+    r = client.options(
+        "/is_it_raining.json",
+        headers={
+            "Origin": "https://evil.example",
+            "Access-Control-Request-Method": "GET",
+        },
+    )
+    assert "access-control-allow-origin" not in r.headers

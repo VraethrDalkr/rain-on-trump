@@ -9,9 +9,9 @@ Run to verify RED phase, then implement to achieve GREEN.
 
 import json
 
-import pytest
 
 from app import push_service as ps
+from push_keys import AUTH, P256DH
 
 
 # ------------------------------------------------------------------ #
@@ -21,7 +21,7 @@ def _make_sub(endpoint_id: int, prefs: dict | None = None) -> dict:
     """Create a valid subscription dict with optional preferences."""
     sub = {
         "endpoint": f"https://fcm.googleapis.com/{endpoint_id}",
-        "keys": {"p256dh": "test_key", "auth": "test_auth"},
+        "keys": {"p256dh": P256DH, "auth": AUTH},
     }
     if prefs is not None:
         sub["preferences"] = prefs
@@ -43,14 +43,24 @@ def test_add_subscription_with_preferences(tmp_path, monkeypatch):
     sub_file = tmp_path / "subs.json"
     monkeypatch.setattr(ps, "SUB_FILE", sub_file)
 
-    sub = _make_sub(1, prefs={"rain_start": True, "rain_stop": False, "thunderstorm": True})
+    sub = _make_sub(
+        1, prefs={"rain_start": True, "rain_stop": False, "thunderstorm": True}
+    )
     result = ps.add_subscription(sub)
 
     assert result["ok"] is True
-    assert result["preferences"] == {"rain_start": True, "rain_stop": False, "thunderstorm": True}
+    assert result["preferences"] == {
+        "rain_start": True,
+        "rain_stop": False,
+        "thunderstorm": True,
+    }
 
     stored = json.loads(sub_file.read_text())
-    assert stored[0]["preferences"] == {"rain_start": True, "rain_stop": False, "thunderstorm": True}
+    assert stored[0]["preferences"] == {
+        "rain_start": True,
+        "rain_stop": False,
+        "thunderstorm": True,
+    }
 
 
 def test_add_subscription_default_preferences(tmp_path, monkeypatch):
@@ -62,10 +72,18 @@ def test_add_subscription_default_preferences(tmp_path, monkeypatch):
     result = ps.add_subscription(sub)
 
     assert result["ok"] is True
-    assert result["preferences"] == {"rain_start": True, "rain_stop": True, "thunderstorm": True}
+    assert result["preferences"] == {
+        "rain_start": True,
+        "rain_stop": True,
+        "thunderstorm": True,
+    }
 
     stored = json.loads(sub_file.read_text())
-    assert stored[0]["preferences"] == {"rain_start": True, "rain_stop": True, "thunderstorm": True}
+    assert stored[0]["preferences"] == {
+        "rain_start": True,
+        "rain_stop": True,
+        "thunderstorm": True,
+    }
 
 
 def test_add_subscription_refresh_returns_existing_preferences(tmp_path, monkeypatch):
@@ -74,7 +92,9 @@ def test_add_subscription_refresh_returns_existing_preferences(tmp_path, monkeyp
     monkeypatch.setattr(ps, "SUB_FILE", sub_file)
 
     # First subscription with custom prefs
-    sub = _make_sub(1, prefs={"rain_start": True, "rain_stop": False, "thunderstorm": False})
+    sub = _make_sub(
+        1, prefs={"rain_start": True, "rain_stop": False, "thunderstorm": False}
+    )
     ps.add_subscription(sub)
 
     # Refresh same endpoint (no prefs in request)
@@ -82,7 +102,11 @@ def test_add_subscription_refresh_returns_existing_preferences(tmp_path, monkeyp
     result = ps.add_subscription(refresh_sub)
 
     # Should return existing preferences, not overwrite with defaults
-    assert result["preferences"] == {"rain_start": True, "rain_stop": False, "thunderstorm": False}
+    assert result["preferences"] == {
+        "rain_start": True,
+        "rain_stop": False,
+        "thunderstorm": False,
+    }
 
 
 # ------------------------------------------------------------------ #
@@ -115,7 +139,9 @@ def test_update_preferences_partial_update(tmp_path, monkeypatch):
     sub_file = tmp_path / "subs.json"
     monkeypatch.setattr(ps, "SUB_FILE", sub_file)
 
-    sub = _make_sub(1, prefs={"rain_start": True, "rain_stop": True, "thunderstorm": True})
+    sub = _make_sub(
+        1, prefs={"rain_start": True, "rain_stop": True, "thunderstorm": True}
+    )
     ps.add_subscription(sub)
 
     # Only update thunderstorm
@@ -142,7 +168,9 @@ def test_get_preferences_returns_stored_values(tmp_path, monkeypatch):
     sub_file = tmp_path / "subs.json"
     monkeypatch.setattr(ps, "SUB_FILE", sub_file)
 
-    sub = _make_sub(1, prefs={"rain_start": False, "rain_stop": True, "thunderstorm": False})
+    sub = _make_sub(
+        1, prefs={"rain_start": False, "rain_stop": True, "thunderstorm": False}
+    )
     ps.add_subscription(sub)
 
     result = ps.get_preferences(sub["endpoint"])
@@ -191,15 +219,18 @@ def test_remove_subscription_nonexistent_returns_false(tmp_path, monkeypatch):
 # ------------------------------------------------------------------ #
 # Backwards Compatibility Tests
 # ------------------------------------------------------------------ #
-def test_legacy_subscription_without_preferences_treated_as_all_on(tmp_path, monkeypatch):
-    """Existing subscriptions without 'preferences' field should be treated as all ON."""
+def test_legacy_subscription_without_preferences_treated_as_all_on(
+    tmp_path, monkeypatch
+):
+    """Existing subscriptions without 'preferences' field should be treated as
+    all ON."""
     sub_file = tmp_path / "subs.json"
     monkeypatch.setattr(ps, "SUB_FILE", sub_file)
 
     # Write legacy subscription (no preferences field)
     legacy_sub = {
         "endpoint": "https://fcm.googleapis.com/legacy",
-        "keys": {"p256dh": "test", "auth": "test"},
+        "keys": {"p256dh": P256DH, "auth": AUTH},
         "subscription_date": "2024-01-01T00:00:00Z",
     }
     sub_file.write_text(json.dumps([legacy_sub]))
@@ -224,9 +255,13 @@ def test_broadcast_filters_by_rain_start_preference(tmp_path, monkeypatch):
     monkeypatch.setattr(ps, "VAPID_PRIVATE", "dummy")
 
     # Sub 1: wants rain_start
-    sub1 = _make_sub(1, prefs={"rain_start": True, "rain_stop": True, "thunderstorm": True})
+    sub1 = _make_sub(
+        1, prefs={"rain_start": True, "rain_stop": True, "thunderstorm": True}
+    )
     # Sub 2: doesn't want rain_start
-    sub2 = _make_sub(2, prefs={"rain_start": False, "rain_stop": True, "thunderstorm": True})
+    sub2 = _make_sub(
+        2, prefs={"rain_start": False, "rain_stop": True, "thunderstorm": True}
+    )
     ps.add_subscription(sub1)
     ps.add_subscription(sub2)
 
@@ -248,9 +283,13 @@ def test_broadcast_filters_by_rain_stop_preference(tmp_path, monkeypatch):
     monkeypatch.setattr(ps, "VAPID_PRIVATE", "dummy")
 
     # Sub 1: wants rain_stop
-    sub1 = _make_sub(1, prefs={"rain_start": True, "rain_stop": True, "thunderstorm": True})
+    sub1 = _make_sub(
+        1, prefs={"rain_start": True, "rain_stop": True, "thunderstorm": True}
+    )
     # Sub 2: doesn't want rain_stop
-    sub2 = _make_sub(2, prefs={"rain_start": True, "rain_stop": False, "thunderstorm": True})
+    sub2 = _make_sub(
+        2, prefs={"rain_start": True, "rain_stop": False, "thunderstorm": True}
+    )
     ps.add_subscription(sub1)
     ps.add_subscription(sub2)
 
@@ -261,7 +300,8 @@ def test_broadcast_filters_by_rain_stop_preference(tmp_path, monkeypatch):
 
 
 def test_broadcast_filters_by_thunderstorm_start_preference(tmp_path, monkeypatch):
-    """broadcast() with type='thunderstorm_start' requires rain_start AND thunderstorm."""
+    """broadcast() with type='thunderstorm_start' requires rain_start AND
+    thunderstorm."""
     sub_file = tmp_path / "subs.json"
     monkeypatch.setattr(ps, "SUB_FILE", sub_file)
 
@@ -271,11 +311,17 @@ def test_broadcast_filters_by_thunderstorm_start_preference(tmp_path, monkeypatc
     monkeypatch.setattr(ps, "VAPID_PRIVATE", "dummy")
 
     # Sub 1: has both rain_start AND thunderstorm
-    sub1 = _make_sub(1, prefs={"rain_start": True, "rain_stop": True, "thunderstorm": True})
+    sub1 = _make_sub(
+        1, prefs={"rain_start": True, "rain_stop": True, "thunderstorm": True}
+    )
     # Sub 2: has rain_start but NOT thunderstorm
-    sub2 = _make_sub(2, prefs={"rain_start": True, "rain_stop": True, "thunderstorm": False})
+    sub2 = _make_sub(
+        2, prefs={"rain_start": True, "rain_stop": True, "thunderstorm": False}
+    )
     # Sub 3: has thunderstorm but NOT rain_start
-    sub3 = _make_sub(3, prefs={"rain_start": False, "rain_stop": True, "thunderstorm": True})
+    sub3 = _make_sub(
+        3, prefs={"rain_start": False, "rain_stop": True, "thunderstorm": True}
+    )
     ps.add_subscription(sub1)
     ps.add_subscription(sub2)
     ps.add_subscription(sub3)
@@ -298,11 +344,17 @@ def test_broadcast_filters_by_thunderstorm_end_preference(tmp_path, monkeypatch)
     monkeypatch.setattr(ps, "VAPID_PRIVATE", "dummy")
 
     # Sub 1: has both rain_stop AND thunderstorm
-    sub1 = _make_sub(1, prefs={"rain_start": True, "rain_stop": True, "thunderstorm": True})
+    sub1 = _make_sub(
+        1, prefs={"rain_start": True, "rain_stop": True, "thunderstorm": True}
+    )
     # Sub 2: has rain_stop but NOT thunderstorm
-    sub2 = _make_sub(2, prefs={"rain_start": True, "rain_stop": True, "thunderstorm": False})
+    sub2 = _make_sub(
+        2, prefs={"rain_start": True, "rain_stop": True, "thunderstorm": False}
+    )
     # Sub 3: has thunderstorm but NOT rain_stop
-    sub3 = _make_sub(3, prefs={"rain_start": True, "rain_stop": False, "thunderstorm": True})
+    sub3 = _make_sub(
+        3, prefs={"rain_start": True, "rain_stop": False, "thunderstorm": True}
+    )
     ps.add_subscription(sub1)
     ps.add_subscription(sub2)
     ps.add_subscription(sub3)
@@ -324,9 +376,13 @@ def test_broadcast_with_none_type_sends_to_all(tmp_path, monkeypatch):
     monkeypatch.setattr(ps, "VAPID_PRIVATE", "dummy")
 
     # Sub with all prefs off
-    sub1 = _make_sub(1, prefs={"rain_start": False, "rain_stop": False, "thunderstorm": False})
+    sub1 = _make_sub(
+        1, prefs={"rain_start": False, "rain_stop": False, "thunderstorm": False}
+    )
     # Sub with all prefs on
-    sub2 = _make_sub(2, prefs={"rain_start": True, "rain_stop": True, "thunderstorm": True})
+    sub2 = _make_sub(
+        2, prefs={"rain_start": True, "rain_stop": True, "thunderstorm": True}
+    )
     ps.add_subscription(sub1)
     ps.add_subscription(sub2)
 
@@ -349,7 +405,7 @@ def test_broadcast_legacy_subscription_receives_all_types(tmp_path, monkeypatch)
     # Write legacy subscription (no preferences field)
     legacy_sub = {
         "endpoint": "https://fcm.googleapis.com/legacy",
-        "keys": {"p256dh": "test", "auth": "test"},
+        "keys": {"p256dh": P256DH, "auth": AUTH},
     }
     sub_file.write_text(json.dumps([legacy_sub]))
 
@@ -381,9 +437,21 @@ def test_broadcast_mixed_preferences(tmp_path, monkeypatch):
     monkeypatch.setattr(ps, "VAPID_PRIVATE", "dummy")
 
     # Various preference combinations
-    ps.add_subscription(_make_sub(1, prefs={"rain_start": True, "rain_stop": False, "thunderstorm": False}))
-    ps.add_subscription(_make_sub(2, prefs={"rain_start": False, "rain_stop": True, "thunderstorm": False}))
-    ps.add_subscription(_make_sub(3, prefs={"rain_start": True, "rain_stop": True, "thunderstorm": True}))
+    ps.add_subscription(
+        _make_sub(
+            1, prefs={"rain_start": True, "rain_stop": False, "thunderstorm": False}
+        )
+    )
+    ps.add_subscription(
+        _make_sub(
+            2, prefs={"rain_start": False, "rain_stop": True, "thunderstorm": False}
+        )
+    )
+    ps.add_subscription(
+        _make_sub(
+            3, prefs={"rain_start": True, "rain_stop": True, "thunderstorm": True}
+        )
+    )
 
     # rain_start: should reach sub1 and sub3
     sent = ps.broadcast("Title", "Body", notification_type="rain_start")

@@ -23,19 +23,14 @@ from app.flight_service import PlaneState
 # --------------------------------------------------------------------------- #
 def _patch_plane(monkeypatch: pytest.MonkeyPatch, fake: PlaneState) -> None:
     """
-    Replace *location_service.get_plane_state* with a lambda returning
-    ``fake`` and wipe its memo-cache so earlier tests don’t leak state.
-    Also stub out _vip_json and get_latest_location to prevent real HTTP.
+    Replace *location_service.get_fleet_states* with a lambda returning
+    ``fake`` as the only fleet state, and stub the calendar and the
+    newswire so no real HTTP request is made.
     """
-    # Clear any cached plane_state
-    loc._cached.pop("get_plane_state", None)  # type: ignore[attr-defined]
-    monkeypatch.setattr(loc, "get_plane_state", lambda: fake, raising=True)
-
-    # Stub out FAA‐TFR JSON so no real HTTP request is ever made:
-    async def _no_vip(*_args, **_kwargs) -> list:
-        return []
-
-    monkeypatch.setattr(loc, "_vip_json", _no_vip, raising=True)
+    monkeypatch.setattr(
+        loc, "get_fleet_states", lambda: {"states": [fake], "errors": []}
+    )
+    monkeypatch.setattr(loc.cal, "get_events", lambda: [])
 
     # Stub out the GDELT newswire (just in case we fall through)
     async def _no_news() -> dict | None:

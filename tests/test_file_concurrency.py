@@ -17,6 +17,7 @@ import time
 from pathlib import Path
 
 import pytest
+from push_keys import AUTH, P256DH
 
 
 class TestSubscriptionFileConcurrency:
@@ -52,10 +53,12 @@ class TestSubscriptionFileConcurrency:
 
         def add_sub(endpoint_id: int) -> None:
             try:
-                add_subscription({
-                    "endpoint": f"https://push.example.com/{endpoint_id}",
-                    "keys": {"p256dh": "key", "auth": "auth"},
-                })
+                add_subscription(
+                    {
+                        "endpoint": f"https://push.example.com/{endpoint_id}",
+                        "keys": {"p256dh": P256DH, "auth": AUTH},
+                    }
+                )
             except json.JSONDecodeError as e:
                 # Expected: race condition can cause JSON decode errors
                 with lock:
@@ -66,10 +69,7 @@ class TestSubscriptionFileConcurrency:
                     errors.append(e)
 
         # Spawn threads to add subscriptions concurrently
-        threads = [
-            threading.Thread(target=add_sub, args=(i,))
-            for i in range(10)
-        ]
+        threads = [threading.Thread(target=add_sub, args=(i,)) for i in range(10)]
 
         for t in threads:
             t.start()
@@ -98,9 +98,7 @@ class TestSubscriptionFileConcurrency:
             # after concurrent writes. Real-world usage is sequential.
             pass
 
-    def test_concurrent_read_during_write_no_crash(
-        self, sub_file: Path
-    ) -> None:
+    def test_concurrent_read_during_write_no_crash(self, sub_file: Path) -> None:
         """Reading subscriptions while writing should not crash."""
         from app.push_service import _load_subscriptions, _save_subscriptions
 
@@ -110,8 +108,10 @@ class TestSubscriptionFileConcurrency:
         def writer() -> None:
             try:
                 for i in range(20):
-                    subs = [{"endpoint": f"https://example.com/{j}", "keys": {}}
-                            for j in range(i)]
+                    subs = [
+                        {"endpoint": f"https://example.com/{j}", "keys": {}}
+                        for j in range(i)
+                    ]
                     _save_subscriptions(subs)
                     time.sleep(0.001)
             except Exception as e:
@@ -141,7 +141,6 @@ class TestSubscriptionFileConcurrency:
         # Should complete without crashing
         # Note: JSON decode errors during concurrent read/write are possible
         # but the threads shouldn't raise unhandled exceptions
-        json_errors = [e for e in errors if isinstance(e, json.JSONDecodeError)]
         other_errors = [e for e in errors if not isinstance(e, json.JSONDecodeError)]
 
         # Other errors (not JSON) would indicate a real problem
@@ -200,7 +199,6 @@ class TestArrivalCacheConcurrency:
             t.join()
 
         # Should complete without non-JSON errors
-        json_errors = [e for e in errors if isinstance(e, json.JSONDecodeError)]
         other_errors = [e for e in errors if not isinstance(e, json.JSONDecodeError)]
 
         assert not other_errors, f"Non-JSON errors: {other_errors}"

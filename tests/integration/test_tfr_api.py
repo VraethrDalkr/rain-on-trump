@@ -21,7 +21,6 @@ import pytest
 
 from app.constants import USER_AGENT
 
-
 TFR_JSON_URL = "https://tfr.faa.gov/tfr3/export/json"
 
 
@@ -152,9 +151,7 @@ class TestFaaTfrAPI:
             pytest.skip("No TFRs currently active")
 
         coord_pattern = re.compile(r"[NS]\d+\.\d+")
-        has_coords = any(
-            coord_pattern.search(r.get("description", "")) for r in data
-        )
+        has_coords = any(coord_pattern.search(r.get("description", "")) for r in data)
 
         if not has_coords:
             pytest.skip("No TFRs with parseable coordinates found")

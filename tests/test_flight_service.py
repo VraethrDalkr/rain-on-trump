@@ -6,9 +6,7 @@ Test flight service confidence decay logic.
 
 from __future__ import annotations
 
-import datetime as dt
 
-import pytest
 from app import flight_service as fs
 
 

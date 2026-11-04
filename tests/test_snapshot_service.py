@@ -152,7 +152,6 @@ def test_add_snapshot_includes_traces(snapshot_dir, sample_coords, sample_precip
 
 def test_get_snapshots_returns_newest_first(snapshot_dir, sample_precip):
     """get_snapshots returns snapshots sorted newest first."""
-    now = dt.datetime.now(dt.timezone.utc)
 
     # Add snapshots with different timestamps
     for i in range(3):
@@ -223,7 +222,9 @@ def test_get_snapshot_stats_with_data(snapshot_dir, sample_coords, sample_precip
     assert stats["max_age_hours"] == ss.SNAPSHOT_MAX_AGE_H
 
 
-def test_snapshot_auto_prunes_old(snapshot_dir, monkeypatch, sample_coords, sample_precip):
+def test_snapshot_auto_prunes_old(
+    snapshot_dir, monkeypatch, sample_coords, sample_precip
+):
     """add_snapshot automatically prunes old entries."""
     monkeypatch.setattr(ss, "SNAPSHOT_MAX_AGE_H", 1)  # 1 hour max age
 

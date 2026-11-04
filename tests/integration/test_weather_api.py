@@ -109,8 +109,12 @@ class TestOpenMeteoAPI:
 
         # Check first few values are numeric
         for i in range(min(5, len(rain_values))):
-            assert isinstance(rain_values[i], (int, float)), f"Rain value {i} not numeric"
-            assert isinstance(snow_values[i], (int, float)), f"Snow value {i} not numeric"
+            assert isinstance(
+                rain_values[i], (int, float)
+            ), f"Rain value {i} not numeric"
+            assert isinstance(
+                snow_values[i], (int, float)
+            ), f"Snow value {i} not numeric"
             assert rain_values[i] >= 0, f"Rain value {i} is negative"
             assert snow_values[i] >= 0, f"Snow value {i} is negative"
 
@@ -134,7 +138,10 @@ class TestOpenMeteoAPI:
 
     async def test_timeout_handling(self) -> None:
         """API should respect timeout settings."""
-        url = "https://api.open-meteo.com/v1/forecast?latitude=38&longitude=-77&hourly=rain"
+        url = (
+            "https://api.open-meteo.com/v1/forecast?latitude=38&longitude=-77"
+            "&hourly=rain"
+        )
 
         # Use very short timeout to test timeout handling
         async with httpx.AsyncClient(

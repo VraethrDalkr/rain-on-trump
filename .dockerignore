@@ -1,0 +1,7 @@
+# Allowlist: send the Fly builder only what backend/Dockerfile copies.
+# Everything else (.env, broadcast_token.txt, .venv, local_data, frontend, tests)
+# stays on this machine.
+*
+!requirements.txt
+!backend/app/
+backend/app/**/__pycache__

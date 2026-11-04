@@ -6,6 +6,9 @@ Global pytest fixtures.
 `isolate_arrival_cache_tmp` ensures that *arrival_cache* writes its JSON
 file into a per-test temporary directory, so nothing is left behind under
 `backend/local_data/` after the suite runs.
+
+`block_real_network` makes every real outbound HTTP request fail in unit
+tests, so a forgotten stub can't hit live APIs or post to Discord.
 """
 
 from __future__ import annotations
@@ -13,10 +16,49 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 
+import httpx
 import pytest
-
+import requests
+import requests.adapters
 
 pytest_plugins = ["pytest_asyncio"]
+
+_NO_NETWORK = "real network access is disabled in unit tests (stub this call)"
+
+
+@pytest.fixture(autouse=True)
+def block_real_network(
+    request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Fail real HTTP requests and disable the Discord webhook in unit tests.
+
+    ``main.py`` calls ``load_dotenv()``, so a real ``DISCORD_WEBHOOK_URL`` from
+    ``.env`` would otherwise make event tests post to the live channel. Only
+    the real transports are patched: Starlette's ``TestClient`` and
+    pytest-httpx mocks (applied after autouse fixtures) keep working. Tests
+    under ``tests/integration/`` are left untouched.
+    """
+    if "integration" in request.path.parts:
+        return
+
+    from app import event_service
+
+    monkeypatch.setattr(event_service, "DISCORD_WEBHOOK_URL", "")
+
+    def _blocked_sync(self: object, req: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError(f"{_NO_NETWORK}: {req.url}", request=req)
+
+    async def _blocked_async(self: object, req: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError(f"{_NO_NETWORK}: {req.url}", request=req)
+
+    def _blocked_requests(self: object, req: requests.PreparedRequest, **_: object):
+        raise requests.ConnectionError(f"{_NO_NETWORK}: {req.url}")
+
+    monkeypatch.setattr(httpx.HTTPTransport, "handle_request", _blocked_sync)
+    monkeypatch.setattr(
+        httpx.AsyncHTTPTransport, "handle_async_request", _blocked_async
+    )
+    monkeypatch.setattr(requests.adapters.HTTPAdapter, "send", _blocked_requests)
 
 
 @pytest.fixture(autouse=True)
@@ -80,3 +122,19 @@ def isolate_arrival_cache_tmp(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -
     # ------------------------------------------------------------------ #
     if temp_cache_dir.exists():
         shutil.rmtree(temp_cache_dir)
+
+
+@pytest.fixture(autouse=True)
+def reset_request_budgets() -> None:
+    """Reset per-process request budgets (rate limits, hourly budgets) so one
+    test's traffic never throttles the next."""
+    import sys
+
+    from app import push_service
+
+    push_service._new_sub_times.clear()
+    main = sys.modules.get("app.main")
+    if main is not None:
+        main.limiter.reset()
+        main.override_budget.reset()
+        main._last_forced_refresh = None

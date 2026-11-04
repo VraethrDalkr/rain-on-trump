@@ -35,7 +35,7 @@ FastAPI listens on **[http://127.0.0.1:8000](http://127.0.0.1:8000)**; the JS fr
 | ----------------- | -------------------------------------------------------------------- |
 | `VAPID_PUBLIC`    | WebPush public key (URL-safe Base64)                                 |
 | `VAPID_PRIVATE`   | WebPush private key                                                  |
-| `BROADCAST_TOKEN` | Secret query param for `/broadcast` endpoint                         |
+| `BROADCAST_TOKEN` | Admin token, sent in the `X-Admin-Token` header                      |
 | `PUSH_DATA_DIR`   | Where to store subscription JSON (`/data` on Fly, `local_data/` dev) |
 
 Generate VAPID keys once:
@@ -57,7 +57,7 @@ PY
 
 | Order | Source                          | Example                      | Confidence                       |
 | ----- | ------------------------------- | ---------------------------- | -------------------------------- |
-| 1     | **ADS-B (OpenSky → adsb.fi)**   | plane callsign / lat-lon     | 95 (air), 80-90 (ground)         |
+| 1     | **ADS-B (adsb.fi → adsb.lol)** | plane callsign / lat-lon     | 95 (air), 80-90 (ground)         |
 | 2     | **Overnight base inference**    | DC evening + DC morning      | 58                               |
 | 3     | **Factba.se JSON calendar**     | latest event with a location | 70 → 30 **linear decay** over 72h |
 | 4     | ~~FAA VIP/SECURITY-TFR JSON~~   | _(disabled 2025-12)_         | ~~40~~                           |
@@ -106,11 +106,15 @@ This is a **best-effort estimate**, not real-time surveillance:
 | `GET  /is_it_raining.json`         | Main endpoint. `?lat=&lon=` overrides auto-location (debug) |
 | `GET  /plane_state.json`           | Raw ADS-B aircraft state                                    |
 | `POST /subscribe`                  | WebPush subscription (from service-worker)                  |
-| `POST /broadcast` **protected**    | `?msg=...&token=<BROADCAST_TOKEN>` manual push              |
-| `POST /cleanup_subscriptions`      | `?token=...&max_days=365` remove old subscriptions          |
-| `GET  /subscription_stats`         | `?token=...` subscription statistics                        |
+| `POST /broadcast` **protected**    | `?msg=...` manual push (header `X-Admin-Token`)             |
+| `POST /cleanup_subscriptions`      | `?max_days=365` remove old subscriptions (admin header)     |
+| `GET  /subscription_stats`         | subscription statistics (admin header)                      |
 | `GET  /healthz`                    | Health probe (returns "ok")                                 |
-| `GET  /debug`, `/debug.json`       | Pretty & raw traces (for debugging)                         |
+| `GET  /debug`, `/debug.json`       | Pretty & raw traces (for debugging; 6/min per IP)           |
+
+Admin routes take the token in the `X-Admin-Token` header (the `?token=`
+query parameter still works but is deprecated: query strings end up in access
+logs). They are limited to 10/min per IP.
 
 ### API Response (`/is_it_raining.json`)
 
@@ -135,7 +139,7 @@ black --check .      # formatting
 flake8               # lint
 ```
 
-All network calls (OpenSky, geocoding, weather, WebPush) are stubbed, so CI remains fast and deterministic.
+All network calls (ADS-B, geocoding, weather, WebPush) are stubbed, so CI remains fast and deterministic.
 
 ---
 
@@ -163,8 +167,8 @@ This project is licensed under the [GNU Affero General Public License v3.0](LICE
 
 * [Open-Meteo](https://open-meteo.com/) – weather data
 * [OpenStreetMap](https://www.openstreetmap.org/copyright) / [Nominatim](https://nominatim.org/) – geocoding
-* [OpenSky Network](https://opensky-network.org/) – ADS-B flight tracking
-* [adsb.fi](https://adsb.fi/) – backup ADS-B feed
+* [adsb.fi](https://adsb.fi/) – ADS-B flight tracking
+* [adsb.lol](https://adsb.lol/) – backup ADS-B feed
 * [Factba.se](https://rollcall.com/factbase/trump/topic/calendar/) – public schedule data
 
 ---

@@ -17,7 +17,6 @@ import pytest
 from app.constants import USER_AGENT
 from dateutil import tz
 
-
 UTC = tz.UTC
 
 

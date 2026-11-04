@@ -19,10 +19,13 @@ import datetime as dt
 import json
 import logging
 import os
+import tempfile
+import threading
 from pathlib import Path
 from typing import Any, Final
 
 UTC: Final = dt.timezone.utc
+_LOCK = threading.Lock()  # serialises read-modify-write cycles
 LOG = logging.getLogger("snapshot_service")
 
 # ── Configuration ─────────────────────────────────────────────────────────
@@ -50,29 +53,50 @@ FILE = DIR / "debug_history.json"
 
 
 def _load_snapshots() -> list[dict[str, Any]]:
-    """Load existing snapshots from disk."""
+    """Load existing snapshots from disk (a corrupt file is set aside, not fatal)."""
     if not FILE.exists():
         return []
 
     try:
         data = json.loads(FILE.read_text())
-        return data.get("snapshots", [])
+        items = data.get("snapshots", [])
+        if not isinstance(items, list):
+            raise ValueError("'snapshots' is not a list")
+        return items
     except Exception as exc:
-        LOG.warning("[snapshot] Failed to load history: %s", exc)
+        LOG.warning("[snapshot] Failed to load: %s", exc)
+        try:
+            os.replace(FILE, FILE.with_name(FILE.name + ".corrupt"))
+        except OSError:
+            pass
         return []
 
 
 def _save_snapshots(snapshots: list[dict[str, Any]]) -> None:
-    """Save snapshots to disk."""
+    """Atomically save snapshots to disk (temp file + os.replace)."""
+    tmp = None
     try:
         data = {
             "snapshots": snapshots,
             "max_age_hours": SNAPSHOT_MAX_AGE_H,
             "updated_at": dt.datetime.now(UTC).isoformat(),
         }
-        FILE.write_text(json.dumps(data, indent=2, default=str))
+        fd, tmp = tempfile.mkstemp(dir=FILE.parent, prefix=FILE.name, suffix=".tmp")
+        with os.fdopen(fd, "w") as fh:
+            fh.write(json.dumps(data, default=str))
+            fh.flush()
+            os.fsync(fh.fileno())
+        os.chmod(tmp, 0o644)  # mkstemp creates 0600
+        os.replace(tmp, FILE)
+        tmp = None
     except Exception as exc:
-        LOG.error("[snapshot] Failed to save history: %s", exc)
+        LOG.error("[snapshot] Failed to save: %s", exc)
+    finally:
+        if tmp is not None:
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
 
 
 def _prune_old(snapshots: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -126,12 +150,15 @@ def add_snapshot(
         snapshot["weather_trace"] = weather_trace
 
     # Load existing, add new, prune old, save
-    snapshots = _load_snapshots()
-    snapshots.append(snapshot)
-    snapshots = _prune_old(snapshots)
-    _save_snapshots(snapshots)
+    with _LOCK:
+        snapshots = _load_snapshots()
+        snapshots.append(snapshot)
+        snapshots = _prune_old(snapshots)
+        _save_snapshots(snapshots)
 
-    LOG.debug("[snapshot] Added snapshot at %s (total: %d)", now.isoformat(), len(snapshots))
+    LOG.debug(
+        "[snapshot] Added snapshot at %s (total: %d)", now.isoformat(), len(snapshots)
+    )
 
 
 def get_snapshots(

@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
+import math
 from typing import Any, Final, TypedDict
 
 import httpx
@@ -59,14 +60,83 @@ def _memo(seconds: int = 300):
     return decorator
 
 
-class Coords(TypedDict):
+class Coords(TypedDict, total=False):
     """
-    Result shape: a simple coordinate with a human‐readable name.
+    Result shape: a simple coordinate with a human‐readable name, plus the
+    article's ``seendate`` (aware UTC datetime) when GDELT reports one.
     """
 
     lat: float
     lon: float
     name: str
+    seendate: dt.datetime
+
+
+def _seendate(art: dict) -> dt.datetime | None:
+    """Parse GDELT's ``seendate`` ("20251205T120000Z"), else None."""
+    raw = art.get("seendate")
+    if not isinstance(raw, str):
+        return None
+    try:
+        return dt.datetime.strptime(raw, "%Y%m%dT%H%M%SZ").replace(tzinfo=UTC)
+    except ValueError:
+        return None
+
+
+class _BadBody(Exception):
+    """HTTP succeeded but the body was not valid JSON."""
+
+
+async def _get_json(url: str) -> Any:
+    """GET ``url``; transport/HTTP errors propagate, bad JSON -> _BadBody."""
+    async with httpx.AsyncClient(
+        timeout=10.0, headers={"User-Agent": USER_AGENT}
+    ) as cli:
+        resp = await cli.get(url)
+        resp.raise_for_status()
+        try:
+            return resp.json()
+        except ValueError as exc:
+            raise _BadBody(str(exc)) from exc
+
+
+def _first_dateline(data: Any) -> Coords | None:
+    """Return the first article dateline with valid coordinates, else None."""
+    if not isinstance(data, dict):
+        return None
+    articles = data.get("articles")
+    if not isinstance(articles, list):
+        return None
+    for art in articles:
+        if not isinstance(art, dict):
+            continue
+        spatial = art.get("spatial")
+        if not isinstance(spatial, list):
+            continue
+        for loc in spatial:
+            try:
+                lat = float(loc["lat"])
+                lon = float(loc["lon"])
+                place = str(loc.get("location") or "").title()
+            except (KeyError, ValueError, TypeError, AttributeError):
+                continue
+            if not (
+                math.isfinite(lat)
+                and math.isfinite(lon)
+                and -90 <= lat <= 90
+                and -180 <= lon <= 180
+            ):
+                continue
+            coords: Coords = {
+                "lat": lat,
+                "lon": lon,
+                "name": f"News dateline: {place}",
+            }
+            seen = _seendate(art)
+            if seen is not None:
+                coords["seendate"] = seen
+            return coords
+    return None
 
 
 @_memo(300)
@@ -99,29 +169,15 @@ async def get_latest_location(hours_back: int = 2) -> Coords | None:
         "&include=locations"
     )
     try:
-        async with httpx.AsyncClient(
-            timeout=10.0, headers={"User-Agent": USER_AGENT}
-        ) as cli:
-            resp = await cli.get(url_narrow)
-            resp.raise_for_status()
-            data = resp.json()
+        data = await _get_json(url_narrow)
+    except _BadBody as exc:
+        LOG.warning("[GDELT narrow] unusable body: %s", exc)
+        return None  # rate-limit / error text: "no data", not a stale fallback
     except Exception as exc:
         LOG.warning("[GDELT narrow] %s", exc)
     else:
-        # If we got back a JSON with articles, attempt spatial extraction
-        articles = data.get("articles", [])
-        if articles:
-            for art in articles:
-                for loc in art.get("spatial", []):
-                    try:
-                        lat = float(loc["lat"])
-                        lon = float(loc["lon"])
-                        place = loc.get("location", "").title()
-                    except (KeyError, ValueError):
-                        continue
-                    return {"lat": lat, "lon": lon, "name": f"News dateline: {place}"}
         # No articles → no fallback; treat as “no hit”
-        return None
+        return _first_dateline(data)
 
     # ─── 2) Fallback probe: last 7 days via `timespan=7d` ─────────────────
     url_fallback = (
@@ -135,25 +191,8 @@ async def get_latest_location(hours_back: int = 2) -> Coords | None:
         "&include=locations"
     )
     try:
-        async with httpx.AsyncClient(
-            timeout=10.0, headers={"User-Agent": USER_AGENT}
-        ) as cli:
-            resp = await cli.get(url_fallback)
-            resp.raise_for_status()
-            data = resp.json()
+        data = await _get_json(url_fallback)
     except Exception as exc:
         LOG.warning("[GDELT fallback] %s", exc)
         return None
-
-    # Attempt spatial extraction on fallback data
-    for art in data.get("articles", []):
-        for loc in art.get("spatial", []):
-            try:
-                lat = float(loc["lat"])
-                lon = float(loc["lon"])
-                place = loc.get("location", "").title()
-            except (KeyError, ValueError):
-                continue
-            return {"lat": lat, "lon": lon, "name": f"News dateline: {place}"}
-
-    return None
+    return _first_dateline(data)

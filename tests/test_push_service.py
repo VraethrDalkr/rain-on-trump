@@ -1,8 +1,8 @@
 import json
 
-import pytest
 
 from app import push_service as ps
+from push_keys import AUTH, P256DH
 
 
 # ------------------------------------------------------------------ #
@@ -12,14 +12,14 @@ def test_validate_subscription_valid():
     """Valid subscription with all required fields should pass."""
     sub = {
         "endpoint": "https://fcm.googleapis.com/fcm/send/abc123",
-        "keys": {"p256dh": "BNcRdreALRFX...", "auth": "tBHItJI5svbp..."},
+        "keys": {"p256dh": P256DH, "auth": AUTH},
     }
     assert ps.validate_subscription(sub) is True
 
 
 def test_validate_subscription_missing_endpoint():
     """Subscription without endpoint should fail."""
-    sub = {"keys": {"p256dh": "test", "auth": "test"}}
+    sub = {"keys": {"p256dh": P256DH, "auth": AUTH}}
     assert ps.validate_subscription(sub) is False
 
 
@@ -27,7 +27,7 @@ def test_validate_subscription_http_endpoint():
     """Subscription with http:// (not https://) should fail."""
     sub = {
         "endpoint": "http://insecure.example.com/push",
-        "keys": {"p256dh": "test", "auth": "test"},
+        "keys": {"p256dh": P256DH, "auth": AUTH},
     }
     assert ps.validate_subscription(sub) is False
 
@@ -42,7 +42,7 @@ def test_validate_subscription_missing_p256dh():
     """Subscription without p256dh key should fail."""
     sub = {
         "endpoint": "https://example.com/push",
-        "keys": {"auth": "test"},
+        "keys": {"auth": AUTH},
     }
     assert ps.validate_subscription(sub) is False
 
@@ -51,7 +51,7 @@ def test_validate_subscription_missing_auth():
     """Subscription without auth key should fail."""
     sub = {
         "endpoint": "https://example.com/push",
-        "keys": {"p256dh": "test"},
+        "keys": {"p256dh": P256DH},
     }
     assert ps.validate_subscription(sub) is False
 
@@ -60,7 +60,7 @@ def test_validate_subscription_empty_keys():
     """Subscription with empty string keys should fail."""
     sub = {
         "endpoint": "https://example.com/push",
-        "keys": {"p256dh": "", "auth": "test"},
+        "keys": {"p256dh": "", "auth": AUTH},
     }
     assert ps.validate_subscription(sub) is False
 
@@ -69,7 +69,7 @@ def test_validate_subscription_too_large():
     """Subscription exceeding MAX_PAYLOAD_SIZE should fail."""
     sub = {
         "endpoint": "https://example.com/push",
-        "keys": {"p256dh": "x" * 3000, "auth": "test"},  # >2KB
+        "keys": {"p256dh": "x" * 3000, "auth": AUTH},  # >2KB
     }
     assert ps.validate_subscription(sub) is False
 
@@ -83,10 +83,11 @@ def test_add_subscription_cap(tmp_path, monkeypatch):
     monkeypatch.setattr(ps, "SUB_FILE", sub_file)
     monkeypatch.setattr(ps, "MAX_SUBSCRIPTIONS", 2)  # Low cap for testing
 
-    valid_sub = lambda n: {
-        "endpoint": f"https://example.com/{n}",
-        "keys": {"p256dh": "test", "auth": "test"},
-    }
+    def valid_sub(n):
+        return {
+            "endpoint": f"https://fcm.googleapis.com/{n}",
+            "keys": {"p256dh": P256DH, "auth": AUTH},
+        }
 
     # First two should succeed
     assert ps.add_subscription(valid_sub(1))["ok"] is True
@@ -107,8 +108,8 @@ def test_add_subscription_refresh_allowed_at_cap(tmp_path, monkeypatch):
     monkeypatch.setattr(ps, "MAX_SUBSCRIPTIONS", 1)
 
     sub = {
-        "endpoint": "https://example.com/existing",
-        "keys": {"p256dh": "test", "auth": "test"},
+        "endpoint": "https://fcm.googleapis.com/existing",
+        "keys": {"p256dh": P256DH, "auth": AUTH},
     }
 
     # Add first subscription
@@ -119,8 +120,8 @@ def test_add_subscription_refresh_allowed_at_cap(tmp_path, monkeypatch):
 
     # New subscription should fail
     new_sub = {
-        "endpoint": "https://example.com/new",
-        "keys": {"p256dh": "test", "auth": "test"},
+        "endpoint": "https://fcm.googleapis.com/new",
+        "keys": {"p256dh": P256DH, "auth": AUTH},
     }
     assert ps.add_subscription(new_sub)["ok"] is False
 
@@ -154,8 +155,8 @@ def test_add_subscription_deduplicates(tmp_path, monkeypatch):
 
     # Valid WebPush subscription format with required keys
     sub = {
-        "endpoint": "https://example.com/123",
-        "keys": {"p256dh": "test_p256dh_key", "auth": "test_auth_key"},
+        "endpoint": "https://fcm.googleapis.com/123",
+        "keys": {"p256dh": P256DH, "auth": AUTH},
     }
     ps.add_subscription(sub)
     ps.add_subscription(sub)  # duplicate - should refresh timestamp, not add

@@ -13,6 +13,7 @@ import json
 from types import SimpleNamespace
 
 import httpx
+import pytest
 from dateutil import tz
 
 from app import calendar_service as cal
@@ -194,8 +195,6 @@ def test_current_event_prefers_implicit_location_summary(monkeypatch):
 
 # ── Tests for overnight base inference ───────────────────────────────────────
 
-import pytest
-
 NYC = tz.gettz("America/New_York")
 
 
@@ -235,12 +234,16 @@ class TestGetOvernightBase:
 
         events = [
             {
-                "dtstart_utc": dt.datetime(2025, 11, 30, 0, 0, tzinfo=UTC),  # 7PM ET Sat
+                "dtstart_utc": dt.datetime(
+                    2025, 11, 30, 0, 0, tzinfo=UTC
+                ),  # 7PM ET Sat
                 "summary": "Dinner",
                 "location": "Mar-a-Lago",
             },
             {
-                "dtstart_utc": dt.datetime(2025, 11, 30, 14, 0, tzinfo=UTC),  # 9AM ET Sun
+                "dtstart_utc": dt.datetime(
+                    2025, 11, 30, 14, 0, tzinfo=UTC
+                ),  # 9AM ET Sun
                 "summary": "Pool Call Time",
                 "location": "Mar-a-Lago",
             },
@@ -265,7 +268,9 @@ class TestGetOvernightBase:
                 "location": "Trump National Golf Club Bedminster",
             },
             {
-                "dtstart_utc": dt.datetime(2025, 7, 13, 13, 0, tzinfo=UTC),  # 9AM ET Sun
+                "dtstart_utc": dt.datetime(
+                    2025, 7, 13, 13, 0, tzinfo=UTC
+                ),  # 9AM ET Sun
                 "summary": "Golf",
                 "location": "Trump National Golf Club Bedminster",
             },
@@ -574,3 +579,43 @@ class TestGetContextEvents:
         # Request 3
         result = cal.get_context_events(target_event, min_context=3)
         assert len(result) == 3
+
+
+# --------------------------------------------------------------------------- #
+# Feed outages must degrade to "no calendar data", never raise                 #
+# --------------------------------------------------------------------------- #
+def test_fetch_events_returns_empty_when_feed_unreachable(monkeypatch):
+    """A network error fetching the feed yields [] instead of propagating."""
+
+    def _boom(*_a, **_k):
+        raise httpx.ConnectError("feed down")
+
+    monkeypatch.setattr(cal.httpx, "get", _boom)
+
+    assert cal._fetch_events() == []
+    assert cal.current_event() is None
+
+
+def test_fetch_events_returns_empty_on_malformed_feed(monkeypatch):
+    """A non-JSON body (e.g. an HTML error page) yields []."""
+    bad = SimpleNamespace(text="<html>oops</html>", raise_for_status=lambda: None)
+    monkeypatch.setattr(cal.httpx, "get", lambda *_a, **_k: bad)
+
+    assert cal._fetch_events() == []
+
+
+def test_fetch_events_backs_off_after_failure(monkeypatch):
+    """After a failure, calls within the back-off window don't re-hit the feed."""
+    calls = {"n": 0}
+
+    def _boom(*_a, **_k):
+        calls["n"] += 1
+        raise httpx.ConnectError("feed down")
+
+    monkeypatch.setattr(cal.httpx, "get", _boom)
+
+    cal._fetch_events()
+    cal._fetch_events()
+    cal._fetch_events()
+
+    assert calls["n"] == 1

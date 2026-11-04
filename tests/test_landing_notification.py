@@ -6,7 +6,6 @@ Test that landing in existing precipitation doesn't trigger false notifications.
 
 from __future__ import annotations
 
-import pytest
 from app.main import should_suppress_landing_notification
 
 

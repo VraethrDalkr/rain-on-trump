@@ -1,6 +1,6 @@
 """tests/test_location_service.py
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Regression tests for the **alias-shortcut** branch inside
+Regression tests for alias resolution and the overnight inference inside
 app.location_service.current_coords().
 """
 
@@ -11,7 +11,13 @@ import datetime as dt
 import pytest
 
 from app import calendar_service as cal
+from app import clock
 from app import location_service as loc
+
+
+def _no_planes(monkeypatch: pytest.MonkeyPatch) -> None:
+    snap = {"states": [], "errors": []}
+    monkeypatch.setattr(loc, "get_fleet_states", lambda: snap, raising=True)
 
 
 @pytest.mark.asyncio
@@ -21,20 +27,16 @@ async def test_alias_shortcut(monkeypatch: pytest.MonkeyPatch) -> None:
     (no geocoding, no plane lookup).
     """
     # 1️⃣ Plane: force *no data* so pipeline proceeds to calendar branch
-    monkeypatch.setattr(loc, "get_plane_state", lambda: None, raising=True)
+    _no_planes(monkeypatch)
 
     # 2️⃣ Calendar: fake a pool-call event at the White House.
     now_utc = dt.datetime.now(dt.timezone.utc)
-    monkeypatch.setattr(
-        cal,
-        "current_event",
-        lambda *_: {
-            "location": "The White House",
-            "summary": "Pool call",
-            "dtstart_utc": now_utc,
-        },
-        raising=True,
-    )
+    event = {
+        "location": "The White House",
+        "summary": "Pool call",
+        "dtstart_utc": now_utc,
+    }
+    monkeypatch.setattr(cal, "get_events", lambda: [event], raising=True)
 
     # 3️⃣ Flush memo-cache between tests
     loc._cached.clear()  # type: ignore[attr-defined]
@@ -59,20 +61,16 @@ async def test_in_town_pool_call_time_resolves_to_white_house(
     'In-Town Pool Call Time' means the press pool must report to the White House.
     """
     # 1️⃣ Plane: force *no data* so pipeline proceeds to calendar branch
-    monkeypatch.setattr(loc, "get_plane_state", lambda: None, raising=True)
+    _no_planes(monkeypatch)
 
     # 2️⃣ Calendar: event with empty location but implicit WH indicator in summary
     now_utc = dt.datetime.now(dt.timezone.utc)
-    monkeypatch.setattr(
-        cal,
-        "current_event",
-        lambda *_: {
-            "location": "",  # Empty location field
-            "summary": "In-Town Pool Call Time",
-            "dtstart_utc": now_utc,
-        },
-        raising=True,
-    )
+    event = {
+        "location": "",  # Empty location field
+        "summary": "In-Town Pool Call Time",
+        "dtstart_utc": now_utc,
+    }
+    monkeypatch.setattr(cal, "get_events", lambda: [event], raising=True)
 
     # 3️⃣ Flush memo-cache between tests
     loc._cached.clear()  # type: ignore[attr-defined]
@@ -94,30 +92,27 @@ async def test_overnight_inference_returns_white_house(
     """
     At 11PM after DC event, with DC morning event → returns WH via overnight inference.
 
-    Tests that overnight base inference takes precedence over stale calendar events.
+    Tests that overnight base inference takes precedence over the evening event.
     """
     # 1️⃣ Plane: force *no data* so pipeline proceeds to overnight/calendar branch
-    monkeypatch.setattr(loc, "get_plane_state", lambda: None, raising=True)
+    _no_planes(monkeypatch)
 
-    # 2️⃣ Mock overnight base to return WH (simulating DC evening + DC morning pattern)
-    monkeypatch.setattr(
-        cal,
-        "get_overnight_base",
-        lambda now=None: {"lat": 38.897676, "lon": -77.036529, "name": "The White House"},
-    )
-
-    # 3️⃣ Calendar returns old Ellipse event (would normally win without overnight inference)
-    now_utc = dt.datetime.now(dt.timezone.utc)
-    monkeypatch.setattr(
-        cal,
-        "current_event",
-        lambda *_: {
+    # 2️⃣ 11PM ET: Ellipse event at 6PM, Oval Office at 10AM next morning
+    now_utc = dt.datetime(2025, 12, 5, 4, 0, tzinfo=dt.timezone.utc)
+    monkeypatch.setattr(clock, "now", lambda: now_utc)
+    events = [
+        {
             "location": "The Ellipse",
             "summary": "Christmas Tree Lighting",
             "dtstart_utc": now_utc - dt.timedelta(hours=5),
         },
-        raising=True,
-    )
+        {
+            "location": "Oval Office",
+            "summary": "Intelligence Briefing",
+            "dtstart_utc": now_utc + dt.timedelta(hours=11),
+        },
+    ]
+    monkeypatch.setattr(cal, "get_events", lambda: events, raising=True)
 
     # 4️⃣ Flush memo-cache between tests
     loc._cached.clear()  # type: ignore[attr-defined]
@@ -131,7 +126,8 @@ async def test_overnight_inference_returns_white_house(
     assert coords["lat"] == pytest.approx(38.897676)
     assert coords["lon"] == pytest.approx(-77.036529)
     assert coords["reason"] == "overnight_dc"
-    assert coords["confidence"] == 58
+    # R 0.9 × stay(4 h 59 min) ≈ 0.967 → 87
+    assert coords["confidence"] == 87
 
 
 # ── Physical Feasibility Tests ─────────────────────────────────────────────────
@@ -472,7 +468,11 @@ class TestHybridDisambiguation:
         target_dt = dt.datetime(2025, 6, 15, 12, 0, tzinfo=dt.timezone.utc)
         # Context: DC event 2h before target
         context = [
-            {"lat": self.DC_LAT, "lon": self.DC_LON, "dt": target_dt - dt.timedelta(hours=2)}
+            {
+                "lat": self.DC_LAT,
+                "lon": self.DC_LON,
+                "dt": target_dt - dt.timedelta(hours=2),
+            }
         ]
 
         best, alert = loc._disambiguate_results(
@@ -494,8 +494,16 @@ class TestHybridDisambiguation:
         target_dt = dt.datetime(2025, 6, 15, 12, 0, tzinfo=dt.timezone.utc)
         # Context: DC events (VA is closer to DC than NY)
         context = [
-            {"lat": self.DC_LAT, "lon": self.DC_LON, "dt": target_dt - dt.timedelta(hours=4)},
-            {"lat": self.DC_LAT, "lon": self.DC_LON, "dt": target_dt + dt.timedelta(hours=4)},
+            {
+                "lat": self.DC_LAT,
+                "lon": self.DC_LON,
+                "dt": target_dt - dt.timedelta(hours=4),
+            },
+            {
+                "lat": self.DC_LAT,
+                "lon": self.DC_LON,
+                "dt": target_dt + dt.timedelta(hours=4),
+            },
         ]
 
         best, alert = loc._disambiguate_results(
@@ -519,7 +527,8 @@ class TestHybridDisambiguation:
             {
                 "lat": self.DC_LAT,
                 "lon": self.DC_LON,
-                "dt": target_dt - dt.timedelta(hours=10),  # Feasible (10h = 8000km range)
+                "dt": target_dt
+                - dt.timedelta(hours=10),  # Feasible (10h = 8000km range)
             }
         ]
 
@@ -545,7 +554,11 @@ class TestHybridDisambiguation:
         target_dt = dt.datetime(2025, 6, 15, 12, 0, tzinfo=dt.timezone.utc)
         # Context: DC event only 1h away - can't reach Arizona
         context = [
-            {"lat": self.DC_LAT, "lon": self.DC_LON, "dt": target_dt - dt.timedelta(hours=1)}
+            {
+                "lat": self.DC_LAT,
+                "lon": self.DC_LON,
+                "dt": target_dt - dt.timedelta(hours=1),
+            }
         ]
 
         best, alert = loc._disambiguate_results(

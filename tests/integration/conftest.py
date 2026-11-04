@@ -23,7 +23,9 @@ from typing import Generator
 import pytest
 
 
-def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+def pytest_collection_modifyitems(
+    config: pytest.Config, items: list[pytest.Item]
+) -> None:
     """Skip all integration tests unless INTEGRATION_TESTS=1."""
     if os.getenv("INTEGRATION_TESTS"):
         # Integration tests enabled - run normally

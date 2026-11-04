@@ -1,11 +1,13 @@
-fastapi>=0.95
-uvicorn>=0.22
-httpx>=0.27
-python-dotenv>=1.0
-opensky-api @ git+https://github.com/openskynetwork/opensky-api.git#egg=opensky-api&subdirectory=python
-python-dateutil>=2.8
-geopy>=2.4
-beautifulsoup4>=4.12
-lxml>=5.4.0
-pywebpush>=1.14
-slowapi>=0.1.9
+# Direct dependencies pinned to the versions the test suite runs against
+# (backend/.venv). Bump deliberately: pip install -U <pkg>, run pytest, re-freeze.
+fastapi==0.162.0
+uvicorn==0.54.0
+httpx==0.28.1
+python-dotenv==1.2.4
+python-dateutil==4.0.0
+geopy==2.5.0
+beautifulsoup4==4.15.0
+lxml==6.1.3
+pywebpush==2.5.0
+slowapi==0.1.10
+limits==5.8.0  # imported directly by main.py (also a slowapi dependency)

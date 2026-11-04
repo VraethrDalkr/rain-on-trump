@@ -6,8 +6,6 @@ Test that location sources are prioritized by confidence score.
 
 from __future__ import annotations
 
-import pytest
-
 
 def test_select_highest_confidence_basic():
     """Should select the candidate with highest confidence."""

@@ -1,7 +1,7 @@
 /* rain-on-trump service-worker
    – separate icon cache, stale-while-revalidate, notification clicks */
 
-const VERSION     = '2-15-3';  // Add context-based geocoding docs + debug trace
+const VERSION     = '2-16-2';  // new app icon (storm over the swoop)
 const SHELL_CACHE = `rain-on-trump-shell-${VERSION}`;
 const ICON_CACHE  = `rain-on-trump-icons-${VERSION}`;
 const SHELL       = '/index.html';
@@ -10,6 +10,7 @@ const SHELL       = '/index.html';
 // Note: Cloudflare Pages redirects /about.html → /about, so cache both paths
 const STATIC_SHELL = [
   SHELL,
+  '/',
   '/manifest.webmanifest',
   '/about.html',
   '/about'
@@ -18,7 +19,10 @@ const STATIC_SHELL = [
 // Big binaries we almost never bump
 const STATIC_ICONS = [
   '/icons/icon-192.png',
-  '/icons/icon-512.png'
+  '/icons/icon-512.png',
+  '/icons/icon-maskable-512.png',
+  '/icons/apple-touch-icon.png',
+  '/icons/favicon-32.png'
 ];
 
 // ─── INSTALL: precache shell & icons, then activate ───────────────────
@@ -40,7 +44,7 @@ self.addEventListener('activate', event => {
         Promise.all(
           keys
             .filter(k => k !== SHELL_CACHE && k !== ICON_CACHE)
-            .map(caches.delete)
+            .map(k => caches.delete(k))
         )
       )
     ])
@@ -52,12 +56,24 @@ self.addEventListener('fetch', event => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // HTML navigations: network-first, fallback to shell
+  // HTML navigations: network-first; offline -> exact cached page, else the shell.
+  // Cached copies are re-wrapped so a redirected response is never served to a navigation.
   if (req.mode === 'navigate') {
     event.respondWith(
-      fetch(req)
-        .then(res => (res.redirected ? fetch(res.url) : res))
-        .catch(() => caches.match(SHELL))
+      fetch(req).catch(async () => {
+        const hit = (await caches.match(req)) ||
+                    (await caches.match(url.pathname)) ||
+                    (await caches.match(SHELL)) ||
+                    (await caches.match('/'));
+        if (!hit) return Response.error();
+        return hit.redirected
+          ? new Response(await hit.blob(), {
+              status: hit.status,
+              statusText: hit.statusText,
+              headers: hit.headers
+            })
+          : hit;
+      })
     );
     return;
   }
@@ -67,14 +83,19 @@ self.addEventListener('fetch', event => {
     event.respondWith(
       caches.match(req).then(cached => {
         const networkFetch = fetch(req).then(res => {
-          // Clone before using to avoid "body already used" error
-          const resClone = res.clone();
           if (res.ok && !res.redirected) {
-            caches.open(SHELL_CACHE).then(c => c.put(req, resClone));
+            const resClone = res.clone();
+            event.waitUntil(
+              caches.open(SHELL_CACHE).then(c => c.put(req, resClone)).catch(() => {})
+            );
           }
           return res;
         });
-        return cached || networkFetch;
+        if (cached) {
+          networkFetch.catch(() => {});  // offline: keep serving the cached copy quietly
+          return cached;
+        }
+        return networkFetch;
       })
     );
   }
@@ -103,13 +124,28 @@ self.addEventListener('push', e => {
 // ─── NOTIFICATION CLICK: focus or open window ────────────────────────
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  const target = e.notification.data?.url || '/';
+  const target = new URL(e.notification.data?.url || '/', self.location.origin).href;
   e.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })
-      .then(list =>
-        list.find(c => c.url === target && 'focus' in c)
-          ? list.find(c => c.url === target).focus()
-          : clients.openWindow(target)
-      )
+      .then(list => {
+        // Any open window of this app will do; prefer a visible one
+        const mine = list.filter(c => new URL(c.url).origin === self.location.origin);
+        const win = mine.find(c => c.visibilityState === 'visible') || mine[0];
+        if (win && 'focus' in win) return win.focus();
+        return clients.openWindow(target);
+      })
   );
+});
+
+// ─── PUSH SUBSCRIPTION CHANGE: browser rotated the endpoint ───────────
+self.addEventListener('pushsubscriptionchange', e => {
+  e.waitUntil((async () => {
+    try {
+      if (e.oldSubscription) {
+        await self.registration.pushManager.subscribe(e.oldSubscription.options);
+      }
+    } catch (err) { /* page will resubscribe on next visit */ }
+    const list = await clients.matchAll({ type: 'window', includeUncontrolled: true });
+    list.forEach(c => c.postMessage({ type: 'PUSH_SUB_CHANGED' }));
+  })());
 });

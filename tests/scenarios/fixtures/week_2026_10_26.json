@@ -1,0 +1,1352 @@
+[
+ {
+  "date": "2026-10-26",
+  "time": null,
+  "details": "TBD: The President departs the White House en route Corinth, Mississippi",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-26",
+  "time": null,
+  "details": "TBD: The President arrives Corinth, Mississippi [CDT Local]",
+  "location": "Crossroads Arena, Corinth, MS"
+ },
+ {
+  "date": "2026-10-26",
+  "time": null,
+  "details": "TBD: The President departs Corinth, Mississippi en route the White House",
+  "location": "Crossroads Arena, Corinth, MS"
+ },
+ {
+  "date": "2026-10-26",
+  "time": null,
+  "details": "TBD: The President arrives the White House",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-26",
+  "time": "08:00:00",
+  "details": "The President participates in Executive Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-26",
+  "time": "09:00:00",
+  "details": "In-Town Pool Call Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-26",
+  "time": "11:00:00",
+  "details": "The President participates in a Policy Meeting",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-10-26",
+  "time": "11:45:00",
+  "details": "The President participates in a Policy Meeting",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-10-26",
+  "time": "12:14:00",
+  "details": "White House Press Office: Lunch lid until 1:00 PM",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-26",
+  "time": "12:30:00",
+  "details": "The President participates in a Policy Meeting",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-10-26",
+  "time": "13:30:00",
+  "details": "The President meets with the U.S. Ambassador to the French Republic and the Principality of Monaco",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-10-26",
+  "time": "14:15:00",
+  "details": "Out-of-Town Travel Pool Call Time",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-10-26",
+  "time": "15:10:00",
+  "details": "The President departs The White House en route to Joint Base Andrews",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-26",
+  "time": "15:30:00",
+  "details": "The President arrives at Joint Base Andrews",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-10-26",
+  "time": "15:49:00",
+  "details": "The President departs Joint Base Andrews for Frederick W. Smith International Airport, Memphis, TN",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-10-26",
+  "time": "17:27:00",
+  "details": "The President arrives at Frederick W. Smith International Airport, Memphis, TN [4:27 PM Local]",
+  "location": "Frederick W. Smith International Airport, Memphis, TN"
+ },
+ {
+  "date": "2026-10-26",
+  "time": "17:51:00",
+  "details": "The President departs Frederick W. Smith International Airport, Memphis, TN en route to Roscoe Turner Airport, Corinth, MS [4:51 PM Local]",
+  "location": "Frederick W. Smith International Airport, Memphis, TN"
+ },
+ {
+  "date": "2026-10-26",
+  "time": "18:25:00",
+  "details": "The President arrives at Roscoe Turner Airport, Corinth, MS [5:25 PM Local]",
+  "location": "Roscoe Turner Airport, Corinth, MS"
+ },
+ {
+  "date": "2026-10-26",
+  "time": "18:30:00",
+  "details": "The President departs Roscoe Turner Airport, Corinth, MS en route to Crossroads Arena, Corinth, MS [5:30 PM Local]",
+  "location": "Crossroads Arena, Corinth, MS"
+ },
+ {
+  "date": "2026-10-26",
+  "time": "18:42:00",
+  "details": "The President arrives at Crossroads Arena, Corinth, MS [5:42 PM Local]",
+  "location": "Crossroads Arena, Corinth, MS"
+ },
+ {
+  "date": "2026-10-26",
+  "time": "19:00:00",
+  "details": "The President holds a political rally in Corinth, Mississippi [CDT Local]",
+  "location": "Crossroads Arena, Corinth, MS"
+ },
+ {
+  "date": "2026-10-26",
+  "time": "20:40:00",
+  "details": "The President departs Crossroads Arena, Corinth, MS en route to Roscoe Turner Airport, Corinth, MS [7:40 PM Local]",
+  "location": "Crossroads Arena, Corinth, MS"
+ },
+ {
+  "date": "2026-10-26",
+  "time": "20:50:00",
+  "details": "The President arrives at Roscoe Turner Airport, Corinth, MS [7:50 PM Local]",
+  "location": "Roscoe Turner Airport, Corinth, MS"
+ },
+ {
+  "date": "2026-10-26",
+  "time": "20:56:00",
+  "details": "The President departs Roscoe Turner Airport, Corinth, MS en route to Frederick W. Smith International Airport, Memphis, TN [7:56 PM Local]",
+  "location": "Roscoe Turner Airport, Corinth, MS"
+ },
+ {
+  "date": "2026-10-26",
+  "time": "21:29:00",
+  "details": "The President arrives at Frederick W. Smith International Airport, Memphis, TN [8:29 PM Local]",
+  "location": "Frederick W. Smith International Airport, Memphis, TN"
+ },
+ {
+  "date": "2026-10-26",
+  "time": "21:46:00",
+  "details": "The President departs Frederick W. Smith International Airport, Memphis, TN for Joint Base Andrews [8:46 PM Local]",
+  "location": "Frederick W. Smith International Airport, Memphis, TN"
+ },
+ {
+  "date": "2026-10-26",
+  "time": "23:13:00",
+  "details": "The President arrives at Joint Base Andrews",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-10-26",
+  "time": "23:31:00",
+  "details": "The President departs Joint Base Andrews en route to The White House",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-10-26",
+  "time": "23:52:00",
+  "details": "The President arrives at The White House",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-26",
+  "time": "23:55:00",
+  "details": "White House Press Office: Travel/Photo lid called",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-27",
+  "time": null,
+  "details": "TBD: The President departs the White House en route Corpus Christi, Texas",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-27",
+  "time": null,
+  "details": "TBD: The President arrives Corpus Christi, Texas [CDT Local]",
+  "location": "Port of Corpus Christi, Texas"
+ },
+ {
+  "date": "2026-10-27",
+  "time": null,
+  "details": "TBD: The President departs Corpus Christi, Texas en route Lubbock, Texas [CDT Local]",
+  "location": "Port of Corpus Christi, Texas"
+ },
+ {
+  "date": "2026-10-27",
+  "time": null,
+  "details": "TBD: The President arrives Lubbock, Texas [CDT Local]",
+  "location": "Lubbock Memorial Civic Center, Texas"
+ },
+ {
+  "date": "2026-10-27",
+  "time": null,
+  "details": "TBD: The President departs Lubbock, Texas en route the White House [CDT Local]",
+  "location": "Lubbock Memorial Civic Center, Texas"
+ },
+ {
+  "date": "2026-10-27",
+  "time": null,
+  "details": "TBD: The President arrives the White House",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-27",
+  "time": "08:00:00",
+  "details": "The President participates in Executive Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-27",
+  "time": "09:00:00",
+  "details": "In-Town Pool Call Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-27",
+  "time": "10:00:00",
+  "details": "Out-of-Town Travel Pool Call Time",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-10-27",
+  "time": "11:10:00",
+  "details": "The President departs The White House en route to Joint Base Andrews",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-27",
+  "time": "11:35:00",
+  "details": "The President arrives at Joint Base Andrews",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-10-27",
+  "time": "11:49:00",
+  "details": "The President departs Joint Base Andrews for Corpus Christi International Airport, Texas",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-10-27",
+  "time": "14:45:00",
+  "details": "The President arrives at Corpus Christi International Airport, Texas [1:45 PM Local]",
+  "location": "Corpus Christi International Airport, Texas"
+ },
+ {
+  "date": "2026-10-27",
+  "time": "15:00:00",
+  "details": "The President holds a political rally in Corpus Christi, Texas [2:00 PM Local]",
+  "location": "Port of Corpus Christi, Texas"
+ },
+ {
+  "date": "2026-10-27",
+  "time": "15:05:00",
+  "details": "The President departs Corpus Christi International Airport, Texas en route to Port of Corpus Christi, Texas [2:05 PM Local]",
+  "location": "Corpus Christi International Airport, Texas"
+ },
+ {
+  "date": "2026-10-27",
+  "time": "17:02:00",
+  "details": "The President departs Port of Corpus Christi, Texas en route to Corpus Christi International Airport, Texas [4:02 PM Local]",
+  "location": "Port of Corpus Christi, Texas"
+ },
+ {
+  "date": "2026-10-27",
+  "time": "17:15:00",
+  "details": "The President arrives at Corpus Christi International Airport, Texas [4:15 PM Local]",
+  "location": "Corpus Christi International Airport, Texas"
+ },
+ {
+  "date": "2026-10-27",
+  "time": "17:30:00",
+  "details": "The President departs Corpus Christi International Airport, Texas for Lubbock Preston Smith International Airport, Lubbock, TX [4:30 PM Local]",
+  "location": "Corpus Christi International Airport, Texas"
+ },
+ {
+  "date": "2026-10-27",
+  "time": "18:40:00",
+  "details": "The President arrives at Lubbock Preston Smith International Airport, Lubbock, TX [5:40 PM Local]",
+  "location": "Lubbock Preston Smith International Airport, Lubbock, TX"
+ },
+ {
+  "date": "2026-10-27",
+  "time": "18:52:00",
+  "details": "The President departs Lubbock Preston Smith International Airport, Lubbock, TX en route to Lubbock Memorial Civic Center, Texas [5:52 PM Local]",
+  "location": "Lubbock Preston Smith International Airport, Lubbock, TX"
+ },
+ {
+  "date": "2026-10-27",
+  "time": "19:00:00",
+  "details": "The President holds a political rally in Lubbock, Texas [6:00 PM Local]",
+  "location": "Lubbock Memorial Civic Center, Texas"
+ },
+ {
+  "date": "2026-10-27",
+  "time": "19:02:00",
+  "details": "The President arrives at Lubbock Memorial Civic Center, Texas [6:02 PM Local]",
+  "location": "Lubbock Memorial Civic Center, Texas"
+ },
+ {
+  "date": "2026-10-27",
+  "time": "21:16:00",
+  "details": "The President departs Lubbock Memorial Civic Center, Texas en route to Lubbock Preston Smith International Airport, Lubbock, TX [8:16 PM Local]",
+  "location": "Lubbock Memorial Civic Center, Texas"
+ },
+ {
+  "date": "2026-10-27",
+  "time": "21:28:00",
+  "details": "The President arrives at Lubbock Preston Smith International Airport, Lubbock, TX [8:28 PM Local]",
+  "location": "Lubbock Preston Smith International Airport, Lubbock, TX"
+ },
+ {
+  "date": "2026-10-27",
+  "time": "21:41:00",
+  "details": "The President departs Lubbock Preston Smith International Airport, Lubbock, TX for Joint Base Andrews [8:41 PM Local]",
+  "location": "Lubbock Preston Smith International Airport, Lubbock, TX"
+ },
+ {
+  "date": "2026-10-28",
+  "time": null,
+  "details": "TBD: The President departs the White House en route Chillicothe, Ohio",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-28",
+  "time": null,
+  "details": "TBD: The President arrives Chillicothe, Ohio",
+  "location": "Shoemaker Center, Chillicothe, OH"
+ },
+ {
+  "date": "2026-10-28",
+  "time": null,
+  "details": "TBD: The President departs Chillicothe, Ohio en route the White House",
+  "location": "Shoemaker Center, Chillicothe, OH"
+ },
+ {
+  "date": "2026-10-28",
+  "time": null,
+  "details": "TBD: The President arrives the White House",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-28",
+  "time": "00:09:00",
+  "details": "The President arrives at Joint Base Andrews",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-10-28",
+  "time": "00:33:00",
+  "details": "The President departs Joint Base Andrews en route to The White House",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-10-28",
+  "time": "00:56:00",
+  "details": "The President arrives at The White House",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-28",
+  "time": "01:04:00",
+  "details": "White House Press Office: Travel/Photo lid called for October 27, 2026",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-28",
+  "time": "08:00:00",
+  "details": "The President participates in Executive Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-28",
+  "time": "09:00:00",
+  "details": "In-Town Pool Call Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-28",
+  "time": "11:00:00",
+  "details": "The President receives his Intelligence Briefing",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-28",
+  "time": "12:25:00",
+  "details": "White House Press Office: Lunch lid until 1:20 PM",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-28",
+  "time": "12:30:00",
+  "details": "The President participates in a Policy Meeting",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-10-28",
+  "time": "13:30:00",
+  "details": "The President greets the Artemis III Crew",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-10-28",
+  "time": "14:00:00",
+  "details": "The President participates in a Policy Meeting",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-10-28",
+  "time": "15:30:00",
+  "details": "Out-of-Town Travel Pool Call Time",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-10-28",
+  "time": "15:30:01",
+  "details": "The President participates in Signing Time",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-10-28",
+  "time": "16:29:00",
+  "details": "The President departs The White House en route to Joint Base Andrews",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-28",
+  "time": "16:54:00",
+  "details": "The President arrives at Joint Base Andrews",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-10-28",
+  "time": "17:14:00",
+  "details": "The President departs Joint Base Andrews for Rickenbacker International Airport, Columbus, OH",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-10-28",
+  "time": "17:30:00",
+  "details": "The President participates in a Policy Meeting",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-10-28",
+  "time": "18:05:00",
+  "details": "The President arrives at Rickenbacker International Airport, Columbus, OH",
+  "location": "Rickenbacker International Airport, Columbus, OH"
+ },
+ {
+  "date": "2026-10-28",
+  "time": "18:31:00",
+  "details": "The President departs Rickenbacker International Airport, Columbus, OH en route to Yoctangee Park, Chillicothe, OH",
+  "location": "Rickenbacker International Airport, Columbus, OH"
+ },
+ {
+  "date": "2026-10-28",
+  "time": "18:55:00",
+  "details": "The President arrives at Yoctangee Park, Chillicothe, OH",
+  "location": "Yoctangee Park, Chillicothe, OH"
+ },
+ {
+  "date": "2026-10-28",
+  "time": "19:00:00",
+  "details": "The President holds a political rally in Chillicothe, Ohio",
+  "location": "Shoemaker Center, Chillicothe, OH"
+ },
+ {
+  "date": "2026-10-28",
+  "time": "19:00:01",
+  "details": "The President departs Yoctangee Park, Chillicothe, OH en route to Shoemaker Center, Chillicothe, OH",
+  "location": "Yoctangee Park, Chillicothe, OH"
+ },
+ {
+  "date": "2026-10-28",
+  "time": "19:10:00",
+  "details": "The President arrives at Shoemaker Center, Chillicothe, OH",
+  "location": "Shoemaker Center, Chillicothe, OH"
+ },
+ {
+  "date": "2026-10-28",
+  "time": "21:04:00",
+  "details": "The President departs Shoemaker Center, Chillicothe, OH en route to Yoctangee Park, Chillicothe, OH",
+  "location": "Shoemaker Center, Chillicothe, OH"
+ },
+ {
+  "date": "2026-10-28",
+  "time": "21:11:00",
+  "details": "The President arrives at Yoctangee Park, Chillicothe, OH",
+  "location": "Yoctangee Park, Chillicothe, OH"
+ },
+ {
+  "date": "2026-10-28",
+  "time": "21:16:00",
+  "details": "The President departs Yoctangee Park, Chillicothe, OH en route to Rickenbacker International Airport, Columbus, OH",
+  "location": "Yoctangee Park, Chillicothe, OH"
+ },
+ {
+  "date": "2026-10-28",
+  "time": "21:35:00",
+  "details": "The President arrives at Rickenbacker International Airport, Columbus, OH",
+  "location": "Rickenbacker International Airport, Columbus, OH"
+ },
+ {
+  "date": "2026-10-28",
+  "time": "21:52:00",
+  "details": "The President departs Rickenbacker International Airport, Columbus, OH for Joint Base Andrews",
+  "location": "Rickenbacker International Airport, Columbus, OH"
+ },
+ {
+  "date": "2026-10-28",
+  "time": "22:38:00",
+  "details": "The President arrives at Joint Base Andrews",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-10-28",
+  "time": "22:50:00",
+  "details": "The President departs Joint Base Andrews en route to The White House",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-10-28",
+  "time": "23:12:00",
+  "details": "The President arrives at The White House",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-28",
+  "time": "23:15:00",
+  "details": "White House Press Office: Travel/Photo lid called",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-29",
+  "time": null,
+  "details": "TBD: The President departs the White House en route Rock Hill, South Carolina",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-29",
+  "time": null,
+  "details": "TBD: The President arrives Rock Hill, South Carolina",
+  "location": "Rock Hill Sports & Event Center, Rock Hill, SC"
+ },
+ {
+  "date": "2026-10-29",
+  "time": null,
+  "details": "TBD: The President departs Rock Hill, South Carolina en route the White House",
+  "location": "Rock Hill Sports & Event Center, Rock Hill, SC"
+ },
+ {
+  "date": "2026-10-29",
+  "time": null,
+  "details": "TBD: The President arrives the White House",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-29",
+  "time": "08:00:00",
+  "details": "The President participates in Executive Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-29",
+  "time": "09:00:00",
+  "details": "In-Town Pool Call Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-29",
+  "time": "09:15:00",
+  "details": "Out-of-Town Travel Pool Call Time",
+  "location": "Joint Base Andreews"
+ },
+ {
+  "date": "2026-10-29",
+  "time": "10:12:00",
+  "details": "The President departs The White House en route to Joint Base Andrews",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-29",
+  "time": "10:33:00",
+  "details": "The President arrives at Joint Base Andrews",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-10-29",
+  "time": "10:53:00",
+  "details": "The President departs Joint Base Andrews for Charlotte Douglas International Airport",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-10-29",
+  "time": "11:48:00",
+  "details": "The President arrives at Charlotte Douglas International Airport",
+  "location": "Charlotte Douglas International Airport"
+ },
+ {
+  "date": "2026-10-29",
+  "time": "12:13:00",
+  "details": "The President departs Charlotte Douglas International Airport en route to Rock Hill Sports & Event Center, Rock Hill, SC",
+  "location": "Charlotte Douglas International Airport"
+ },
+ {
+  "date": "2026-10-29",
+  "time": "12:30:00",
+  "details": "The President holds a political rally in Rock Hill, South Carolina",
+  "location": "Rock Hill Sports & Event Center, Rock Hill, SC"
+ },
+ {
+  "date": "2026-10-29",
+  "time": "12:47:00",
+  "details": "The President arrives at Rock Hill Sports & Event Center, Rock Hill, SC",
+  "location": "Rock Hill Sports & Event Center, Rock Hill, SC"
+ },
+ {
+  "date": "2026-10-29",
+  "time": "14:50:00",
+  "details": "The President departs Rock Hill Sports & Event Center, Rock Hill, SC en route to Charlotte Douglas International Airport",
+  "location": "Rock Hill Sports & Event Center, Rock Hill, SC"
+ },
+ {
+  "date": "2026-10-29",
+  "time": "15:27:00",
+  "details": "The President arrives at Charlotte Douglas International Airport",
+  "location": "Charlotte Douglas International Airport"
+ },
+ {
+  "date": "2026-10-29",
+  "time": "16:24:00",
+  "details": "The President arrives at Joint Base Andrews",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-10-29",
+  "time": "16:41:00",
+  "details": "The President departs Joint Base Andrews en route to The White House",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-10-29",
+  "time": "17:02:00",
+  "details": "The President arrives at The White House",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-29",
+  "time": "17:30:00",
+  "details": "The President and The First Lady host Halloween at the White House",
+  "location": "South Lawn"
+ },
+ {
+  "date": "2026-10-29",
+  "time": "18:35:00",
+  "details": "White House Press Office: Travel/Photo lid called",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-29",
+  "time": "19:00:00",
+  "details": "The President participates in a Tele-Rally  [Note: Call in support of Kurt Alme's senate campaign and Aaron Flint's congressional campaign in Montana]",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-29",
+  "time": "19:30:00",
+  "details": "The President participates in a Tele-Rally",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-30",
+  "time": null,
+  "details": "TBD: The President departs the White House en route Daytona Beach, Florida",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-30",
+  "time": null,
+  "details": "TBD: The President arrives Daytona Beach, Florida",
+  "location": "Ocean Center, Daytona Beach, FL"
+ },
+ {
+  "date": "2026-10-30",
+  "time": null,
+  "details": "TBD: The President departs Daytona Beach, Florida en route Palm Beach, Florida",
+  "location": "Ocean Center, Daytona Beach, FL"
+ },
+ {
+  "date": "2026-10-30",
+  "time": null,
+  "details": "TBD: The President arrives Palm Beach, Florida",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-10-30",
+  "time": "07:00:00",
+  "details": "The President participates in Executive Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-30",
+  "time": "07:30:00",
+  "details": "The President participates in a Radio Interview with Pete Mundo, KCMO",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-30",
+  "time": "09:00:00",
+  "details": "In-Town Pool Call Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-30",
+  "time": "12:15:00",
+  "details": "White House Press Office: Lunch lid until 1:15 PM",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-30",
+  "time": "12:30:00",
+  "details": "The President participates in a Policy Meeting",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-10-30",
+  "time": "13:30:00",
+  "details": "The President participates in a Pre-Tape Interview [Note: interview with Miranda Devine, for the New York Post's Pod Force One]",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-30",
+  "time": "14:30:00",
+  "details": "Out-of-Town Travel Pool Call Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-30",
+  "time": "15:53:00",
+  "details": "The President meets with Stephen Hubbard",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-10-30",
+  "time": "16:39:00",
+  "details": "The President departs The White House en route to Joint Base Andrews",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-30",
+  "time": "16:47:00",
+  "details": "The President arrives at Joint Base Andrews",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-10-30",
+  "time": "17:00:00",
+  "details": "The President participates in a Tele-Rally",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-10-30",
+  "time": "17:01:00",
+  "details": "The President departs Joint Base Andrews for Daytona Beach International Airport",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-10-30",
+  "time": "18:35:00",
+  "details": "The President arrives at Daytona Beach International Airport",
+  "location": "Daytona Beach International Airport"
+ },
+ {
+  "date": "2026-10-30",
+  "time": "18:51:00",
+  "details": "The President departs Daytona Beach International Airport en route to Ocean Center, Daytona Beach, FL",
+  "location": "Daytona Beach International Airport"
+ },
+ {
+  "date": "2026-10-30",
+  "time": "19:00:00",
+  "details": "The President holds a political rally in Daytona Beach, Florida",
+  "location": "Ocean Center, Daytona Beach, FL"
+ },
+ {
+  "date": "2026-10-30",
+  "time": "19:04:00",
+  "details": "The President arrives at Ocean Center, Daytona Beach, FL",
+  "location": "Ocean Center, Daytona Beach, FL"
+ },
+ {
+  "date": "2026-10-30",
+  "time": "21:47:00",
+  "details": "The President departs Ocean Center, Daytona Beach, FL en route to Daytona Beach International Airport",
+  "location": "Ocean Center, Daytona Beach, FL"
+ },
+ {
+  "date": "2026-10-30",
+  "time": "21:58:00",
+  "details": "The President arrives at Daytona Beach International Airport",
+  "location": "Daytona Beach International Airport"
+ },
+ {
+  "date": "2026-10-30",
+  "time": "22:12:00",
+  "details": "The President departs Daytona Beach International Airport for President Donald J. Trump International Airport, West Palm Beach, FL",
+  "location": "Daytona Beach International Airport"
+ },
+ {
+  "date": "2026-10-30",
+  "time": "22:48:00",
+  "details": "The President arrives at President Donald J. Trump International Airport, West Palm Beach, FL",
+  "location": "President Donald J. Trump International Airport, West Palm Beach, FL"
+ },
+ {
+  "date": "2026-10-30",
+  "time": "23:03:00",
+  "details": "The President departs President Donald J. Trump International Airport, West Palm Beach, FL en route to Mar-a-Lago",
+  "location": "President Donald J. Trump International Airport, West Palm Beach, FL"
+ },
+ {
+  "date": "2026-10-30",
+  "time": "23:12:00",
+  "details": "The President arrives at Mar-a-Lago",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-10-30",
+  "time": "23:15:00",
+  "details": "White House Press Office: Travel/Photo lid called",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-10-31",
+  "time": "07:30:00",
+  "details": "Out-of-Town Travel Pool Call Time",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-10-31",
+  "time": "08:00:00",
+  "details": "The President participates in Executive Time",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-10-31",
+  "time": "09:16:00",
+  "details": "The President departs Mar-a-Lago en route to Trump International Golf Club West Palm Beach",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-10-31",
+  "time": "09:23:00",
+  "details": "The President arrives at Trump International Golf Club West Palm Beach",
+  "location": "Trump International Golf Club West Palm Beach"
+ },
+ {
+  "date": "2026-10-31",
+  "time": "13:41:00",
+  "details": "The President departs Trump International Golf Club West Palm Beach en route to Mar-a-Lago",
+  "location": "Trump International Golf Club West Palm Beach"
+ },
+ {
+  "date": "2026-10-31",
+  "time": "13:49:00",
+  "details": "The President arrives at Mar-a-Lago",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-10-31",
+  "time": "14:00:00",
+  "details": "The President participates in a Tele-Rally [Note: Call in support of Pennsylvania GOP candidates]",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-10-31",
+  "time": "14:45:00",
+  "details": "The President participates in a Tele-Rally [Note: Call in support of Ohio GOP candidates]",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-10-31",
+  "time": "15:30:00",
+  "details": "The President participates in a Tele-Rally [Note: Call in support of Florida GOP candidates]",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-10-31",
+  "time": "15:36:00",
+  "details": "White House Press Office: Lunch lid until 6:00 PM",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-10-31",
+  "time": "16:15:00",
+  "details": "The President participates in a Tele-Rally [Note: Call in support of New York GOP candidates]",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-10-31",
+  "time": "16:45:00",
+  "details": "The President participates in a Tele-Rally [Note: Second call in support of Florida GOP Candidates]",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-10-31",
+  "time": "17:15:00",
+  "details": "The President participates in a Tele-Rally [Note: Call in support of Michigan GOP candidates]",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-10-31",
+  "time": "20:00:00",
+  "details": "The President attends a halloween party",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-10-31",
+  "time": "20:20:00",
+  "details": "White House Press Office: Travel/Photo lid called",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-11-01",
+  "time": null,
+  "details": "TBD: The President departs Palm Beach, Florida en route Dubuque, Iowa",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-11-01",
+  "time": null,
+  "details": "TBD: The President arrives Dubuque, Iowa [CDT Local]",
+  "location": "Five Flags Center, Dubuque, IA"
+ },
+ {
+  "date": "2026-11-01",
+  "time": null,
+  "details": "TBD: The President departs Dubuque, Iowa en route Salina, Kansas [CDT Local]",
+  "location": "Five Flags Center, Dubuque, IA"
+ },
+ {
+  "date": "2026-11-01",
+  "time": null,
+  "details": "TBD: The President arrives Salina, Kansas [CDT Local]",
+  "location": "Salina Regional Airport, KS"
+ },
+ {
+  "date": "2026-11-01",
+  "time": null,
+  "details": "TBD: The President departs Salina, Kansas en route the White House [CDT Local]",
+  "location": "Salina Regional Airport, KS"
+ },
+ {
+  "date": "2026-11-01",
+  "time": null,
+  "details": "TBD: The President arrives the White House",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-01",
+  "time": "08:00:00",
+  "details": "The President participates in Executive Time",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-11-01",
+  "time": "10:15:00",
+  "details": "Out-of-Town Travel Pool Call Time",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-11-01",
+  "time": "11:45:00",
+  "details": "The President departs Mar-a-Lago en route to President Donald J. Trump International Airport, West Palm Beach, FL",
+  "location": "Mar-a-Lago"
+ },
+ {
+  "date": "2026-11-01",
+  "time": "11:52:00",
+  "details": "The President arrives at President Donald J. Trump International Airport, West Palm Beach, FL",
+  "location": "President Donald J. Trump International Airport, West Palm Beach, FL"
+ },
+ {
+  "date": "2026-11-01",
+  "time": "12:07:00",
+  "details": "The President departs President Donald J. Trump International Airport, West Palm Beach, FL for Dubuque Regional Airport, IA",
+  "location": "President Donald J. Trump International Airport, West Palm Beach, FL"
+ },
+ {
+  "date": "2026-11-01",
+  "time": "15:14:00",
+  "details": "The President arrives at Dubuque Regional Airport, IA [2:14 PM Local]",
+  "location": "Dubuque Regional Airport, IA"
+ },
+ {
+  "date": "2026-11-01",
+  "time": "15:42:00",
+  "details": "The President departs Dubuque Regional Airport, IA en route to Five Flags Center, Dubuque, IA [2:42 PM Local]",
+  "location": "Dubuque Regional Airport, IA"
+ },
+ {
+  "date": "2026-11-01",
+  "time": "15:52:00",
+  "details": "The President arrives at Five Flags Center, Dubuque, IA [2:52 PM Local]",
+  "location": "Five Flags Center, Dubuque, IA"
+ },
+ {
+  "date": "2026-11-01",
+  "time": "18:41:00",
+  "details": "The President departs Five Flags Center, Dubuque, IA en route to Dubuque Regional Airport, IA [5:41 PM Local]",
+  "location": "Five Flags Center, Dubuque, IA"
+ },
+ {
+  "date": "2026-11-01",
+  "time": "18:52:00",
+  "details": "The President arrives at Dubuque Regional Airport, IA [5:52 PM Local]",
+  "location": "Dubuque Regional Airport, IA"
+ },
+ {
+  "date": "2026-11-01",
+  "time": "19:12:00",
+  "details": "The President departs Dubuque Regional Airport, IA for Salina Regional Airport, KS [6:11 PM Local]",
+  "location": "Dubuque Regional Airport, IA"
+ },
+ {
+  "date": "2026-11-01",
+  "time": "20:00:00",
+  "details": "The President holds a political rally in Salina, Kansas [7:00 PM Local]",
+  "location": "Salina Regional Airport, KS"
+ },
+ {
+  "date": "2026-11-01",
+  "time": "20:50:00",
+  "details": "The President arrives at Salina Regional Airport, KS [7:50 PM Local]",
+  "location": "Salina Regional Airport, KS"
+ },
+ {
+  "date": "2026-11-01",
+  "time": "23:01:00",
+  "details": "The President departs Salina Regional Airport, KS for Joint Base Andrews [10:08 PM Local]",
+  "location": "Salina Regional Airport, KS"
+ },
+ {
+  "date": "2026-11-01",
+  "time": "23:45:00",
+  "details": "In-Town Pool Call Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-02",
+  "time": null,
+  "details": "TBD: The President departs the White House en route the Lincoln Memorial Reflecting Pool",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-02",
+  "time": null,
+  "details": "TBD: The President arrives the Lincoln Memorial Reflecting Pool",
+  "location": "Lincoln Memorial Reflecting Pool"
+ },
+ {
+  "date": "2026-11-02",
+  "time": null,
+  "details": "TBD: The President departs the Lincoln Memorial Reflecting Pool en route the White House",
+  "location": "Lincoln Memorial Reflecting Pool"
+ },
+ {
+  "date": "2026-11-02",
+  "time": null,
+  "details": "TBD: The President arrives the White House",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-02",
+  "time": "01:30:00",
+  "details": "The President arrives at Joint Base Andrews",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-11-02",
+  "time": "01:45:00",
+  "details": "The President departs Joint Base Andrews en route to The White House",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-11-02",
+  "time": "01:52:00",
+  "details": "The President arrives at The White House",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-02",
+  "time": "01:56:00",
+  "details": "White House Press Office: Travel/Photo lid called for November 1, 2026",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-02",
+  "time": "08:00:00",
+  "details": "The President participates in Executive Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-02",
+  "time": "09:00:00",
+  "details": "In-Town Pool Call Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-02",
+  "time": "11:00:00",
+  "details": "The President participates in a Tele-Rally [Note: Call in support of New York congressional GOP candidates]",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-02",
+  "time": "11:45:00",
+  "details": "The President participates in a Tele-Rally [Note: Call in support of North Carolina GOP candidates]",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-02",
+  "time": "12:03:00",
+  "details": "White House Press Office: Lunch lid until 1:00 PM",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-02",
+  "time": "13:49:00",
+  "details": "The President departs The White House en route to Lincoln Memorial Reflecting Pool",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-02",
+  "time": "13:55:00",
+  "details": "The President arrives at Lincoln Memorial Reflecting Pool",
+  "location": "Lincoln Memorial Reflecting Pool"
+ },
+ {
+  "date": "2026-11-02",
+  "time": "14:00:00",
+  "details": "The President delivers Remarks",
+  "location": "Lincoln Memorial Reflecting Pool"
+ },
+ {
+  "date": "2026-11-02",
+  "time": "14:59:00",
+  "details": "The President departs Lincoln Memorial Reflecting Pool en route to The White House",
+  "location": "Lincoln Memorial Reflecting Pool"
+ },
+ {
+  "date": "2026-11-02",
+  "time": "15:03:00",
+  "details": "The President arrives at The White House",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-02",
+  "time": "16:00:00",
+  "details": "The President participates in a Tele-Rally [Note: Call in support of South Carolina GOP candidates]",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-02",
+  "time": "16:45:00",
+  "details": "The President participates in a Tele-Rally [Note: Call in support of Georgia GOP candidates]",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-02",
+  "time": "17:30:00",
+  "details": "The President participates in a Tele-Rally [Note: Call in support of Alaska GOP candidates]",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-02",
+  "time": "18:07:00",
+  "details": "White House Press Office: Travel/Photo lid called",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-02",
+  "time": "18:15:00",
+  "details": "The President participates in a Tele-Rally [Note: First of two calls in support of Texas GOP candidates]",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-02",
+  "time": "19:00:00",
+  "details": "The President participates in a Tele-Rally [Note: Second of two calls in support of Texas GOP candidates]",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-02",
+  "time": "19:45:00",
+  "details": "The President participates in a Tele-Rally [Note: Call in support of Indiana GOP candidates]",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-02",
+  "time": "20:15:00",
+  "details": "The President participates in a Tele-Rally [Note: Call in support of Louisiana GOP candidates]",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-02",
+  "time": "21:00:00",
+  "details": "Sean Hannity interviews The President on the telephone",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-03",
+  "time": "08:00:00",
+  "details": "The President participates in Executive Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-03",
+  "time": "09:00:00",
+  "details": "In-Town Pool Call Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-03",
+  "time": "11:00:00",
+  "details": "The President participates in a Policy Meeting",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-03",
+  "time": "11:05:00",
+  "details": "The President calls Dan Bongino for a live interview",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-03",
+  "time": "11:55:00",
+  "details": "White House Press Office: Travel/Photo lid called",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-03",
+  "time": "12:08:00",
+  "details": "White House Press Office: Lunch lid until 1:00 PM",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-03",
+  "time": "12:30:00",
+  "details": "The President participates in a Policy Meeting",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-03",
+  "time": "13:30:00",
+  "details": "The President meets with the U.S. Ambassador to the Portuguese Republic",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-11-03",
+  "time": "13:40:00",
+  "details": "Brooke Rollins briefs reporters at The Sticks",
+  "location": "The Sticks - The White House"
+ },
+ {
+  "date": "2026-11-03",
+  "time": "14:30:00",
+  "details": "The President participates in a Policy Meeting",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-11-03",
+  "time": "14:57:00",
+  "details": "Doug Burgum briefs reporters at The Sticks",
+  "location": "The Sticks - The White House"
+ },
+ {
+  "date": "2026-11-03",
+  "time": "16:00:00",
+  "details": "The President participates in Signing Time",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-11-03",
+  "time": "16:32:00",
+  "details": "Markwayne Mullin briefs reporters at The Sticks",
+  "location": "The Sticks - The White House"
+ },
+ {
+  "date": "2026-11-03",
+  "time": "17:03:00",
+  "details": "White House Press Office: Dinner lid until 7:00 PM",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-03",
+  "time": "19:00:00",
+  "details": "The President participates in an Election Night Viewing Reception",
+  "location": "East Room"
+ },
+ {
+  "date": "2026-11-04",
+  "time": "08:00:00",
+  "details": "The President participates in Executive Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-04",
+  "time": "09:00:00",
+  "details": "In-Town Pool Call Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-04",
+  "time": "11:00:00",
+  "details": "The President participates in a Policy Meeting",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-04",
+  "time": "13:30:00",
+  "details": "The President participates in a Policy Meeting",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-04",
+  "time": "14:00:00",
+  "details": "The President participates in a Policy Meeting",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-11-04",
+  "time": "15:30:00",
+  "details": "The President participates in a Policy Meeting",
+  "location": "The White House"
+ }
+]

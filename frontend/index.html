@@ -5,8 +5,9 @@
   <title>Is It Raining on Trump?</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
   <meta name="theme-color" content="#0ea5e9">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -149,7 +150,11 @@
     body.snow .snow-container,
     body.mixed .snow-container,
     body.snow-night .snow-container,
-    body.mixed-night .snow-container { opacity: 1; }
+    body.mixed-night .snow-container,
+    body.has-snow .snow-container { opacity: 1; }
+
+    /* Thunderstorm with snow only: no rain streaks */
+    body.snow-only #rainCanvas { opacity: 0; }
 
     .snowflake {
       position: absolute;
@@ -1110,7 +1115,7 @@
       <div class="subtitle" id="subtitle">Checking weather...</div>
       <div class="rate">
         <span id="rateValue">-</span>
-        <span class="rate-unit">mm/h</span>
+        <span class="rate-unit" id="rateUnit">mm/h</span>
       </div>
     </div>
 
@@ -1131,7 +1136,7 @@
       <button class="footer-btn footer-btn-icon" id="shareBtn" aria-label="Share">
         <span>🔗</span>
       </button>
-      <a href="about.html?v=2.15.3" class="footer-btn footer-btn-icon" aria-label="About">
+      <a href="about.html?v=2.16.2" class="footer-btn footer-btn-icon" aria-label="About">
         <span>ℹ️</span>
       </a>
     </div>
@@ -1146,7 +1151,7 @@
         <div class="sheet-subtitle">Location Details</div>
       </div>
       <div class="sheet-links">
-        <a href="#" class="sheet-link" id="linkRadar" target="_blank">
+        <a class="sheet-link" id="linkRadar" target="_blank" rel="noopener">
           <span class="sheet-link-icon">🌧️</span>
           <div class="sheet-link-text">
             <div class="sheet-link-title">Weather Radar</div>
@@ -1154,7 +1159,7 @@
           </div>
           <span class="sheet-link-arrow">›</span>
         </a>
-        <a href="#" class="sheet-link" id="linkMap" target="_blank">
+        <a class="sheet-link" id="linkMap" target="_blank" rel="noopener">
           <span class="sheet-link-icon">🗺️</span>
           <div class="sheet-link-text">
             <div class="sheet-link-title">View on Map</div>
@@ -1162,7 +1167,7 @@
           </div>
           <span class="sheet-link-arrow">›</span>
         </a>
-        <a href="#" class="sheet-link" id="linkSource" target="_blank">
+        <a class="sheet-link" id="linkSource" target="_blank" rel="noopener">
           <span class="sheet-link-icon">🛫</span>
           <div class="sheet-link-text">
             <div class="sheet-link-title">Location Source</div>
@@ -1312,9 +1317,44 @@
       });
     }
 
+    // The loop only runs while rain is visible and the page is shown.
+    // After rain ends it keeps running for the 0.5s CSS fade-out, then stops.
+    let rainFrame = null;
+    let rainIdleSince = 0;
+    const RAIN_FADE_MS = 600;
+
+    function rainWanted() {
+      return !document.hidden &&
+        /^(rain|mixed|thunderstorm)(-night)?$/.test(
+          [...document.body.classList].find(c => /^(rain|mixed|thunderstorm|sunny|snow|unknown|inflight)(-night)?$/.test(c)) || '');
+    }
+
+    function syncRainLoop() {
+      if (document.hidden) {
+        if (rainFrame !== null) { cancelAnimationFrame(rainFrame); rainFrame = null; }
+        return;
+      }
+      if (rainFrame === null && rainWanted()) {
+        rainIdleSince = 0;
+        rainFrame = requestAnimationFrame(animateRain);
+      }
+    }
+
     function animateRain() {
+      rainFrame = null;
+      if (!rainWanted()) {
+        const now = performance.now();
+        if (!rainIdleSince) rainIdleSince = now;
+        if (now - rainIdleSince > RAIN_FADE_MS) {
+          ctx.clearRect(0, 0, rainCanvas.width, rainCanvas.height);
+          return;  // stopped; syncRainLoop() restarts it
+        }
+      } else {
+        rainIdleSince = 0;
+      }
       ctx.clearRect(0, 0, rainCanvas.width, rainCanvas.height);
-      const isThunderstorm = document.body.classList.contains('thunderstorm');
+      const isThunderstorm = /^thunderstorm/.test(
+        [...document.body.classList].find(c => /^(rain|mixed|thunderstorm|sunny|snow|unknown|inflight)(-night)?$/.test(c)) || '');
       const baseColor = isThunderstorm ? '180, 200, 255' : '200, 220, 255';
       const offset = driftOffset();
 
@@ -1333,9 +1373,9 @@
           drop.x = Math.random() * (rainCanvas.width + offset) - offset;
         }
       });
-      requestAnimationFrame(animateRain);
+      rainFrame = requestAnimationFrame(animateRain);
     }
-    animateRain();
+    document.addEventListener('visibilitychange', syncRainLoop);
 
     // ═══════════════════════════════════════════════════════════════
     // SNOW ANIMATION
@@ -1419,6 +1459,9 @@
     // ═══════════════════════════════════════════════════════════════
     const lightning = document.getElementById('lightning');
     let lightningInterval = null;
+    let lightningFirst = null;
+    let lightningActive = false;
+    let lightningSevere = null;
 
     function triggerLightning() {
       lightning.classList.add('flash');
@@ -1430,24 +1473,34 @@
     }
 
     function startLightning(severe = false) {
+      // Already running at this severity: don't restart (refresh() calls this every minute)
+      if (lightningActive && lightningSevere === severe) return;
       stopLightning();
+      lightningActive = true;
+      lightningSevere = severe;
       const minDelay = severe ? 2000 : 5000;
       const maxDelay = severe ? 6000 : 15000;
 
       function scheduleLightning() {
         const delay = Math.random() * (maxDelay - minDelay) + minDelay;
         lightningInterval = setTimeout(() => {
-          if (document.body.classList.contains('thunderstorm')) {
+          if (lightningActive) {
             triggerLightning();
             scheduleLightning();
           }
         }, delay);
       }
       scheduleLightning();
-      setTimeout(triggerLightning, 1000);
+      lightningFirst = setTimeout(triggerLightning, 1000);
     }
 
     function stopLightning() {
+      lightningActive = false;
+      lightningSevere = null;
+      if (lightningFirst) {
+        clearTimeout(lightningFirst);
+        lightningFirst = null;
+      }
       if (lightningInterval) {
         clearTimeout(lightningInterval);
         lightningInterval = null;
@@ -1468,7 +1521,7 @@
       document.addEventListener('touchmove', (e) => {
         const dy = e.touches[0].clientY - startY;
         // Prevent pull-down bounce when at top of page
-        if (window.scrollY === 0 && dy > 0) {
+        if (window.scrollY === 0 && dy > 0 && !e.target.closest('.sheet')) {
           e.preventDefault();
         }
       }, { passive: false });
@@ -1520,6 +1573,13 @@
       document.body.classList.remove(...allWeatherStates);
       document.body.classList.add(state);
 
+      // Snow falling during a thunderstorm (the storm state wins the theme)
+      const ptype = currentData?.precipitation_type;
+      const stormy = state.startsWith('thunderstorm');
+      document.body.classList.toggle('has-snow', stormy && (ptype === 'snow' || ptype === 'both'));
+      document.body.classList.toggle('snow-only', stormy && ptype === 'snow');
+      syncRainLoop();
+
       // Update iOS/Android status bar color to match theme
       const themeColor = themeColors[state] || themeColors.sunny;
       document.querySelector('meta[name="theme-color"]').setAttribute('content', themeColor);
@@ -1542,25 +1602,39 @@
       return 'rain';
     }
 
-    /**
-     * Determine if it's currently night based on sunrise/sunset times.
-     * @param {string|null} sunrise - ISO8601 sunrise time (local timezone from API)
-     * @param {string|null} sunset - ISO8601 sunset time (local timezone from API)
-     * @returns {boolean} True if it's night (before sunrise or after sunset)
-     */
-    function isNightTime(sunrise, sunset) {
-      // If no sunrise/sunset data, fall back to simple hour-based check
-      if (!sunrise || !sunset) {
-        const hour = new Date().getHours();
-        return hour < 6 || hour >= 20; // Fallback: night = 8pm-6am
+    let lastKnownNight = null;  // last day/night answer derived from real sun data
+
+    function sunMillis(utcIso, localIso, offsetSec) {
+      // Prefer the offset-qualified UTC string; else interpret the naive local string
+      // with the location's UTC offset; else (legacy) parse as viewer-local time.
+      if (utcIso) return Date.parse(utcIso);
+      if (!localIso) return NaN;
+      if (typeof offsetSec === 'number' && isFinite(offsetSec)) {
+        if (/(Z|[+-]\d\d:?\d\d)$/.test(localIso)) return Date.parse(localIso);
+        return Date.parse(localIso + 'Z') - offsetSec * 1000;
       }
+      return new Date(localIso).getTime();
+    }
 
-      const now = new Date();
-      const sunriseTime = new Date(sunrise);
-      const sunsetTime = new Date(sunset);
-
-      // It's night if current time is before sunrise OR after sunset
-      return now < sunriseTime || now > sunsetTime;
+    /**
+     * Determine if it's currently night at Trump's location.
+     * Uses sunrise_utc/sunset_utc (or the local strings plus utc_offset_seconds)
+     * against Date.now(). With no sun data (in flight, unknown) keeps the last
+     * known state; only an app that has never had sun data uses the viewer's clock.
+     * @param {object} data - API response
+     * @returns {boolean} True if it's night
+     */
+    function isNightTime(data) {
+      const rise = sunMillis(data.sunrise_utc, data.sunrise, data.utc_offset_seconds);
+      const set = sunMillis(data.sunset_utc, data.sunset, data.utc_offset_seconds);
+      if (isFinite(rise) && isFinite(set)) {
+        const now = Date.now();
+        lastKnownNight = now < rise || now > set;
+        return lastKnownNight;
+      }
+      if (lastKnownNight !== null) return lastKnownNight;
+      const hour = new Date().getHours();
+      return hour < 6 || hour >= 20;  // Last resort: viewer's clock
     }
 
     /**
@@ -1570,7 +1644,7 @@
      */
     function getWeatherStateWithDayNight(data) {
       const baseState = getWeatherState(data);
-      const isNight = isNightTime(data.sunrise, data.sunset);
+      const isNight = isNightTime(data);
       return isNight ? baseState + '-night' : baseState;
     }
 
@@ -1606,73 +1680,165 @@
         unknown: "Location unknown",
         inflight: "In flight - no weather check"
       };
+      if (baseState === 'unknown' && data && data.error) return "Weather data unavailable";
       return subtitles[baseState] || "";
     }
 
     // ═══════════════════════════════════════════════════════════════
     // API REFRESH
     // ═══════════════════════════════════════════════════════════════
+    const REFRESH_TIMEOUT_MS = 15000;
+    let refreshSeq = 0;
+    let refreshCtl = null;
+    let retryTimer = null;
+
+    function sourceIconFor(reason) {
+      const r = String(reason || '');
+      if (r.startsWith('plane_')) return '✈️';
+      if (r === 'en_route') return '✈️';
+      if (r.startsWith('landing')) return '🛬';
+      if (r.startsWith('calendar_')) return '📅';
+      if (r === 'departure_dest') return '📅';
+      if (r.startsWith('overnight_')) return '🏠';
+      if (r === 'newswire') return '📰';
+      if (r === 'last_known') return '📍';
+      if (r.startsWith('tfr')) return '🚫';
+      if (r === 'unknown') return '❓';
+      return '📍';
+    }
+
+    function fmtAmount(v) {
+      if (v > 0 && v < 0.1) return '<0.1';
+      return v.toFixed(1);
+    }
+
+    /** Rain in mm/h and snow in cm/h shown separately (never summed). '–' when unknown. */
+    function rateParts(data) {
+      const known = data.precipitating !== null && data.precipitating !== undefined &&
+        !data.coords?.in_flight && typeof data.mmh === 'number';
+      if (!known) return null;
+      const rain = data.mmh;
+      const snow = typeof data.snow === 'number' ? data.snow : 0;
+      const t = data.precipitation_type;
+      const parts = [];
+      if (!data.precipitating) {
+        parts.push({ v: fmtAmount(rain), u: 'mm/h' });
+        return parts;
+      }
+      if (t === 'rain' || t === 'both' || snow <= 0) parts.push({ v: fmtAmount(rain), u: 'mm/h' });
+      if (t === 'snow' || t === 'both') parts.push({ v: fmtAmount(snow), u: 'cm/h' });
+      return parts;
+    }
+
+    function renderRate(data) {
+      const valueEl = document.getElementById('rateValue');
+      const unitEl = document.getElementById('rateUnit');
+      const parts = data ? rateParts(data) : null;
+      if (!parts || !parts.length) {
+        valueEl.textContent = '–';
+        unitEl.textContent = '';
+        return;
+      }
+      const last = parts[parts.length - 1];
+      valueEl.textContent = parts.slice(0, -1).map(p => `${p.v} ${p.u} · `).join('') + last.v;
+      unitEl.textContent = last.u;
+    }
+
+    function setLink(el, href) {
+      if (href) {
+        el.setAttribute('href', href);
+        el.removeAttribute('aria-disabled');
+        el.style.display = '';
+        el.style.pointerEvents = '';
+      } else {
+        el.removeAttribute('href');
+        el.setAttribute('aria-disabled', 'true');
+      }
+    }
+
+    function render(data, apiError) {
+      currentData = data;
+
+      document.getElementById('statusDot').classList.toggle('offline', !!apiError);
+      document.getElementById('statusText').textContent = apiError ? 'Weather unavailable' : 'Live';
+      document.querySelector('.center').style.opacity = '';
+
+      const local = new Date(data.timestamp).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+      document.getElementById('updatedTime').textContent = `Updated ${local}`;
+
+      const state = getWeatherStateWithDayNight(data);
+      setWeatherState(state);
+
+      document.getElementById('weatherIcon').textContent = getWeatherIcon(state);
+      document.getElementById('answer').textContent = data.precipitating ? 'YES' : (data.precipitating === false ? 'NO' : '???');
+      document.getElementById('subtitle').textContent = getSubtitle(state, data);
+      renderRate(data);
+
+      const coords = data.coords || {};
+      document.getElementById('locationName').textContent = coords.name || 'Unknown';
+      document.getElementById('locationSource').textContent = coords.source_display || '';
+
+      document.getElementById('sheetTitle').textContent = coords.name || 'Location';
+      const hasPos = typeof coords.lat === 'number' && typeof coords.lon === 'number';
+      const radar = document.getElementById('linkRadar');
+      const map = document.getElementById('linkMap');
+      setLink(radar, hasPos ? `https://www.rainviewer.com/map.html?loc=${coords.lat},${coords.lon},8` : null);
+      setLink(map, hasPos ? `https://www.openstreetmap.org/?mlat=${coords.lat}&mlon=${coords.lon}#map=12/${coords.lat}/${coords.lon}` : null);
+      radar.style.display = map.style.display = hasPos ? '' : 'none';
+
+      const src = document.getElementById('linkSource');
+      setLink(src, coords.source_url || null);
+      src.style.pointerEvents = coords.source_url ? '' : 'none';
+      src.querySelector('.sheet-link-arrow').style.visibility = coords.source_url ? '' : 'hidden';
+      document.getElementById('sourceDesc').textContent = coords.source_display || 'Location source';
+      src.querySelector('.sheet-link-icon').textContent = sourceIconFor(coords.reason);
+    }
+
+    function renderOffline(err) {
+      document.getElementById('statusDot').classList.add('offline');
+      document.getElementById('statusText').textContent = 'Offline';
+      if (!currentData) {
+        // Nothing has ever loaded: replace the placeholders with a real message
+        document.getElementById('weatherIcon').textContent = '📡';
+        document.getElementById('answer').textContent = '???';
+        document.getElementById('subtitle').textContent = "Can't reach server - retrying";
+        document.getElementById('updatedTime').textContent = 'Not updated yet';
+        document.getElementById('locationName').textContent = 'Unavailable';
+        renderRate(null);
+      } else {
+        // Stale answer: say so and dim it
+        const t = new Date(currentData.timestamp).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+        document.getElementById('updatedTime').textContent = `Last updated ${t} (offline)`;
+        document.querySelector('.center').style.opacity = '0.55';
+      }
+      console.error('Refresh failed:', err);
+      clearTimeout(retryTimer);
+      retryTimer = setTimeout(refresh, 10000);
+    }
+
     async function refresh() {
+      // Newest request wins: abort any previous one so stale responses can't overwrite newer state
+      if (refreshCtl) refreshCtl.abort();
+      const ctl = new AbortController();
+      refreshCtl = ctl;
+      const seq = ++refreshSeq;
+      const timer = setTimeout(() => ctl.abort(), REFRESH_TIMEOUT_MS);
+      clearTimeout(retryTimer);
       try {
-        const response = await fetch(ENDPT, { cache: 'no-store' });
-        if (!response.ok) throw new Error('API error');
-
-        const data = await response.json();
-        currentData = data;
-
-        // Update live status
-        document.getElementById('statusDot').classList.remove('offline');
-        document.getElementById('statusText').textContent = 'Live';
-
-        // Update time
-        const local = new Date(data.timestamp).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
-        document.getElementById('updatedTime').textContent = `Updated ${local}`;
-
-        // Determine weather state (with day/night)
-        const state = getWeatherStateWithDayNight(data);
-        setWeatherState(state);
-
-        // Update UI
-        document.getElementById('weatherIcon').textContent = getWeatherIcon(state);
-        document.getElementById('answer').textContent = data.precipitating ? 'YES' : (data.precipitating === false ? 'NO' : '???');
-        document.getElementById('subtitle').textContent = getSubtitle(state, data);
-
-        // Rate display
-        const totalPrecip = (data.mmh || 0) + (data.snow || 0);
-        document.getElementById('rateValue').textContent = totalPrecip.toFixed(1);
-
-        // Location
-        const coords = data.coords || {};
-        document.getElementById('locationName').textContent = coords.name || 'Unknown';
-        document.getElementById('locationSource').textContent = coords.source_display || '';
-
-        // Sheet links
-        document.getElementById('sheetTitle').textContent = coords.name || 'Location';
-        if (coords.lat && coords.lon) {
-          document.getElementById('linkRadar').href = `https://www.rainviewer.com/map.html?loc=${coords.lat},${coords.lon},8`;
-          document.getElementById('linkMap').href = `https://www.openstreetmap.org/?mlat=${coords.lat}&mlon=${coords.lon}#map=12/${coords.lat}/${coords.lon}`;
-        }
-        document.getElementById('linkSource').href = coords.source_url || '#';
-        document.getElementById('sourceDesc').textContent = coords.source_display || 'Location source';
-
-        // Update source icon based on reason
-        const sourceIcons = {
-          flight_opensky: '✈️',
-          flight_adsbfi: '✈️',
-          calendar_alias: '📅',
-          calendar_nominatim: '📅',
-          newswire: '📰',
-          arrival: '📍',
-          tfr: '🚫'
-        };
-        const sourceIcon = sourceIcons[coords.reason] || '📍';
-        document.querySelector('#linkSource .sheet-link-icon').textContent = sourceIcon;
-
+        const response = await fetch(ENDPT, { cache: 'no-store', signal: ctl.signal });
+        let data = null;
+        try { data = await response.json(); } catch (e) { /* non-JSON error body */ }
+        if (seq !== refreshSeq) return;
+        const usable = data && typeof data === 'object' && 'precipitating' in data;
+        if (!response.ok && !(usable && data.error)) throw new Error('API error ' + response.status);
+        if (!usable) throw new Error('Malformed API response');
+        render(data, !response.ok);
       } catch (err) {
-        // Offline state
-        document.getElementById('statusDot').classList.add('offline');
-        document.getElementById('statusText').textContent = 'Offline';
-        console.error('Refresh failed:', err);
+        if (seq !== refreshSeq) return;  // superseded
+        renderOffline(err);
+      } finally {
+        clearTimeout(timer);
+        if (refreshCtl === ctl) refreshCtl = null;
       }
     }
 
@@ -1791,11 +1957,15 @@
           body: JSON.stringify(subscription.toJSON())
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          if (data.preferences) {
-            setLocalPreferences(data.preferences);
-          }
+        if (!response.ok) {
+          // Server refused it: don't leave a browser subscription the server doesn't know about
+          try { await subscription.unsubscribe(); } catch (e) { /* ignore */ }
+          currentSubscription = null;
+          throw new Error('Server rejected subscription (' + response.status + ')');
+        }
+        const data = await response.json();
+        if (data.preferences) {
+          setLocalPreferences(data.preferences);
         }
 
         isSubscribed = true;
@@ -1810,19 +1980,29 @@
       }
     }
 
+    async function getBrowserSubscription() {
+      if (currentSubscription) return currentSubscription;
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        currentSubscription = await reg.pushManager.getSubscription();
+      } catch (e) { /* ignore */ }
+      return currentSubscription;
+    }
+
     async function unsubscribeFromNotifications() {
       try {
-        // Unsubscribe from browser push
-        if (currentSubscription) {
-          const endpoint = currentSubscription.endpoint;
-          await currentSubscription.unsubscribe();
-
-          // Tell server to remove subscription
-          await fetch(BASE + '/subscribe', {
+        const sub = await getBrowserSubscription();
+        if (sub) {
+          // Tell the server first; only drop the browser subscription once that worked
+          const response = await fetch(BASE + '/subscribe', {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ endpoint })
+            body: JSON.stringify({ endpoint: sub.endpoint })
           });
+          if (!response.ok && response.status !== 404) {
+            throw new Error('Server refused unsubscribe (' + response.status + ')');
+          }
+          await sub.unsubscribe();
         }
 
         currentSubscription = null;
@@ -1839,33 +2019,47 @@
     }
 
     async function syncPreference(key, value) {
-      // Optimistic UI update
+      // Optimistic UI update, remembering the exact previous value
       const prefs = getLocalPreferences();
+      const previous = prefs[key];
       prefs[key] = value;
       setLocalPreferences(prefs);
 
       // Update thunderstorm toggle state if needed
       updateThunderstormToggleState();
 
+      const revert = (msg) => {
+        const p = getLocalPreferences();
+        p[key] = previous;
+        setLocalPreferences(p);
+        renderSettingsContent();
+        showToast(msg);
+      };
+
       // Sync to server
-      if (currentSubscription) {
-        try {
-          await fetch(BASE + '/preferences', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              endpoint: currentSubscription.endpoint,
-              preferences: { [key]: value }
-            })
-          });
-        } catch (err) {
-          console.error('Failed to sync preference:', err);
-          // Revert on failure
-          prefs[key] = !value;
-          setLocalPreferences(prefs);
-          renderSettingsContent();
-          showToast('Failed to save preference');
+      const sub = await getBrowserSubscription();
+      if (!sub) {
+        revert('Not subscribed on this device');
+        return;
+      }
+      try {
+        const response = await fetch(BASE + '/preferences', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            endpoint: sub.endpoint,
+            preferences: { [key]: value }
+          })
+        });
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        const data = await response.json().catch(() => null);
+        if (data && data.preferences) {
+          setLocalPreferences(data.preferences);
+          updateThunderstormToggleState();
         }
+      } catch (err) {
+        console.error('Failed to sync preference:', err);
+        revert('Failed to save preference');
       }
     }
 
@@ -2092,6 +2286,31 @@
       }
     });
 
+    // Re-register the browser's subscription with the server (idempotent) so a
+    // server-side prune or a rotated endpoint heals itself; sync prefs from the reply.
+    async function resyncSubscription(subscription) {
+      try {
+        const response = await fetch(BASE + '/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(subscription.toJSON())
+        });
+        if (!response.ok) return;
+        const data = await response.json();
+        if (data.preferences) setLocalPreferences(data.preferences);
+      } catch (err) { /* offline: try again next load */ }
+    }
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', async (e) => {
+        if (e.data?.type === 'PUSH_SUB_CHANGED') {
+          currentSubscription = null;
+          const sub = await getBrowserSubscription();
+          if (sub) resyncSubscription(sub);
+        }
+      });
+    }
+
     // ═══════════════════════════════════════════════════════════════
     // SERVICE WORKER & SUBSCRIPTION INITIALIZATION
     // ═══════════════════════════════════════════════════════════════
@@ -2109,6 +2328,7 @@
             currentSubscription = subscription;
             isSubscribed = true;
             localStorage.setItem('pushSubscribed', 'true');
+            resyncSubscription(subscription);
           }
         } catch (err) {
           // Ignore errors - localStorage will be used as fallback

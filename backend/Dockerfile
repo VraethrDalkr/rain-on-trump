@@ -25,8 +25,11 @@ RUN pip install --no-cache-dir /wheels/*.whl
 COPY backend/app ./app
 
 # Run as non-root
+# /data is the persist dir (Fly mounts the volume over it, so the volume itself
+# needs a one-time chown to rainuser).
 RUN adduser --disabled-login --gecos "" rainuser \
-  && chown -R rainuser:rainuser /app
+  && mkdir -p /data \
+  && chown -R rainuser:rainuser /app /data
 USER rainuser
 
 # Healthcheck endpoint (you’ll need /healthz in your FastAPI app)

@@ -1,10 +1,11 @@
 <!doctype html>
-<!-- v2.15.3 -->
+<!-- v2.16.2 -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <title>About · Is It Raining on Trump?</title>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -213,7 +214,7 @@
         View the code on <a href="https://github.com/VraethrDalkr/rain-on-trump" target="_blank">GitHub</a>.
       </p>
       <p style="font-size: 0.9rem; margin-top: 1rem;" class="muted">
-        <strong>Version:</strong> 2.15.3
+        <strong>Version:</strong> 2.16.2
       </p>
     </section>
 
@@ -252,10 +253,10 @@
       <details style="margin-top: 1.5rem;">
         <summary>Prefer email? Click here to expand contact form</summary>
         <div style="margin-top: 1rem;">
-          <!-- Spam-trap field: hidden from users, used to catch bots -->
-          <input type="text" name="_gotcha" style="display:none">
-
           <form action="https://formspree.io/f/xqabkkvw" method="POST" id="contact-form">
+            <!-- Spam-trap field: hidden from users, used to catch bots -->
+            <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true">
+
             <label for="name">Your name (or GitHub username):</label>
             <input id="name" type="text" name="name" required>
 
@@ -277,7 +278,7 @@
       <h2>Data Sources &amp; Methodology</h2>
       <p>
         <strong>1. Aircraft Tracking:</strong>
-        Checks ADS-B feeds (OpenSky → adsb.fi) for Trump’s jet. If airborne,
+        Checks community ADS-B feeds (adsb.fi → adsb.lol) for the presidential aircraft. If airborne,
         we assume no rain until arrival; if grounded, we save the last arrival
         coordinates to cache.
       </p>
@@ -309,7 +310,7 @@
       </p>
       <p>
         <strong>3. Weather Data:</strong>
-        With coordinates determined, we query Open-Meteo for current hourly
+        With coordinates determined, we query Open-Meteo for current 15-minute
         precipitation (both rain and snow). Any precipitation rate > 0 mm/h
         yields "🌧 YES" in the UI; otherwise "☀ NO."
       </p>
@@ -328,12 +329,12 @@
       <ul>
         <li><strong>Location accuracy:</strong> Derived from public schedule and
             flight data. Confidence decreases over time since the last known event.</li>
-        <li><strong>Weather granularity:</strong> Open-Meteo provides hourly data,
-            so brief showers may be missed or delayed.</li>
+        <li><strong>Weather granularity:</strong> Open-Meteo provides 15-minute data
+            (we look at the last hour), so very brief showers may be missed or delayed.</li>
         <li><strong>In-flight:</strong> No weather check while airborne. We report
             "not raining" until landing.</li>
         <li><strong>Unknown state:</strong> If no fresh data exists within 72 hours,
-            the app displays "Unknown" with the last known location.</li>
+            the app displays "Unknown" (no location).</li>
       </ul>
     </section>
 
@@ -346,15 +347,15 @@
       <ul>
         <li><a href="https://open-meteo.com/" target="_blank">Open-Meteo</a> – weather data</li>
         <li><a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> / <a href="https://nominatim.org/" target="_blank">Nominatim</a> – geocoding</li>
-        <li><a href="https://opensky-network.org/" target="_blank">OpenSky Network</a> – ADS-B flight tracking</li>
-        <li><a href="https://adsb.fi/" target="_blank">adsb.fi</a> – backup ADS-B feed</li>
+        <li><a href="https://adsb.fi/" target="_blank">adsb.fi</a> – ADS-B flight tracking</li>
+        <li><a href="https://adsb.lol/" target="_blank">adsb.lol</a> – backup ADS-B feed</li>
         <li><a href="https://rollcall.com/factbase/trump/topic/calendar/" target="_blank">Factba.se</a> – public schedule data</li>
       </ul>
     </section>
   </main>
 
   <footer>
-    <p>© 2025 "Is It Raining on Trump?" · Licensed under <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank">AGPL-3.0</a></p>
+    <p>© 2025–2026 "Is It Raining on Trump?" · Licensed under <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank">AGPL-3.0</a></p>
     <a href="debug.html" class="debug-link">🐞 Debug</a>
   </footer>
 

@@ -114,22 +114,8 @@ def test_adsbfi_none(
     assert svc.get_plane_state_adsb() is None
 
 
-def test_adsbfi_fresh_snapshot(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Fresh <40 min snapshot ⇒ expect PlaneState dict with correct keys."""
-    now = dt.datetime.now(UTC).timestamp()
-    payload = {
-        "aircraft": {
-            "seen_pos": now - 60,  # 1 min ago (fresh)
-            "lat": 50.0,
-            "lon": -75.0,
-            "alt_baro": 1500,
-            "ground": False,
-        }
-    }
-    # Reset memo-cache
+def _patch_client(monkeypatch: pytest.MonkeyPatch, payload: dict[str, Any]) -> None:
     monkeypatch.setattr(svc, "_cache", {}, raising=False)
-
-    # Provide exactly one fresh snapshot. After that, DummyClient returns 404.
     monkeypatch.setattr(
         svc.httpx,
         "Client",
@@ -137,8 +123,138 @@ def test_adsbfi_fresh_snapshot(monkeypatch: pytest.MonkeyPatch) -> None:
         raising=True,
     )
 
+
+def test_adsbfi_fresh_snapshot(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Fresh v2 snapshot (relative seen_pos) ⇒ PlaneState with correct keys."""
+    payload = {
+        "now": dt.datetime.now(UTC).timestamp() * 1000,
+        "ac": [
+            {
+                "hex": "adfdf9",
+                "seen_pos": 60.0,  # seconds since last position (readsb style)
+                "lat": 50.0,
+                "lon": -75.0,
+                "alt_baro": 1500,
+            }
+        ],
+    }
+    _patch_client(monkeypatch, payload)
+
     plane = svc.get_plane_state_adsb()
     assert plane is not None
+    assert plane["callsign"] == "92-9000"
     assert plane["status"] == "airborne"
-    assert pytest.approx(50.0) == plane["lat"]
-    assert pytest.approx(-75.0) == plane["lon"]
+    assert plane["tracker_url"].endswith("icao=adfdf9")
+    age = (dt.datetime.now(UTC) - plane["ts"]).total_seconds()
+    assert 55 < age < 120
+
+
+def test_adsbfi_alt_baro_ground_string(monkeypatch: pytest.MonkeyPatch) -> None:
+    """alt_baro == "ground" must mean grounded, not a float() crash."""
+    payload = {
+        "ac": [
+            {
+                "hex": "aa3410",
+                "seen_pos": 5,
+                "lat": 26.7,
+                "lon": -80.1,
+                "alt_baro": "ground",
+            }
+        ]
+    }
+    _patch_client(monkeypatch, payload)
+
+    plane = svc.get_plane_state_adsb()
+    assert plane is not None
+    assert plane["callsign"] == "N757AF"
+    assert plane["on_ground"] is True
+    assert plane["status"] == "grounded"
+
+
+def test_adsbfi_freshest_aircraft_wins(monkeypatch: pytest.MonkeyPatch) -> None:
+    """With several fleet aircraft visible, the most recent position wins."""
+    payload = {
+        "ac": [
+            {
+                "hex": "adfdf9",
+                "seen_pos": 900,
+                "lat": 1.0,
+                "lon": 1.0,
+                "alt_baro": 30000,
+            },
+            {
+                "hex": "AA3410",
+                "seen_pos": 10,
+                "lat": 2.0,
+                "lon": 2.0,
+                "alt_baro": 30000,
+            },
+            {"hex": "123456", "seen_pos": 1, "lat": 3.0, "lon": 3.0, "alt_baro": 30000},
+        ]
+    }
+    _patch_client(monkeypatch, payload)
+
+    plane = svc.get_plane_state_adsb()
+    assert plane is not None
+    assert plane["callsign"] == "N757AF"
+
+
+def test_adsbfi_legacy_epoch_seen_pos(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Legacy v1 shape with an absolute epoch seen_pos still parses."""
+    now = dt.datetime.now(UTC).timestamp()
+    payload = {
+        "aircraft": {
+            "hex": "adfdf9",
+            "seen_pos": now - 60,
+            "lat": 50.0,
+            "lon": -75.0,
+            "alt_baro": 1500,
+        }
+    }
+    _patch_client(monkeypatch, payload)
+
+    plane = svc.get_plane_state_adsb()
+    assert plane is not None
+    assert plane["callsign"] == "92-9000"
+
+
+def test_adsbfi_c32a_needs_af1_callsign(monkeypatch: pytest.MonkeyPatch) -> None:
+    """C-32A sightings only count when the flight ID is AF1."""
+    rec = {"hex": "adfeb8", "seen_pos": 5, "lat": 1.0, "lon": 2.0, "alt_baro": 30000}
+    _patch_client(monkeypatch, {"ac": [{**rec, "flight": "SAM0002 "}]})
+    assert svc.get_plane_state_adsb() is None
+
+    _patch_client(monkeypatch, {"ac": [{**rec, "flight": "AF1     "}]})
+    plane = svc.get_plane_state_adsb()
+    assert plane is not None
+    assert plane["callsign"] == "98-0002"
+    assert plane["flight_id"] == "AF1"
+
+
+def test_real_mlat_record_with_blank_flight(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Shape observed live on adsb.lol 2026-11-04 (VC-25A, MLAT, blank flight)."""
+    payload = {
+        "ac": [
+            {
+                "hex": "adfdf8",
+                "type": "mlat",
+                "flight": "        ",
+                "r": "82-8000",
+                "t": "B742",
+                "alt_baro": 31000,
+                "gs": 572.0,
+                "baro_rate": 32,
+                "lat": 40.1,
+                "lon": -80.2,
+                "seen_pos": 1.2,
+            }
+        ],
+        "now": dt.datetime.now(UTC).timestamp() * 1000,
+    }
+    _patch_client(monkeypatch, payload)
+
+    plane = svc.get_plane_state_adsb()
+    assert plane is not None
+    assert plane["callsign"] == "82-8000"
+    assert plane["status"] == "airborne"
+    assert plane["flight_id"] == ""

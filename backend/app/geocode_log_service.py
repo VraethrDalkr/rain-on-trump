@@ -19,10 +19,13 @@ import datetime as dt
 import json
 import logging
 import os
+import tempfile
+import threading
 from pathlib import Path
 from typing import Any, Final
 
 UTC: Final = dt.timezone.utc
+_LOCK = threading.Lock()  # serialises read-modify-write cycles
 LOG = logging.getLogger("geocode_log_service")
 
 # ── Configuration ─────────────────────────────────────────────────────────
@@ -50,29 +53,50 @@ FILE = DIR / "geocode_log.json"
 
 
 def _load_entries() -> list[dict[str, Any]]:
-    """Load existing log entries from disk."""
+    """Load existing entries from disk (a corrupt file is set aside, not fatal)."""
     if not FILE.exists():
         return []
 
     try:
         data = json.loads(FILE.read_text())
-        return data.get("entries", [])
+        items = data.get("entries", [])
+        if not isinstance(items, list):
+            raise ValueError("'entries' is not a list")
+        return items
     except Exception as exc:
         LOG.warning("[geocode_log] Failed to load: %s", exc)
+        try:
+            os.replace(FILE, FILE.with_name(FILE.name + ".corrupt"))
+        except OSError:
+            pass
         return []
 
 
 def _save_entries(entries: list[dict[str, Any]]) -> None:
-    """Save entries to disk."""
+    """Atomically save entries to disk (temp file + os.replace)."""
+    tmp = None
     try:
         data = {
             "entries": entries,
             "max_age_hours": GEOCODE_LOG_MAX_AGE_H,
             "updated_at": dt.datetime.now(UTC).isoformat(),
         }
-        FILE.write_text(json.dumps(data, indent=2, default=str))
+        fd, tmp = tempfile.mkstemp(dir=FILE.parent, prefix=FILE.name, suffix=".tmp")
+        with os.fdopen(fd, "w") as fh:
+            fh.write(json.dumps(data, default=str))
+            fh.flush()
+            os.fsync(fh.fileno())
+        os.chmod(tmp, 0o644)  # mkstemp creates 0600
+        os.replace(tmp, FILE)
+        tmp = None
     except Exception as exc:
         LOG.error("[geocode_log] Failed to save: %s", exc)
+    finally:
+        if tmp is not None:
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
 
 
 def _prune_old(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -145,10 +169,11 @@ def add_geocode_entry(
         entry["importance"] = round(importance, 3)
 
     # Load existing, add new, prune old, save
-    entries = _load_entries()
-    entries.append(entry)
-    entries = _prune_old(entries)
-    _save_entries(entries)
+    with _LOCK:
+        entries = _load_entries()
+        entries.append(entry)
+        entries = _prune_old(entries)
+        _save_entries(entries)
 
 
 def get_geocode_entries(

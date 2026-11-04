@@ -8,6 +8,9 @@ Verify the “plane vs calendar” *freshness* rule:
 
 * If the jet landed **before** the calendar event, pipeline falls through
   to the calendar branch (`reason` starts with `"calendar_"`).
+
+The jet flies as Air Force One (corroborated) and is parked near the venue,
+as an uncorroborated or far-away grounded jet never outranks the calendar.
 """
 
 from __future__ import annotations
@@ -27,13 +30,14 @@ def _stub_plane(ts: dt.datetime) -> Dict[str, Any]:
     """Return minimal grounded PlaneState for stubbing."""
     return {
         "callsign": "N757AF",
-        "lat": 10.0,
-        "lon": 20.0,
+        "lat": 40.7994,  # Morristown Municipal Airport, ~25 km from the venue
+        "lon": -74.4149,
         "altitude": 0.0,
         "on_ground": True,
         "ts": ts,
         "status": "grounded",
         "tracker_url": "",
+        "flight_id": "AF1",
     }
 
 
@@ -53,34 +57,22 @@ async def test_freshness_rule(
     plane_ts = now + dt.timedelta(hours=plane_delta_h)
     event_ts = now
 
-    # 1️⃣  Plane state stub
-    monkeypatch.setattr(
-        loc, "get_plane_state", lambda: _stub_plane(plane_ts), raising=True
-    )
+    # 1️⃣  Plane state stub (a live state stamped in the future is clamped)
+    snap = {"states": [_stub_plane(plane_ts)], "errors": []}
+    monkeypatch.setattr(loc, "get_fleet_states", lambda: snap, raising=True)
 
     # 2️⃣  Calendar event stub
-    monkeypatch.setattr(
-        loc.cal,
-        "current_event",
-        lambda: {
-            "location": "Bedminster, NJ",
-            "summary": "Private fundraiser",
-            "dtstart_utc": event_ts,
-        },
-        raising=True,
+    event = {
+        "location": "Bedminster, NJ",
+        "summary": "Private fundraiser",
+        "dtstart_utc": event_ts,
+    }
+    monkeypatch.setattr(loc.cal, "get_events", lambda: [event], raising=True)
+
+    # 3️⃣  "Bedminster, NJ" has no place alias → a cached geocode
+    loc._put_candidates(
+        "Bedminster, NJ", [{"lat": 40.68, "lon": -74.65, "name": "Bedminster, NJ"}]
     )
-
-    # 3️⃣  Empty VIP/TFR + last-known + newswire to isolate branch
-    async def _no_vip(*_a, **_k):
-        return []
-
-    monkeypatch.setattr(loc, "_vip_json", _no_vip, raising=True)
-    monkeypatch.setattr(loc, "load_last", lambda: None, raising=True)
-
-    async def _no_news():
-        return None
-
-    monkeypatch.setattr(loc, "get_latest_location", _no_news, raising=True)
 
     coords = await loc.current_coords()
     if isinstance(coords, tuple):

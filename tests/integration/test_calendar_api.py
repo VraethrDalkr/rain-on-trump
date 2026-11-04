@@ -17,7 +17,6 @@ import pytest
 
 from app.constants import USER_AGENT
 
-
 FEED_URL = "https://media-cdn.factba.se/rss/json/trump/calendar-full.json"
 
 
@@ -120,4 +119,6 @@ class TestFactbaseCalendarAPI:
         for item in data[:20]:
             location = item.get("location")
             if location is not None:
-                assert isinstance(location, str), f"Location should be string: {location}"
+                assert isinstance(
+                    location, str
+                ), f"Location should be string: {location}"

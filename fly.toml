@@ -1,6 +1,7 @@
 # fly.toml
 app = "rain-api"
 primary_region = "yul"
+kill_timeout = 15  # seconds between SIGTERM and SIGKILL (let writes/webhooks finish)
 
 [build]
   dockerfile = "backend/Dockerfile"
@@ -12,6 +13,14 @@ primary_region = "yul"
   auto_start_machines = true
   min_machines_running = 1
   processes = ["app"]
+
+  # /healthz returns 503 when the background loop stalls (first 5 min: always ok)
+  [[http_service.checks]]
+    method       = "GET"
+    path         = "/healthz"
+    interval     = "30s"
+    timeout      = "5s"
+    grace_period = "20s"
 
 [[vm]]
   size   = "shared-cpu-1x"

@@ -14,34 +14,17 @@ from __future__ import annotations
 import asyncio
 import inspect
 
-import pytest
 
+class TestFlightServiceAsyncSafety:
+    """flight_service must stay callable from threads inside a running loop."""
 
-class TestOpenSkyAsyncSafety:
-    """Document OpenSky's asyncio.run() usage pattern."""
+    def test_flight_service_does_not_use_asyncio_run(self) -> None:
+        """asyncio.run() raises inside a running event loop (it made
+        /plane_state.json always fail before 2026-11)."""
+        from app import adsbfi_service, flight_service
 
-    def test_opensky_uses_asyncio_run_internally(self) -> None:
-        """Document: _opensky_state uses asyncio.run() internally.
-
-        This means _opensky_state CANNOT be called from an already-running
-        async context (nested asyncio.run() raises RuntimeError).
-
-        Currently safe because get_plane_state() is called via asyncio.to_thread()
-        in location_service.py.
-
-        If this test fails, the implementation has changed and async safety
-        should be reviewed.
-        """
-        from app.flight_service import _opensky_state
-
-        source = inspect.getsource(_opensky_state)
-
-        # Verify the function uses asyncio.run
-        assert "asyncio.run" in source, (
-            "_opensky_state implementation changed - verify async safety. "
-            "If asyncio.run is removed, the to_thread wrapper in location_service "
-            "may need to be updated."
-        )
+        for mod in (flight_service, adsbfi_service):
+            assert "asyncio.run(" not in inspect.getsource(mod)
 
     async def test_get_plane_state_callable_from_async(self) -> None:
         """get_plane_state should be callable from async context via to_thread.
@@ -90,23 +73,20 @@ class TestLocationServiceAsyncSafety:
         # Mock external calls to avoid actual network requests
         from unittest.mock import AsyncMock, patch
 
-        with patch("app.location_service.get_plane_state") as mock_plane:
-            mock_plane.return_value = {"state": None, "errors": []}
+        with patch("app.location_service.get_fleet_states") as mock_plane:
+            mock_plane.return_value = {"states": [], "errors": []}
 
-            with patch("app.location_service._vip_json", new_callable=AsyncMock) as mock_tfr:
-                mock_tfr.return_value = []
+            with patch("app.location_service.cal.get_events") as mock_cal:
+                mock_cal.return_value = []
 
-                with patch("app.location_service.cal.current_event") as mock_cal:
-                    mock_cal.return_value = None
+                with patch(
+                    "app.location_service.get_latest_location",
+                    new_callable=AsyncMock,
+                ) as mock_news:
+                    mock_news.return_value = None
 
-                    with patch("app.location_service.get_latest_location", new_callable=AsyncMock) as mock_news:
-                        mock_news.return_value = None
-
-                        with patch("app.location_service.load_last") as mock_last:
-                            mock_last.return_value = None
-
-                            # Should not raise
-                            result = await current_coords()
+                    # Should not raise
+                    result = await current_coords()
 
         assert result is not None
         assert "unknown" in result
@@ -123,16 +103,16 @@ class TestAdsbfiSyncPattern:
 
         If this test fails, verify the calling pattern is still safe.
         """
-        from app.adsbfi_service import get_plane_state_adsb
+        from app.adsbfi_service import _fetch_v2, get_plane_state_adsb
 
-        source = inspect.getsource(get_plane_state_adsb)
+        source = inspect.getsource(_fetch_v2)
 
         # Should use sync Client, not AsyncClient
         assert "httpx.Client" in source, "adsb.fi should use sync httpx.Client"
         # The function should NOT be async
-        assert not asyncio.iscoroutinefunction(get_plane_state_adsb), (
-            "get_plane_state_adsb should be sync (not async)"
-        )
+        assert not asyncio.iscoroutinefunction(
+            get_plane_state_adsb
+        ), "get_plane_state_adsb should be sync (not async)"
 
 
 class TestWeatherServiceAsyncPattern:

@@ -324,7 +324,6 @@ class TestEmitGeocodeFailure:
     def test_emit_geocode_failure_respects_cooldown(self):
         """emit_geocode_failure deduplicates by query within cooldown period."""
         from app.event_service import (
-            _last_geocode_error,
             emit_geocode_failure,
         )
 

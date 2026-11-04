@@ -21,19 +21,25 @@ Determine Donald Trump’s most likely location **right now**.
   provides NOTAMs data via REST. Note: NASA docs indicate TFRs in NOTAMs
   often lack geometry data; may need to merge with other sources.
 * Impact: Grounded aircraft no longer get +10 confidence boost from TFR
-  proximity. Flight tracking (ADS-B via OpenSky/adsb.fi) is unaffected.
+  proximity. Flight tracking (ADS-B via adsb.fi/adsb.lol) is unaffected.
 * See: https://ntrs.nasa.gov/citations/20250003355 for NASA DIP API docs.
 """
 
 from __future__ import annotations
 
-import asyncio
 import datetime as dt
+import json
 import logging
 import math
+import os
 import re
+import tempfile
+import threading
+import time
 import unicodedata
-from typing import Any, Dict, List, Optional, Tuple, Union
+from pathlib import Path
+from types import SimpleNamespace
+from typing import Any, Dict, Final, List, Optional, Tuple, Union
 
 import httpx
 from dateutil import tz
@@ -41,7 +47,7 @@ from geopy.extra.rate_limiter import RateLimiter
 from geopy.geocoders import Nominatim
 
 from .api_logging import logged_request_async
-from .arrival_cache import load as load_last, save as save_last
+from . import arrival_cache, clock, executors, location_fusion
 from .event_service import (
     LOW_IMPORTANCE_THRESHOLD,
     emit_all_results_infeasible,
@@ -53,10 +59,11 @@ from .event_service import (
     emit_low_importance_geocode,
     emit_suspicious_geocode,
 )
-from .flight_service import get_plane_state
+from .fleet import FLEET, airframe_of, home_base_of, is_af1_callsign
+from .flight_service import get_fleet_states
 from .gdelt_service import get_latest_location
 from . import calendar_service as cal
-from .place_aliases import PLACE_ALIASES
+from .place_aliases import find_alias
 from .geocode_log_service import add_geocode_entry
 
 # ── Constants ─────────────────────────────────────────────────────────────
@@ -79,14 +86,16 @@ COORD_RE = re.compile(r"([NS]\d+\.\d+),\s*([EW\-]?\d+\.\d+)")
 R_EARTH_KM = 6_371.0
 CAL_BASE_CONF = 70
 CAL_MIN_CONF = 30
-CAL_WINDOW_H = 72.0  # hours
+CAL_WINDOW_H = 72.0  # hours (decay span; current_event() only looks back 36 h)
 
 # Physical feasibility constants for geocoding disambiguation
 MAX_TRAVEL_SPEED_KMH = 800.0  # Generous estimate for Air Force One effective speed
 MIN_TIME_GAP_H = 0.1  # Minimum 6 minutes to avoid division issues
 SUSPICIOUS_DISTANCE_KM = 500.0  # Alert if best result is this far from context
 
-TRANSLATE = str.maketrans({"\u00a0": " ", "\u2011": "-", "\u2013": "-", "\u2014": "-"})
+TRANSLATE = str.maketrans(
+    {"\u00a0": " ", "\u2010": "-", "\u2011": "-", "\u2013": "-", "\u2014": "-"}
+)
 
 # ── Skip list for non-geocodable locations ────────────────────────────────
 # Locations that shouldn't be geocoded (based on empirical analysis of calendar)
@@ -117,7 +126,7 @@ def _emit_state_change_events(
     During initialization (_is_initializing=True), updates state tracking
     variables but skips event emission to avoid startup noise.
     """
-    global _prev_flight_status, _prev_location_reason, _is_initializing
+    global _prev_flight_status, _prev_location_reason
 
     # During initialization, just update state without emitting events
     if _is_initializing:
@@ -136,7 +145,7 @@ def _emit_state_change_events(
                 lat=plane_state.get("lat", 0),
                 lon=plane_state.get("lon", 0),
                 altitude=plane_state.get("altitude", 0),
-                source="OpenSky/adsb.fi",
+                source="adsb.fi/adsb.lol",
             )
 
         elif curr_status == "grounded" and _prev_flight_status == "airborne":
@@ -203,7 +212,7 @@ def select_highest_confidence(candidates: list[dict]) -> dict | None:
     """
     if not candidates:
         return None
-    
+
     return max(candidates, key=lambda c: c.get("confidence", 0))
 
 
@@ -212,39 +221,40 @@ def _clean(text: str) -> str:
 
     return unicodedata.normalize("NFKC", text).translate(TRANSLATE).strip().lower()
 
+
 def parse_tfr_coordinates(description: str) -> dict[str, float] | None:
     """
     Parse and validate coordinates from TFR description.
-    
+
     Args:
         description: TFR description text containing coordinates.
-    
+
     Returns:
         Dict with 'lat' and 'lon' keys, or None if invalid/not found.
-    
+
     Validation:
         - Latitude must be between -90 and 90
         - Longitude must be between -180 and 180
         - Coordinates must match format: N40.7, W74.0 (or S/E)
     """
     import logging
-    
+
     # Match coordinates like "N40.7128, W74.0060"
     m = COORD_RE.search(description)
     if not m:
         return None
-    
+
     try:
         # Parse latitude (group 1: like "N40.7128")
         lat_str = m.group(1)
         lat_value = float(lat_str[1:])  # Remove direction letter
-        
+
         # Apply sign based on direction (N=positive, S=negative)
         if lat_str[0] == "S":
             lat_value = -lat_value
         elif lat_str[0] != "N":
             return None  # Invalid direction
-        
+
         # Parse longitude (group 2: like "W74.0060" or "E151.2093")
         lon_str = m.group(2)
         # Handle both "W74" and "-74" formats
@@ -254,7 +264,7 @@ def parse_tfr_coordinates(description: str) -> dict[str, float] | None:
                 lon_value = -lon_value
         else:
             lon_value = float(lon_str)  # Already has sign
-        
+
         # Validate bounds
         if not (-90 <= lat_value <= 90):
             logging.getLogger("location_service").warning(
@@ -263,7 +273,7 @@ def parse_tfr_coordinates(description: str) -> dict[str, float] | None:
                 lat_value,
             )
             return None
-        
+
         if not (-180 <= lon_value <= 180):
             logging.getLogger("location_service").warning(
                 "Invalid longitude in TFR description: %s (lon=%.2f)",
@@ -271,9 +281,9 @@ def parse_tfr_coordinates(description: str) -> dict[str, float] | None:
                 lon_value,
             )
             return None
-        
+
         return {"lat": lat_value, "lon": lon_value}
-    
+
     except (ValueError, IndexError) as e:
         logging.getLogger("location_service").warning(
             "Failed to parse TFR coordinates from '%s': %s",
@@ -281,8 +291,6 @@ def parse_tfr_coordinates(description: str) -> dict[str, float] | None:
             e,
         )
         return None
-
-
 
 
 def _age_h(ts_utc: dt.datetime) -> float:
@@ -439,7 +447,8 @@ def _disambiguate_results(
 
     # === LAYER 1: Physical Feasibility Filter ===
     feasible_results = [
-        r for r in results
+        r
+        for r in results
         if _is_physically_feasible(r.latitude, r.longitude, context_events, target_dt)
     ]
 
@@ -460,9 +469,7 @@ def _disambiguate_results(
     )
 
     # === LAYER 3: Suspicious Distance Alert ===
-    distance_km = _haversine_km(
-        centroid[0], centroid[1], best.latitude, best.longitude
-    )
+    distance_km = _haversine_km(centroid[0], centroid[1], best.latitude, best.longitude)
     if distance_km > SUSPICIOUS_DISTANCE_KM:
         return best, {
             "type": "suspicious_distance",
@@ -487,43 +494,316 @@ def _likely_trump_tfr(rec: dict) -> bool:
 
 
 # ── Geocoder (polite rate‑limited) ───────────────────────────────────────
-_nominatim = Nominatim(user_agent="rain-on-trump")
-_geocode_raw = RateLimiter(_nominatim.geocode, min_delay_seconds=1)
+_nominatim = Nominatim(user_agent=USER_AGENT)
+# Errors must surface (not come back as "no result"), and are never retried
+# inside a batch: the background loop simply tries again later
+_geocode_raw = RateLimiter(
+    _nominatim.geocode, min_delay_seconds=1, max_retries=0, swallow_exceptions=False
+)
 
 _geocode_log = logging.getLogger("location_service.geocode")
 
 
 def _should_skip_geocode(location: str) -> bool:
-    """Check if location should be skipped for geocoding."""
+    """True for skip-listed strings and generic phrases ("his golf club")."""
     cleaned = _clean(location)
-    return cleaned in SKIP_LOCATIONS
+    return cleaned in SKIP_LOCATIONS or location_fusion.is_generic_place(cleaned)
 
 
-# ── Geocode result cache ─────────────────────────────────────────────────
-# Prevents redundant Nominatim calls for the same query within TTL period.
-# Keyed by cleaned query string; stores (timestamp, result) tuples.
-_geocode_cache: dict[str, tuple[dt.datetime, object]] = {}
-GEOCODE_CACHE_TTL_S: Final = 900  # 15 minutes (matches calendar cache)
+# ── Persistent geocode cache ─────────────────────────────────────────────
+# Positive results (all candidates of a query) are kept in the persist dir
+# for GEOCODE_CACHE_TTL_S, keyed by the cleaned query, and are NOT cleared by
+# /debug. Geocoding happens in the background loop (pregeocode_events); the
+# request path only reads this cache.
+GEOCODE_CACHE_TTL_S: Final = 30 * 86400  # 30 days
+GEOCODE_CACHE_NAME: Final = "geocode_cache.json"
+GEOCODE_CANDIDATES: Final = 5
+_geocode_lock = threading.RLock()
+_geocode_cache: dict[str, dict[str, Any]] = {}  # in-memory mirror of the file
+_geocode_cache_path: Path | None = None
 
 
-def _get_cached_geocode(query: str) -> object | None:
-    """Return cached geocode result if still valid, else None."""
+def _persist_dir() -> Path:
+    try:
+        from .push_service import PERSIST_DIR  # looked up at call time (tests)
+
+        return Path(PERSIST_DIR)
+    except Exception:  # noqa: BLE001 – fall back next to the flight history
+        return arrival_cache.FILE.parent
+
+
+def _geocode_store() -> dict[str, dict[str, Any]]:
+    """The in-memory cache, (re)loaded when the persist dir changed."""
+    global _geocode_cache_path
+    path = _persist_dir() / GEOCODE_CACHE_NAME
+    if path != _geocode_cache_path:
+        _geocode_cache.clear()
+        try:
+            data = json.loads(path.read_text())
+            entries = data.get("entries", {}) if isinstance(data, dict) else {}
+            _geocode_cache.update(
+                {
+                    k: v
+                    for k, v in entries.items()
+                    if isinstance(v, dict) and _fresh(v.get("ts"), GEOCODE_CACHE_TTL_S)
+                }
+            )
+            negative = data.get("negative", {}) if isinstance(data, dict) else {}
+            for key, ts in negative.items():
+                if _fresh(ts, GEOCODE_NEG_TTL_S):
+                    _geocode_neg_cache[key] = dt.datetime.fromisoformat(ts)
+        except FileNotFoundError:
+            pass
+        except Exception as exc:  # noqa: BLE001 – corrupt cache: start afresh
+            _geocode_log.warning("Unreadable geocode cache %s: %s", path, exc)
+        _geocode_cache_path = path
+    return _geocode_cache
+
+
+def _fresh(ts: Any, ttl_s: float) -> bool:
+    """True if ISO timestamp *ts* is younger than *ttl_s*."""
+    try:
+        age = dt.datetime.now(UTC) - dt.datetime.fromisoformat(str(ts))
+    except (TypeError, ValueError):
+        return False
+    return age.total_seconds() <= ttl_s
+
+
+def _save_geocode_store() -> None:
+    """Persist fresh positive entries and genuine negative results (expired
+    entries are pruned on every save)."""
+    for key in [
+        k
+        for k, v in _geocode_cache.items()
+        if not _fresh(v.get("ts"), GEOCODE_CACHE_TTL_S)
+    ]:
+        del _geocode_cache[key]
+    _prune_negative()
+    negative = {k: ts.isoformat() for k, ts in _geocode_neg_cache.items()}
+    path = _persist_dir() / GEOCODE_CACHE_NAME
+    fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.")
+    try:
+        with os.fdopen(fd, "w") as fh:
+            json.dump(
+                {"version": 1, "entries": _geocode_cache, "negative": negative}, fh
+            )
+        os.chmod(tmp, 0o644)
+        os.replace(tmp, path)
+    except BaseException:
+        Path(tmp).unlink(missing_ok=True)
+        raise
+
+
+def cached_candidates(query: str) -> list[dict[str, Any]] | None:
+    """Cached geocode candidates for *query* (None if not cached / expired)."""
     key = _clean(query)
-    if key not in _geocode_cache:
+    with _geocode_lock:
+        entry = _geocode_store().get(key)
+    if not entry:
         return None
-    ts, result = _geocode_cache[key]
-    if (dt.datetime.now(UTC) - ts).total_seconds() < GEOCODE_CACHE_TTL_S:
-        _geocode_log.debug("Cache hit for: %r", query)
-        return result
-    # Expired
-    del _geocode_cache[key]
-    return None
+    try:
+        age = (
+            dt.datetime.now(UTC) - dt.datetime.fromisoformat(entry["ts"])
+        ).total_seconds()
+    except Exception:  # noqa: BLE001
+        return None
+    if age > GEOCODE_CACHE_TTL_S:
+        return None
+    return list(entry.get("candidates") or []) or None
 
 
-def _set_cached_geocode(query: str, result: object) -> None:
-    """Store geocode result in cache."""
+_geocode_version = 0  # bumped on every cache write (decision memo key)
+
+
+def _put_candidates(query: str, candidates: list[dict[str, Any]]) -> None:
+    global _geocode_version
+    with _geocode_lock:
+        _geocode_version += 1
+        _geocode_store()[_clean(query)] = {
+            "ts": dt.datetime.now(UTC).isoformat(),
+            "query": query,
+            "candidates": candidates,
+        }
+        try:
+            _save_geocode_store()
+        except OSError as exc:
+            _geocode_log.warning("Could not persist geocode cache: %s", exc)
+
+
+# Negative cache: genuine empty results are not retried for 12 h (persisted
+# with the positive cache); geocoder errors only back off briefly and are
+# never cached as a result.
+_geocode_neg_cache: dict[str, dt.datetime] = {}
+_geocode_err_cache: dict[str, dt.datetime] = {}
+GEOCODE_NEG_TTL_S: Final = 12 * 3600  # failures are rarely fixed sooner
+GEOCODE_ERROR_TTL_S: Final = 300  # outage / rate limit: retry soon
+
+
+def _prune_negative() -> None:
+    now = dt.datetime.now(UTC)
+    for cache, ttl in (
+        (_geocode_neg_cache, GEOCODE_NEG_TTL_S),
+        (_geocode_err_cache, GEOCODE_ERROR_TTL_S),
+    ):
+        for key in [k for k, ts in cache.items() if (now - ts).total_seconds() >= ttl]:
+            del cache[key]
+
+
+def _neg_cached(query: str) -> bool:
+    """True if *query* had no result recently, or errored very recently."""
+    with _geocode_lock:
+        _geocode_store()  # loads persisted negatives after a restart
     key = _clean(query)
-    _geocode_cache[key] = (dt.datetime.now(UTC), result)
+    now = dt.datetime.now(UTC)
+    for cache, ttl in (
+        (_geocode_neg_cache, GEOCODE_NEG_TTL_S),
+        (_geocode_err_cache, GEOCODE_ERROR_TTL_S),
+    ):
+        ts = cache.get(key)
+        if ts is None:
+            continue
+        if (now - ts).total_seconds() < ttl:
+            return True
+        cache.pop(key, None)
+    return False
+
+
+def _set_neg_cached(query: str) -> None:
+    """Remember a genuine empty result (persisted)."""
+    with _geocode_lock:
+        _geocode_store()
+        _prune_negative()
+        _geocode_neg_cache[_clean(query)] = dt.datetime.now(UTC)
+        try:
+            _save_geocode_store()
+        except OSError as exc:
+            _geocode_log.warning("Could not persist geocode cache: %s", exc)
+
+
+def _set_error_backoff(query: str) -> None:
+    """Back off briefly after a geocoder error (never cached as a result)."""
+    _prune_negative()
+    _geocode_err_cache[_clean(query)] = dt.datetime.now(UTC)
+
+
+def _as_list(result: Any) -> list[Any]:
+    """Normalise a geopy answer (None, one Location, or a list) to a list."""
+    if not result:
+        return []
+    if isinstance(result, (list, tuple)):
+        return [r for r in result if r]
+    return [result]
+
+
+def _candidate(result: Any, scope: str) -> dict[str, Any]:
+    raw = getattr(result, "raw", None) or {}
+    addr = raw.get("address", {}) if isinstance(raw, dict) else {}
+    return {
+        "lat": float(result.latitude),
+        "lon": float(result.longitude),
+        "name": str(getattr(result, "address", "") or ""),
+        "country_code": str(
+            addr.get("country_code") or ("us" if scope == "us" else "")
+        ),
+        "country": str(addr.get("country") or ""),
+        "state": str(addr.get("state") or ""),
+        "importance": raw.get("importance") if isinstance(raw, dict) else None,
+        "scope": scope,
+    }
+
+
+def _geocode_candidates(query: str, timeout: int = 10) -> list[dict[str, Any]]:
+    """Geocode *query* to up to 5 US and 5 worldwide candidates (cached).
+
+    Both searches always run (the worldwide one first), so a foreign venue
+    with a US namesake ("Elysee Palace, Paris") keeps its real candidate; the
+    fusion picks among them using the trip's context. US candidates are
+    listed first. Results are cached persistently; failures negatively.
+    """
+    if _should_skip_geocode(query):
+        _geocode_log.debug("Skipped (in skip list): %r", query)
+        add_geocode_entry(query=query, result_type="skipped")
+        return []
+    cached = cached_candidates(query)
+    if cached is not None:
+        return cached
+    if _neg_cached(query):
+        _geocode_log.debug("Negative cache hit for: %r", query)
+        return []
+
+    found: dict[str, list[dict[str, Any]]] = {"intl": [], "us": []}
+    errors: list[str] = []
+    for scope, extra in (("intl", {}), ("us", {"country_codes": "us"})):
+        try:
+            results = _geocode_raw(
+                query,
+                timeout=timeout,
+                addressdetails=True,
+                exactly_one=False,
+                limit=GEOCODE_CANDIDATES,
+                **extra,
+            )
+            found[scope] = [_candidate(r, scope) for r in _as_list(results)]
+        except Exception as e:  # noqa: BLE001
+            _geocode_log.warning("%s geocode failed for %r: %s", scope, query, e)
+            add_geocode_entry(query=query, result_type="error", error=str(e))
+            errors.append(str(e))
+
+    candidates: list[dict[str, Any]] = []
+    for cand in found["us"] + found["intl"]:
+        if all(
+            _haversine_km(cand["lat"], cand["lon"], c["lat"], c["lon"]) > 1.0
+            for c in candidates
+        ):
+            candidates.append(cand)
+
+    if errors:
+        # A failed scope means the answer is incomplete: use what came back
+        # now, but never cache it (positively or negatively); retry soon.
+        _set_error_backoff(query)
+        if not candidates:
+            emit_geocode_failure(query=query, result_type="error", error=errors[-1])
+        return candidates
+
+    if not candidates:
+        _geocode_log.warning("Geocode returned no results for: %r", query)
+        add_geocode_entry(query=query, result_type="no_result")
+        emit_geocode_failure(query=query, result_type="no_result")
+        _set_neg_cached(query)
+        return []
+
+    top = candidates[0]
+    us = top["scope"] == "us"
+    _geocode_log.info(
+        "Geocoded (%s, %d candidates): %r → %.4f, %.4f [importance=%.3f]",
+        "US" if us else "international",
+        len(candidates),
+        query,
+        top["lat"],
+        top["lon"],
+        top["importance"] or 0,
+    )
+    add_geocode_entry(
+        query=query,
+        result_type="us" if us else "international",
+        lat=top["lat"],
+        lon=top["lon"],
+        display_name=top["name"],
+        country="United States" if us else top["country"],
+        state=top["state"],
+        importance=top["importance"],
+    )
+    importance = top["importance"]
+    if importance is not None and importance < LOW_IMPORTANCE_THRESHOLD:
+        emit_low_importance_geocode(
+            query=query,
+            importance=importance,
+            lat=top["lat"],
+            lon=top["lon"],
+            display_name=top["name"],
+        )
+    _put_candidates(query, candidates)
+    return candidates
 
 
 def _smart_geocode(
@@ -532,204 +812,46 @@ def _smart_geocode(
     context_events: list[dict] | None = None,
     target_dt: dt.datetime | None = None,
 ):
+    """Geocode *query* now and return one geopy-like result (or None).
+
+    A convenience wrapper over :func:`_geocode_candidates` for ad-hoc use:
+    with ``context_events`` (``{"lat", "lon", "dt"}``) and ``target_dt`` the
+    candidates are disambiguated by :func:`_disambiguate_results`, else the
+    first (US) candidate wins. The location pipeline itself never geocodes in
+    the request path; it reads cached candidates.
     """
-    Geocode with US-first strategy, context disambiguation, and international fallback.
-
-    Args:
-        query: Location string to geocode.
-        timeout: Timeout in seconds.
-        context_events: Optional nearby resolved events with {"lat", "lon", "dt"}.
-            When provided, enables multi-result disambiguation.
-        target_dt: Timestamp of the event being geocoded (required if context_events).
-
-    Returns:
-        geopy.Location or None.
-
-    Strategy:
-        1. Skip if query matches skip list
-        2. Try US-restricted search (with multiple results if context provided)
-        3. If context provided, use hybrid 3-layer disambiguation
-        4. If US returns nothing, try international search
-        5. Log result for monitoring and alias curation
-    """
-    # Check skip list
-    if _should_skip_geocode(query):
-        _geocode_log.debug("Skipped (in skip list): %r", query)
-        add_geocode_entry(query=query, result_type="skipped")
+    cands = _geocode_candidates(query, timeout=timeout)
+    if not cands:
         return None
-
-    # Check cache first (avoids redundant Nominatim calls)
-    cached = _get_cached_geocode(query)
-    if cached is not None:
-        return cached
-
-    # Determine if we should use multi-result mode
-    use_disambiguation = bool(context_events and target_dt)
-
-    # Try US-first
-    try:
-        if use_disambiguation:
-            # Multi-result mode for disambiguation
-            results = _geocode_raw(
-                query,
-                timeout=timeout,
-                country_codes="us",
-                addressdetails=True,
-                exactly_one=False,
-                limit=5,
-            )
-            # Convert generator to list if needed
-            results = list(results) if results else []
-        else:
-            # Single-result mode (legacy behavior)
-            result = _geocode_raw(
-                query,
-                timeout=timeout,
-                country_codes="us",
-                addressdetails=True,
-            )
-            results = [result] if result else []
-
-        if results:
-            # Apply disambiguation if we have context
-            if use_disambiguation and len(results) > 1:
-                result, alert = _disambiguate_results(
-                    results=results,
-                    context_events=context_events,
-                    target_dt=target_dt,
-                )
-                # Emit alerts
-                if alert:
-                    if alert["type"] == "suspicious_distance":
-                        emit_suspicious_geocode(
-                            query=query,
-                            best_lat=result.latitude,
-                            best_lon=result.longitude,
-                            centroid=alert["centroid"],
-                            distance_km=alert["distance_km"],
-                        )
-                    elif alert["type"] == "all_infeasible":
-                        emit_all_results_infeasible(
-                            query=query,
-                            results_count=alert["results_count"],
-                            context_events=context_events,
-                            target_dt=target_dt,
-                        )
-                _geocode_log.info(
-                    "Geocoded (US, disambiguated from %d): %r → %.4f, %.4f",
-                    len(results),
-                    query,
-                    result.latitude,
-                    result.longitude,
-                )
-            else:
-                result = results[0]
-                # Check for suspicious distance even with single result
-                if use_disambiguation:
-                    _, alert = _disambiguate_results(
-                        results=results,
-                        context_events=context_events,
-                        target_dt=target_dt,
-                    )
-                    if alert and alert["type"] == "suspicious_distance":
-                        emit_suspicious_geocode(
-                            query=query,
-                            best_lat=result.latitude,
-                            best_lon=result.longitude,
-                            centroid=alert["centroid"],
-                            distance_km=alert["distance_km"],
-                        )
-
-            addr = result.raw.get("address", {})
-            state = addr.get("state", "")
-            city = addr.get("city") or addr.get("town") or addr.get("county", "")
-            importance = result.raw.get("importance")
-            _geocode_log.info(
-                "Geocoded (US): %r → %.4f, %.4f (%s, %s) [importance=%.3f]",
-                query,
-                result.latitude,
-                result.longitude,
-                city,
-                state,
-                importance or 0,
-            )
-            add_geocode_entry(
-                query=query,
-                result_type="us",
-                lat=result.latitude,
-                lon=result.longitude,
-                display_name=result.address,
-                country="United States",
-                state=state,
-                importance=importance,
-            )
-            # Alert on low importance scores
-            if importance is not None and importance < LOW_IMPORTANCE_THRESHOLD:
-                emit_low_importance_geocode(
-                    query=query,
-                    importance=importance,
-                    lat=result.latitude,
-                    lon=result.longitude,
-                    display_name=result.address,
-                )
-            _set_cached_geocode(query, result)
-            return result
-    except Exception as e:  # noqa: BLE001
-        _geocode_log.warning("US geocode failed for %r: %s", query, e)
-        add_geocode_entry(query=query, result_type="error", error=str(e))
-        # Don't emit Discord yet - try international fallback first
-
-    # Fallback to international
-    try:
-        result = _geocode_raw(
-            query,
-            timeout=timeout,
-            addressdetails=True,
+    results = [
+        SimpleNamespace(
+            latitude=c["lat"],
+            longitude=c["lon"],
+            address=c["name"],
+            raw={"importance": c.get("importance") or 0},
         )
-        if result:
-            addr = result.raw.get("address", {})
-            country = addr.get("country", "")
-            state = addr.get("state", "")
-            importance = result.raw.get("importance")
-            _geocode_log.info(
-                "Geocoded (international): %r → %.4f, %.4f (%s) [importance=%.3f]",
-                query,
-                result.latitude,
-                result.longitude,
-                country,
-                importance or 0,
-            )
-            add_geocode_entry(
+        for c in cands
+    ]
+    if context_events and target_dt:
+        best, alert = _disambiguate_results(results, context_events, target_dt)
+        if alert and alert["type"] == "suspicious_distance":
+            emit_suspicious_geocode(
                 query=query,
-                result_type="international",
-                lat=result.latitude,
-                lon=result.longitude,
-                display_name=result.address,
-                country=country,
-                state=state,
-                importance=importance,
+                best_lat=best.latitude,
+                best_lon=best.longitude,
+                centroid=alert["centroid"],
+                distance_km=alert["distance_km"],
             )
-            # Alert on low importance scores
-            if importance is not None and importance < LOW_IMPORTANCE_THRESHOLD:
-                emit_low_importance_geocode(
-                    query=query,
-                    importance=importance,
-                    lat=result.latitude,
-                    lon=result.longitude,
-                    display_name=result.address,
-                )
-            _set_cached_geocode(query, result)
-            return result
-    except Exception as e:  # noqa: BLE001
-        _geocode_log.warning("International geocode failed for %r: %s", query, e)
-        add_geocode_entry(query=query, result_type="error", error=str(e))
-        emit_geocode_failure(query=query, result_type="error", error=str(e))
-        return None
+        elif alert and alert["type"] == "all_infeasible":
+            emit_all_results_infeasible(
+                query=query,
+                results_count=alert["results_count"],
+                context_events=context_events,
+                target_dt=target_dt,
+            )
+        return best
+    return results[0]
 
-    _geocode_log.warning("Geocode returned no results for: %r", query)
-    add_geocode_entry(query=query, result_type="no_result")
-    emit_geocode_failure(query=query, result_type="no_result")
-    return None
 
 # ── Async TTL cache decorator ────────────────────────────────────────────
 _cached: Dict[str, Tuple[dt.datetime, Any]] = {}
@@ -797,306 +919,325 @@ async def _vip_json(include_security: bool = False) -> List[Dict[str, Any]]:
     return records
 
 
+# ── Flight history ───────────────────────────────────────────────────────
+def poll_flight_history() -> None:
+    """Record this poll's fleet states in the flight history (background loop).
+
+    Requests only read the history; the background loop calls this once per
+    tick (blocking: call it off the event loop).
+    """
+    states, errors = _unpack_fleet(get_fleet_states())
+    _record_flight_history(states, feeds_failed=bool(errors) and not states)
+
+
+def _record_flight_history(states: list[dict], feeds_failed: bool) -> None:
+    """Persist airborne fixes / landings per airframe, or infer landings.
+
+    Landing inference runs for every airframe not seen in this poll, but only
+    when the feeds answered (an outage is not aircraft silence). Never raises:
+    flight history is an optimisation, not a requirement.
+    """
+    try:
+        for st in states:
+            tail = st.get("callsign")
+            if st.get("status") == "airborne":
+                known = st.get("altitude_known", True)
+                arrival_cache.record_airborne(
+                    st["lat"],
+                    st["lon"],
+                    st.get("altitude") if known else None,
+                    st.get("vertical_rate"),
+                    st["ts"],
+                    tail,
+                    st.get("flight_id"),
+                )
+            elif st.get("status") == "grounded":
+                arrival_cache.save(
+                    st["lat"], st["lon"], st["ts"], kind="observed", tail=tail
+                )
+                if is_af1_callsign(st.get("flight_id")):
+                    arrival_cache.mark_af1(tail)
+        if not feeds_failed:
+            seen = {airframe_of(s.get("callsign")) or s.get("callsign") for s in states}
+            if arrival_cache.maybe_infer_landing(
+                clock.now(), skip={s for s in seen if s}
+            ):
+                LOG.info("Inferred landing from a track lost low and descending")
+    except Exception as exc:  # noqa: BLE001
+        LOG.warning("Could not update flight history: %s", exc)
+
+
+def _tracker_url(tail: str | None) -> str | None:
+    meta = FLEET.get(tail or "")
+    return f"https://globe.adsbexchange.com/?icao={meta['icao']}" if meta else None
+
+
+def _build_tracks(
+    states: list[dict], history: dict[str, dict[str, Any]]
+) -> list[location_fusion.Track]:
+    """Merge this poll's states with the per-airframe flight history."""
+    live_by: dict[str, dict] = {}
+    for st in states:
+        key = airframe_of(st.get("callsign")) or st.get("callsign") or "unknown"
+        if key not in live_by or st["ts"] > live_by[key]["ts"]:
+            live_by[key] = st
+    tracks = []
+    for key in sorted(set(history) | set(live_by)):
+        rec = history.get(key, {})
+        landing, air = rec.get("landing"), rec.get("airborne")
+        if landing and air:
+            if air["ts"] > landing["ts"]:
+                landing = None  # took off again
+            else:
+                air = None
+        live = live_by.get(key)
+        tail = (
+            (live or {}).get("callsign")
+            or (air or {}).get("tail")
+            or (landing or {}).get("tail")
+            or (None if key == arrival_cache.UNKNOWN_AIRFRAME else key)
+        )
+        tracks.append(
+            location_fusion.Track(
+                airframe=key,
+                tail=tail,
+                live=live,
+                landing=landing,
+                airborne=air,
+                takeoff=rec.get("takeoff"),
+                af1=bool(rec.get("af1")),
+                home_base=home_base_of(key),
+                tracker_url=(live or {}).get("tracker_url") or _tracker_url(tail),
+            )
+        )
+    return tracks
+
+
+# ── Venues to geocode ────────────────────────────────────────────────────
+def _window(events: list[dict], now: dt.datetime) -> list[dict]:
+    """Items the fusion can use: 7 days back (+ context) to 24 h ahead."""
+    pad = location_fusion.CONTEXT_WINDOW_H
+    lo = now - dt.timedelta(hours=location_fusion.MAX_AGE_H + pad)
+    hi = now + dt.timedelta(hours=location_fusion.FUTURE_H + pad)
+    return cal.events_between(events, lo, hi)
+
+
+def _venue_queries(events: list[dict], now: dt.datetime) -> list[str]:
+    """Event locations and departure destinations that need geocoding.
+
+    Covers items in the fusion window (7 days back, 24 h ahead), nearest in
+    time first; aliased, skip-listed and generic strings and items that place
+    nobody (lids, cancellations) are left out.
+    """
+    lo = now - dt.timedelta(hours=location_fusion.MAX_AGE_H)
+    hi = now + dt.timedelta(hours=location_fusion.FUTURE_H)
+    window = sorted(
+        (e for e in events if lo <= e["dtstart_utc"] <= hi),
+        key=lambda e: abs((e["dtstart_utc"] - now).total_seconds()),
+    )
+    seen: set[str] = set()
+    out: list[str] = []
+    for ev in window:
+        if location_fusion.presence(str(ev.get("summary") or "")) == "none":
+            continue
+        texts = [str(ev.get("location") or "")]
+        m = location_fusion.DEPARTS_RE.search(str(ev.get("summary") or ""))
+        if m:
+            texts.append(m.group("dest").strip().rstrip("."))
+        for text in texts:
+            key = _clean(text)
+            if not key or key in seen or find_alias(key) or _should_skip_geocode(key):
+                continue
+            seen.add(key)
+            out.append(text.strip())
+    return out
+
+
+def _cached_geocodes(events: list[dict], now: dt.datetime) -> dict[str, list[dict]]:
+    out: dict[str, list[dict]] = {}
+    for query in _venue_queries(events, now):
+        cands = cached_candidates(query)
+        if cands:
+            out[_clean(query)] = cands
+    return out
+
+
+def pregeocode_events(limit: int = 5) -> int:
+    """Geocode up to *limit* uncached venues of the current window.
+
+    Runs in the background loop (blocking: call it off the event loop); the
+    rate limiter keeps Nominatim at ≤ 1 req/s. Returns the number of venues
+    looked up.
+    """
+    now = clock.now()
+    done = 0
+    for query in _venue_queries(_window(cal.get_events(), now), now):
+        if done >= limit:
+            break
+        if cached_candidates(query) is not None or _neg_cached(query):
+            continue
+        _geocode_candidates(query)
+        done += 1
+    return done
+
+
 # ── Main public helper ───────────────────────────────────────────────────
+NEWSWIRE_ENABLED: Final = False  # finding #8: never produced a claim in prod
+
+#: Display source → link for each claim kind
+_KIND_URLS: Final[dict[str, str]] = {
+    "calendar_alias": FACTBASE_URL,
+    "calendar_summary": FACTBASE_URL,
+    "calendar_geocode": FACTBASE_URL,
+    "departure_dest": FACTBASE_URL,
+    "overnight_dc": FACTBASE_URL,
+    "overnight_fl": FACTBASE_URL,
+    "overnight_nj": FACTBASE_URL,
+}
+
+
+def _unpack_fleet(snap: Any) -> tuple[list[dict], list[str]]:
+    """Accept ``{"states", "errors"}`` (or a legacy single-state envelope)."""
+    if isinstance(snap, dict) and "states" in snap:
+        return list(snap.get("states") or []), list(snap.get("errors") or [])
+    if isinstance(snap, dict) and "state" in snap:
+        st = snap.get("state")
+        return ([st] if st else []), list(snap.get("errors") or [])
+    return ([snap] if snap else []), []
+
+
+def _present(coords: dict[str, Any]) -> dict[str, Any]:
+    """Turn the fusion output into the public coords dict."""
+    coords = dict(coords)
+    source = coords.pop("_source", "") or ""
+    url = coords.pop("_url", None) or _KIND_URLS.get(str(coords.get("reason")))
+    if coords.get("unknown"):
+        return coords
+    return _stamp(coords, age_h=coords.get("age_h"), source=source, url=url)
+
+
+DECISION_TTL_S: Final = 45.0
+DECISION_BUCKET_S: Final = 30
+#: Last decision and the inputs it was made from (kept alive so ids stay valid)
+_decision_memo: dict[str, Any] = {}
+
+
 async def current_coords(
     *, trace: Optional[List[Dict[str, Any]]] = None
 ) -> Union[Dict[str, Any], Tuple[Dict[str, Any], List[Dict[str, Any]]]]:
-    """Return best‑guess coordinates for Donald Trump **right now**."""
+    """Return best‑guess coordinates for Donald Trump **right now**.
 
-    ts_now = dt.datetime.now(UTC).isoformat()
+    Gathers the fleet states, the calendar window, cached geocodes, the
+    overnight-base inference and (if enabled) the newswire, then lets
+    :func:`location_fusion.fuse` decide. Read-only: flight history is recorded
+    by the background loop (:func:`poll_flight_history`). The decision is
+    memoised for up to :data:`DECISION_TTL_S` while its inputs are unchanged
+    (same memoised feed objects, no history / geocode writes, same 30 s
+    bucket of ``clock.now()``); a *trace* request always recomputes. Returns
+    the coords dict, or ``(coords, trace)`` when a *trace* list is passed.
+    """
+    now = clock.now()
+    ts_now = now.isoformat()
     trace_log = trace if trace is not None else []
     trace_log.append({"ts": ts_now, "phase": "loc", "step": "start"})
 
-    # ── 1️⃣  ADS‑B feeds --------------------------------------------------
-    plane_raw = await asyncio.to_thread(get_plane_state)
-    if isinstance(plane_raw, dict) and "state" in plane_raw:
-        plane_state = plane_raw["state"]
-        plane_errors = plane_raw.get("errors")
-    else:
-        plane_state = plane_raw  # type: ignore[assignment]
-        plane_errors = None
+    # ── ADS-B (memoised 60 s; blocking HTTP → thread) and the calendar ────
+    # Requests run these on the bounded request pool (see executors)
+    snap = await executors.to_thread(get_fleet_states)
+    events = await executors.to_thread(cal.get_events)
+    key = (
+        id(snap),
+        id(events),
+        _geocode_version,
+        arrival_cache.version(),
+        int(now.timestamp() // DECISION_BUCKET_S),
+    )
+    memo = _decision_memo
+    if (
+        trace is None
+        and memo.get("key") == key
+        and time.monotonic() - memo["at"] < DECISION_TTL_S
+    ):
+        return dict(memo["coords"])
 
+    states, errors = _unpack_fleet(snap)
+    plane_state = max(states, key=lambda s: s["ts"]) if states else None
     trace_log.append(
         {
             "ts": ts_now,
             "phase": "loc",
             "step": "plane",
             "state": plane_state,
-            "errors": plane_errors,
+            "states": states,
+            "errors": errors or None,
         }
     )
 
-    # ── helper: calendar event (may be None) -----------------------------
-    event = cal.current_event()
+    window = _window(events, now)
+    geocodes = _cached_geocodes(window, now)
+    lo, hi = now - dt.timedelta(hours=14), now + dt.timedelta(hours=18)
+    overnight_events = [
+        e
+        for e in window
+        if lo <= e["dtstart_utc"] <= hi
+        and location_fusion.presence(str(e.get("summary") or "")) == "full"
+    ]
+    overnight = cal.get_overnight_base(
+        now,
+        events=overnight_events,
+        resolve=location_fusion.make_resolver(window, geocodes, now),
+    )
+    news = await get_latest_location() if NEWSWIRE_ENABLED else None
+    try:
+        history = arrival_cache.airframes()
+        primary_hint = arrival_cache.primary_airframe()
+    except Exception as exc:  # noqa: BLE001 – never break the pipeline
+        LOG.warning("Could not read flight history: %s", exc)
+        history, primary_hint = {}, None
 
-    def _plane_newer_than_event() -> bool:
-        if not (plane_state and event):
-            return True  # nothing to compare → treat plane as newer
-        return plane_state["ts"] > event["dtstart_utc"]
+    decision = location_fusion.fuse(
+        location_fusion.Inputs(
+            events=window,
+            geocodes=geocodes,
+            tracks=_build_tracks(states, history),
+            overnight=overnight,
+            news=news,
+            primary_hint=primary_hint,
+        ),
+        now,
+    )
+    if decision.primary_gated and decision.primary != primary_hint:
+        try:
+            arrival_cache.set_primary_airframe(decision.primary)
+        except Exception as exc:  # noqa: BLE001
+            LOG.warning("Could not store primary airframe: %s", exc)
 
-    if plane_state and plane_state["status"] == "airborne":
-        # Always trust airborne snapshot — location = jet
-        coords_air = _stamp(
-            {
-                "lat": plane_state["lat"],
-                "lon": plane_state["lon"],
-                "name": f"In flight ({plane_state['callsign']})",
-                "in_flight": True,
-                "confidence": plane_state.get("confidence", 95),
-                "reason": "plane_air",
-            },
-            age_h=0.0,
-            source="ADS‑B (airborne)",
-            url=plane_state.get("tracker_url"),
-        )
-        _emit_state_change_events(coords_air, plane_state)
-        return (coords_air, trace_log) if trace else coords_air
-
-    if (
-        plane_state
-        and plane_state["status"] == "grounded"
-        and _plane_newer_than_event()
-    ):
-        # Grounded but *newer* than any calendar entry → keep
-        # NOTE: TFR check below is no-op when TFR_ENABLED=False (always near_tfr=False)
-        near_tfr = False
-        for rec in await _vip_json(include_security=True):
-            coords = parse_tfr_coordinates(rec.get("description", ""))
-            if not coords:
-                continue
-            if _haversine_km(plane_state["lat"], plane_state["lon"], coords["lat"], coords["lon"]) < 55:
-                near_tfr = True
-                break
-
-        # Use confidence from flight_service (with age decay) + TFR bonus
-        base_confidence = plane_state.get("confidence", 90)
-        confidence = min(95, base_confidence + 10) if near_tfr else base_confidence
-
-        coords_ground = _stamp(
-            {
-                "lat": plane_state["lat"],
-                "lon": plane_state["lon"],
-                "name": f"{plane_state['callsign']} parked",
-                "tfr_confirmed": near_tfr,
-                "confidence": confidence,
-                "reason": "plane_tfr" if near_tfr else "plane_ground",
-            },
-            age_h=_age_h(plane_state["ts"]),
-            source="ADS‑B (grounded)",
-            url=plane_state.get("tracker_url"),
-        )
-        save_last(coords_ground["lat"], coords_ground["lon"])
+    coords = _present(decision.coords)
+    if trace is not None:
         trace_log.append(
             {
                 "ts": ts_now,
                 "phase": "loc",
-                "step": "plane_ground",
-                "coords": coords_ground,
+                "step": "candidates",
+                "primary": decision.primary,
+                "candidates": decision.trace(now),
             }
         )
-        _emit_state_change_events(coords_ground, plane_state)
-        return (coords_ground, trace_log) if trace else coords_ground
-
-    # ── 1.5️⃣ Overnight base inference ------------------------------------
-    # During overnight hours (9PM-8AM ET), if evening and morning events
-    # are in the same region (DC, FL, or NJ), infer the overnight base.
-    overnight_base = cal.get_overnight_base()
-    if overnight_base:
-        # Determine reason based on base name
-        name = overnight_base["name"]
-        if "White House" in name:
-            reason = "overnight_dc"
-        elif "Mar-a-Lago" in name:
-            reason = "overnight_fl"
-        else:
-            reason = "overnight_nj"  # Bedminster
-
-        coords_overnight = _stamp(
-            {
-                **overnight_base,
-                "confidence": 58,
-                "reason": reason,
-            },
-            source="Overnight inference (evening→morning pattern)",
-            url=FACTBASE_URL,
-        )
         trace_log.append(
-            {
-                "ts": ts_now,
-                "phase": "loc",
-                "step": "overnight_base",
-                "coords": coords_overnight,
-            }
+            {"ts": ts_now, "phase": "loc", "step": "decision", "coords": coords}
         )
-        _emit_state_change_events(coords_overnight, plane_state)
-        return (coords_overnight, trace_log) if trace else coords_overnight
-
-    # ── 2️⃣  Calendar event ----------------------------------------------
-    # Collect calendar candidate (don't return early - compare with TFR later)
-    trace_log.append(
-        {"ts": ts_now, "phase": "loc", "step": "calendar_event", "event": event}
+    memo.clear()
+    memo.update(
+        key=(
+            id(snap),
+            id(events),
+            _geocode_version,
+            arrival_cache.version(),
+            key[-1],
+        ),
+        refs=(snap, events),
+        coords=dict(coords),
+        at=time.monotonic(),
     )
-    coords_cal: Optional[dict] = None
-    last_known_calendar: Optional[dict] = None
-
-    if event:
-        # Keep raw versions for display, cleaned versions for matching
-        raw_location = (event.get("location", "") or "").strip()
-        raw_summary = event.get("summary", "")
-        desc = _clean(raw_location)
-        summ = _clean(raw_summary)
-        age_cal = _age_h(event["dtstart_utc"])
-        if "no public events scheduled" not in summ:
-            cal_conf = CAL_BASE_CONF - (
-                (CAL_BASE_CONF - CAL_MIN_CONF)
-                * min(age_cal, CAL_WINDOW_H)
-                / CAL_WINDOW_H
-            )
-
-            # 2a. Alias on location
-            for key, alias in PLACE_ALIASES.items():
-                if key in desc:
-                    coords_cal = _stamp(
-                        {
-                            **alias,
-                            "confidence": cal_conf,
-                            "reason": "calendar_alias",
-                            "event_summary": raw_summary,
-                        },
-                        age_h=age_cal,
-                        source="Factba.se schedule",
-                        url=FACTBASE_URL,
-                    )
-                    if cal_conf < CAL_MIN_CONF:
-                        last_known_calendar = coords_cal
-                    break
-            # 2b. Alias on summary
-            if not coords_cal:
-                for key, alias in PLACE_ALIASES.items():
-                    if key in summ:
-                        coords_cal = _stamp(
-                            {
-                                **alias,
-                                "confidence": cal_conf,
-                                "reason": "calendar_summary",
-                                "event_summary": raw_summary,
-                            },
-                            age_h=age_cal,
-                            source="Factba.se schedule",
-                            url=FACTBASE_URL,
-                        )
-                        if cal_conf < CAL_MIN_CONF:
-                            last_known_calendar = coords_cal
-                        break
-            # 2c. Geocode fallback (US-first with hybrid disambiguation)
-            if desc and not coords_cal:
-                # Get context events for disambiguation (coords + timestamps)
-                context_events = cal.get_context_events(event)
-
-                # Log context retrieval for debug endpoint
-                trace_log.append({
-                    "ts": ts_now,
-                    "phase": "loc",
-                    "step": "geocode_context",
-                    "query": raw_location,
-                    "context_count": len(context_events),
-                })
-
-                geocoded = _smart_geocode(
-                    desc,
-                    timeout=10,
-                    context_events=context_events,
-                    target_dt=event["dtstart_utc"],
-                )
-                if geocoded:
-                    # Log geocode result for debug endpoint
-                    trace_log.append({
-                        "ts": ts_now,
-                        "phase": "loc",
-                        "step": "geocode_result",
-                        "coords": {"lat": geocoded.latitude, "lon": geocoded.longitude},
-                        "display_name": getattr(geocoded, "address", raw_location),
-                    })
-
-                    coords_cal = _stamp(
-                        {
-                            "lat": geocoded.latitude,
-                            "lon": geocoded.longitude,
-                            "name": raw_location,  # Preserve original case
-                            "confidence": cal_conf,
-                            "reason": "calendar_geocode",
-                            "event_summary": raw_summary,
-                        },
-                        age_h=age_cal,
-                        source="Factba.se schedule (geocoded)",
-                        url=FACTBASE_URL,
-                    )
-                    if cal_conf < CAL_MIN_CONF:
-                        last_known_calendar = coords_cal
-
-    # ── 3️⃣  VIP/SECURITY TFR (JSON) -------------------------------------
-    # Collect TFR candidate (don't return early - compare with calendar)
-    # NOTE: This step is no-op when TFR_ENABLED=False (vip_recs always empty)
-    coords_tfr: Optional[dict] = None
-    vip_recs = await _vip_json(include_security=True)
-    if vip_recs:
-        best = vip_recs[0]  # newest because _vip_json keeps current only
-        tfr_coords = parse_tfr_coordinates(best.get("description", ""))
-        if tfr_coords:
-            coords_tfr = _stamp(
-                {
-                    "lat": tfr_coords["lat"],
-                    "lon": tfr_coords["lon"],
-                    "name": best.get("shortDesc", "VIP‑TFR"),
-                    "confidence": 40,
-                    "reason": "tfr_json",
-                },
-                source="FAA VIP‑TFR JSON",
-                url=TFR_JSON_URL,
-            )
-            trace_log.append(
-                {"ts": ts_now, "phase": "loc", "step": "vip_json", "coords": coords_tfr}
-            )
-
-    # ── Compare calendar vs TFR by confidence ──
-    candidates = [c for c in [coords_cal, coords_tfr] if c is not None]
-    best_candidate = select_highest_confidence(candidates)
-    if best_candidate:
-        _emit_state_change_events(best_candidate, plane_state)
-        return (best_candidate, trace_log) if trace else best_candidate
-
-    # ── 4️⃣  Newswire ------------------------------------------------------
-    news_coord = await get_latest_location()
-    trace_log.append(
-        {"ts": ts_now, "phase": "loc", "step": "news_probe", "candidate": news_coord}
-    )
-    if news_coord:
-        coords_news = _stamp(
-            {**news_coord, "confidence": 35, "reason": "newswire"},
-            source="GDELT dateline",
-            url="https://www.gdeltproject.org/",
-        )
-        _emit_state_change_events(coords_news, plane_state)
-        return (coords_news, trace_log) if trace else coords_news
-
-    # ── 5️⃣  Last aircraft arrival cache ----------------------------------
-    last = load_last()
-    if last:
-        coords_last = _stamp(last, source="Last aircraft arrival")
-        trace_log.append(
-            {"ts": ts_now, "phase": "loc", "step": "last_known", "coords": coords_last}
-        )
-        _emit_state_change_events(coords_last, plane_state)
-        return (coords_last, trace_log) if trace else coords_last
-
-    # ── 🤷  Unknown --------------------------------------------------------
-    coords_unknown: Dict[str, Any] = {
-        "unknown": True,
-        "confidence": 0,
-        "reason": "unknown",
-    }
-    if last_known_calendar:
-        coords_unknown["last_known"] = last_known_calendar
-    trace_log.append({"ts": ts_now, "phase": "loc", "step": "unknown"})
-    _emit_state_change_events(coords_unknown, plane_state)
-    return (coords_unknown, trace_log) if trace else coords_unknown
+    _emit_state_change_events(coords, plane_state)
+    return (coords, trace_log) if trace is not None else coords

@@ -25,34 +25,30 @@ class TestWeatherApiTimeouts:
     For HTTP errors (4xx/5xx), the service returns a structured error dict.
     """
 
-    async def test_weather_api_timeout_propagates(
+    async def test_weather_api_timeout_returns_error(
         self, httpx_mock: pytest.fixture
     ) -> None:
-        """Document: Weather API timeout exceptions propagate to caller.
-
-        Unlike TFR and GDELT services, weather_service does NOT catch
-        timeout exceptions. The caller (main.py) should handle this.
-        """
+        """Weather API timeouts are returned as an error-shaped result."""
         from app.weather_service import get_precip
 
         get_precip.cache_clear()
         httpx_mock.add_exception(httpx.TimeoutException("timeout"))
 
-        # Current behavior: exception propagates
-        with pytest.raises(httpx.TimeoutException):
-            await get_precip(38.8977, -77.0365)
+        result = await get_precip(38.8977, -77.0365)
+        assert result["error"] is True
+        assert result["precipitating"] is None
 
-    async def test_weather_api_connection_error_propagates(
+    async def test_weather_api_connection_error_returns_error(
         self, httpx_mock: pytest.fixture
     ) -> None:
-        """Document: Weather API connection errors propagate to caller."""
+        """Weather API connection errors are returned as an error result."""
         from app.weather_service import get_precip
 
         get_precip.cache_clear()
         httpx_mock.add_exception(httpx.ConnectError("connection failed"))
 
-        with pytest.raises(httpx.ConnectError):
-            await get_precip(38.8977, -77.0365)
+        result = await get_precip(38.8977, -77.0365)
+        assert result["error"] is True
 
     async def test_weather_api_500_error_returns_error_structure(
         self, httpx_mock: pytest.fixture
@@ -66,8 +62,7 @@ class TestWeatherApiTimeouts:
 
         get_precip.cache_clear()
         httpx_mock.add_response(
-            status_code=500,
-            json={"reason": "Internal Server Error"}
+            status_code=500, json={"reason": "Internal Server Error"}
         )
 
         result = await get_precip(38.8977, -77.0365)
@@ -86,44 +81,39 @@ class TestWeatherApiTimeouts:
 class TestFlightServiceTimeouts:
     """Tests for flight service timeout and error handling."""
 
-    def test_opensky_timeout_falls_back_to_adsbfi(self) -> None:
-        """OpenSky timeout should trigger adsb.fi fallback."""
+    def test_adsbfi_timeout_falls_back_to_adsblol(self) -> None:
+        """An adsb.fi timeout should trigger the adsb.lol fallback."""
         from app.flight_service import _cache, get_plane_state
 
-        # Clear cache
         _cache.clear()
 
-        with patch("app.flight_service._opensky_state") as mock_opensky:
-            mock_opensky.side_effect = httpx.TimeoutException("timeout")
+        with patch("app.flight_service.get_fleet_adsb") as mock_adsb:
+            mock_adsb.side_effect = httpx.TimeoutException("timeout")
 
-            with patch("app.flight_service.get_plane_state_adsb") as mock_adsb:
-                mock_adsb.return_value = None
+            with patch("app.flight_service.get_fleet_adsblol") as mock_al:
+                mock_al.return_value = []
 
-                # Call the wrapped function directly
-                result = get_plane_state.__wrapped__()
+                result = get_plane_state()
 
-        # Should have tried adsb.fi fallback
-        mock_adsb.assert_called_once()
-        # Both failed, so expect error envelope
-        assert "errors" in result
+        mock_al.assert_called_once()
+        assert result["state"] is None
+        assert len(result["errors"]) == 1
 
     def test_both_feeds_timeout_returns_error_envelope(self) -> None:
-        """Both OpenSky and adsb.fi timeout should return error envelope."""
+        """Both feeds timing out should return the error envelope."""
         from app.flight_service import _cache, get_plane_state
 
         _cache.clear()
 
-        with patch("app.flight_service._opensky_state") as mock_opensky:
-            mock_opensky.side_effect = httpx.TimeoutException("opensky timeout")
+        with patch("app.flight_service.get_fleet_adsb") as mock_adsb:
+            mock_adsb.side_effect = httpx.TimeoutException("adsb timeout")
 
-            with patch("app.flight_service.get_plane_state_adsb") as mock_adsb:
-                mock_adsb.side_effect = httpx.TimeoutException("adsb timeout")
+            with patch("app.flight_service.get_fleet_adsblol") as mock_al:
+                mock_al.side_effect = httpx.TimeoutException("al timeout")
 
-                result = get_plane_state.__wrapped__()
+                result = get_plane_state()
 
-        assert "state" in result
         assert result["state"] is None
-        assert "errors" in result
         assert len(result["errors"]) == 2
 
 

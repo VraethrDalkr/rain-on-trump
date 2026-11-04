@@ -1,0 +1,476 @@
+[
+ {
+  "date": "2026-09-24",
+  "time": "08:00:00",
+  "details": "The President participates in Executive Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-09-24",
+  "time": "09:00:00",
+  "details": "In-Town Pool Call Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-09-24",
+  "time": "10:00:00",
+  "details": "The President and The First Lady greet the President of the People's Republic of China and Madame Peng",
+  "location": "South Portico"
+ },
+ {
+  "date": "2026-09-24",
+  "time": "10:10:00",
+  "details": "The President and The First Lady participate in an Arrival Ceremony with the President of the People's Republic of China and Madame Peng",
+  "location": "Grand Foyer"
+ },
+ {
+  "date": "2026-09-24",
+  "time": "10:15:00",
+  "details": "The President and the President of the People's Republic of China deliver Remarks",
+  "location": "Grand Foyer"
+ },
+ {
+  "date": "2026-09-24",
+  "time": "10:30:00",
+  "details": "The President and The First Lady participate in a Gift Exchange with the President of the People's Republic of China and Madame Peng",
+  "location": "Blue Room"
+ },
+ {
+  "date": "2026-09-24",
+  "time": "10:40:00",
+  "details": "The President and The First Lady participate in a Silent Drill Platoon Review with the President of the People's Republic of China and Madame Peng",
+  "location": "South Portico"
+ },
+ {
+  "date": "2026-09-24",
+  "time": "11:00:00",
+  "details": "The President and The First Lady participate in a Military Review with the President of the People's Republic of China and Madame Peng",
+  "location": "Rose Garden"
+ },
+ {
+  "date": "2026-09-24",
+  "time": "11:30:00",
+  "details": "The First Lady and Madame Peng participate in a Cultural Visit at the Smithsonian National Museum of Asian Art",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-09-24",
+  "time": "12:00:00",
+  "details": "The President participates in an Expanded Bilateral Meeting with the President of the People's Republic of China",
+  "location": "Cabinet Room"
+ },
+ {
+  "date": "2026-09-24",
+  "time": "13:55:00",
+  "details": "White House Press Office: Lunch lid until 3:00 PM",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-09-24",
+  "time": "14:00:00",
+  "details": "The President receives his Intelligence Briefing",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-09-24",
+  "time": "15:30:00",
+  "details": "The President participates in a Policy Meeting",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-09-24",
+  "time": "17:02:00",
+  "details": "White House Press Office: Dinner lid until 6:15 PM",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-09-24",
+  "time": "18:45:00",
+  "details": "The President and The First Lady greet the President of the People's Republic of China and Madame Peng",
+  "location": "North Portico"
+ },
+ {
+  "date": "2026-09-24",
+  "time": "19:55:00",
+  "details": "The President and the President of the People's Republic of China deliver Remarks",
+  "location": "East Room"
+ },
+ {
+  "date": "2026-09-24",
+  "time": "20:10:00",
+  "details": "The President and The First Lady participate in a State Dinner with the President of the People's Republic of China and Madame Peng",
+  "location": "East Room"
+ },
+ {
+  "date": "2026-09-24",
+  "time": "21:37:00",
+  "details": "White House Press Office: Travel/Photo lid called",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-09-25",
+  "time": null,
+  "details": "TBD: The President and the First Lady depart the White House en route the National Archives",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-09-25",
+  "time": null,
+  "details": "TBD: The President and the First Lady arrive the National Archives",
+  "location": "National Archives"
+ },
+ {
+  "date": "2026-09-25",
+  "time": null,
+  "details": "TBD: The President and the First Lady depart the National Archives en route the White House",
+  "location": "National Archives"
+ },
+ {
+  "date": "2026-09-25",
+  "time": null,
+  "details": "TBD: The President and the First Lady arrive the White House",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-09-25",
+  "time": "08:00:00",
+  "details": "The President participates in Executive Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-09-25",
+  "time": "09:00:00",
+  "details": "In-Town Pool Call Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-09-25",
+  "time": "10:30:00",
+  "details": "The President and The First Lady greet the President of the People's Republic of China and Madame Peng",
+  "location": "South Portico"
+ },
+ {
+  "date": "2026-09-25",
+  "time": "10:35:00",
+  "details": "The President and The First Lady participate in a Tea with the President of the People's Republic of China and Madame Peng",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-09-25",
+  "time": "11:30:00",
+  "details": "The President and The First Lady participate in a Site Visit with the President of the People's Republic of China and Madame Peng",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-09-25",
+  "time": "11:44:00",
+  "details": "The President departs The White House en route to the National Archives",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-09-25",
+  "time": "11:51:00",
+  "details": "The President arrives at National Archives",
+  "location": "National Archives"
+ },
+ {
+  "date": "2026-09-25",
+  "time": "12:08:00",
+  "details": "The President departs National Archives en route to The White House",
+  "location": "National Archives"
+ },
+ {
+  "date": "2026-09-25",
+  "time": "12:13:00",
+  "details": "The President arrives at The White House",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-09-25",
+  "time": "12:29:00",
+  "details": "White House Press Office: Lunch lid until 1:30 PM",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-09-25",
+  "time": "14:00:00",
+  "details": "The President participates in a Policy Meeting",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-09-25",
+  "time": "16:30:00",
+  "details": "The President participates in Signing Time",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-09-25",
+  "time": "17:00:00",
+  "details": "The President participates in a Policy Meeting",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-09-25",
+  "time": "17:49:00",
+  "details": "White House Press Office: Travel/Photo lid called",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-09-26",
+  "time": null,
+  "details": "TBD: The President departs the White House en route Knoxville, Tennessee",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-09-26",
+  "time": null,
+  "details": "TBD: The President arrives Knoxville, Tennessee",
+  "location": "Neyland Stadium, Knoxville, TN"
+ },
+ {
+  "date": "2026-09-26",
+  "time": null,
+  "details": "TBD: The President departs Knoxville, Tennessee en route the White House",
+  "location": "Neyland Stadium, Knoxville, TN"
+ },
+ {
+  "date": "2026-09-26",
+  "time": null,
+  "details": "TBD: The President arrives the White House",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-09-26",
+  "time": "02:28:00",
+  "details": "The President arrives at McGhee Tyson Airport, Alcoa, TN",
+  "location": "McGhee Tyson Airport, Alcoa, TN"
+ },
+ {
+  "date": "2026-09-26",
+  "time": "08:00:00",
+  "details": "The President participates in Executive Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-09-26",
+  "time": "08:30:00",
+  "details": "Out-of-Town Travel Pool Call Time",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-09-26",
+  "time": "09:00:00",
+  "details": "In-Town Pool Call Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-09-26",
+  "time": "09:57:00",
+  "details": "The President departs The White House en route to Joint Base Andrews",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-09-26",
+  "time": "10:05:00",
+  "details": "The President arrives at Joint Base Andrews",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-09-26",
+  "time": "10:24:00",
+  "details": "The President departs Joint Base Andrews for McGhee Tyson Airport, Alcoa, TN",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-09-26",
+  "time": "11:27:00",
+  "details": "The President arrives at McGhee Tyson Airport, Alcoa, TN",
+  "location": "McGhee Tyson Airport, Alcoa, TN"
+ },
+ {
+  "date": "2026-09-26",
+  "time": "11:43:00",
+  "details": "The President departs McGhee Tyson Airport, Alcoa, TN en route to Neyland Stadium, Knoxville, TN",
+  "location": "McGhee Tyson Airport, Alcoa, TN"
+ },
+ {
+  "date": "2026-09-26",
+  "time": "11:59:00",
+  "details": "The President arrives at Neyland Stadium, Knoxville, TN",
+  "location": "Neyland Stadium, Knoxville, TN"
+ },
+ {
+  "date": "2026-09-26",
+  "time": "12:00:00",
+  "details": "The President attends the University of Tennessee vs. University of Texas College Football Game",
+  "location": "Neyland Stadium, Knoxville, TN"
+ },
+ {
+  "date": "2026-09-26",
+  "time": "14:07:00",
+  "details": "The President departs Neyland Stadium, Knoxville, TN en route to McGhee Tyson Airport, Alcoa, TN",
+  "location": "Neyland Stadium, Knoxville, TN"
+ },
+ {
+  "date": "2026-09-26",
+  "time": "14:40:00",
+  "details": "The President departs McGhee Tyson Airport, Alcoa, TN for Joint Base Andrews",
+  "location": "McGhee Tyson Airport, Alcoa, TN"
+ },
+ {
+  "date": "2026-09-26",
+  "time": "15:30:00",
+  "details": "The President participates in a Print Interview [Note: Interview with Eric Cortellessa and Sam Jacobs, Time Magazine]",
+  "location": "Oval Office"
+ },
+ {
+  "date": "2026-09-26",
+  "time": "15:45:00",
+  "details": "The President arrives at Joint Base Andrews",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-09-26",
+  "time": "16:05:00",
+  "details": "The President departs Joint Base Andrews en route to The White House",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-09-26",
+  "time": "16:14:00",
+  "details": "The President arrives at The White House",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-09-26",
+  "time": "16:25:00",
+  "details": "White House Press Office: Travel/Photo lid called",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-09-27",
+  "time": null,
+  "details": "TBD: The President departs the White House en route Medinah, Illinois",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-09-27",
+  "time": null,
+  "details": "TBD: The President arrives Medinah, Illinois",
+  "location": "Medinah Country Club, Medinah, IL"
+ },
+ {
+  "date": "2026-09-27",
+  "time": null,
+  "details": "TBD: The President departs Medinah, Illinois en route the White House",
+  "location": "Medinah Country Club, Medinah, IL"
+ },
+ {
+  "date": "2026-09-27",
+  "time": null,
+  "details": "TBD: The President arrives the White House",
+  "location": "Medinah Country Club, Medinah, IL"
+ },
+ {
+  "date": "2026-09-27",
+  "time": "07:35:00",
+  "details": "Out-of-Town Travel Pool Call Time",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-09-27",
+  "time": "08:00:00",
+  "details": "The President participates in Executive Time",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-09-27",
+  "time": "08:41:00",
+  "details": "The President departs The White House en route to Joint Base Andrews",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-09-27",
+  "time": "08:48:00",
+  "details": "The President arrives at Joint Base Andrews",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-09-27",
+  "time": "09:04:00",
+  "details": "The President departs Joint Base Andrews for O'Hare International Airport, Chicago",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-09-27",
+  "time": "10:38:00",
+  "details": "The President arrives at O'Hare International Airport, Chicago [9:38 AM Local]",
+  "location": "O'Hare International Airport, Chicago"
+ },
+ {
+  "date": "2026-09-27",
+  "time": "10:50:00",
+  "details": "The President departs O'Hare International Airport, Chicago en route to Medinah Country Club, Medinah, IL [9:50 AM Local]",
+  "location": "O'Hare International Airport, Chicago"
+ },
+ {
+  "date": "2026-09-27",
+  "time": "11:15:00",
+  "details": "The President arrives at Medinah Country Club, Medinah, IL [10:15 AM Local]",
+  "location": "Medinah Country Club, Medinah, IL"
+ },
+ {
+  "date": "2026-09-27",
+  "time": "11:30:00",
+  "details": "The President attends the President's Cup [10:30 AM Local]",
+  "location": "Medinah Country Club, Medinah, IL"
+ },
+ {
+  "date": "2026-09-27",
+  "time": "11:30:00",
+  "details": "The President is introduced at the Presidents Cup [10:30 AM]",
+  "location": "Medinah Country Club, Medinah, IL"
+ },
+ {
+  "date": "2026-09-27",
+  "time": "18:58:00",
+  "details": "The President departs Medinah Country Club, Medinah, IL en route to O'Hare International Airport, Chicago [5:58 PM Local]",
+  "location": "Medinah Country Club, Medinah, IL"
+ },
+ {
+  "date": "2026-09-27",
+  "time": "19:20:00",
+  "details": "The President arrives at O'Hare International Airport, Chicago [6:20 PM Local]",
+  "location": "O'Hare International Airport, Chicago"
+ },
+ {
+  "date": "2026-09-27",
+  "time": "19:38:00",
+  "details": "The President departs O'Hare International Airport, Chicago for Joint Base Andrews [6:38 PM Local]",
+  "location": "O'Hare International Airport, Chicago"
+ },
+ {
+  "date": "2026-09-27",
+  "time": "21:06:00",
+  "details": "The President arrives at Joint Base Andrews",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-09-27",
+  "time": "21:28:00",
+  "details": "The President departs Joint Base Andrews en route to The White House",
+  "location": "Joint Base Andrews"
+ },
+ {
+  "date": "2026-09-27",
+  "time": "21:36:00",
+  "details": "The President arrives at The White House",
+  "location": "The White House"
+ },
+ {
+  "date": "2026-09-27",
+  "time": "21:46:00",
+  "details": "White House Press Office: Travel/Photo lid called",
+  "location": "The White House"
+ }
+]

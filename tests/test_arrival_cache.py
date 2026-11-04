@@ -7,7 +7,6 @@ Test arrival cache expiration logic, specifically the .days vs .total_seconds bu
 from __future__ import annotations
 
 import datetime as dt
-import json
 
 import pytest
 from app import arrival_cache as cache
@@ -48,13 +47,12 @@ def test_load_boundary_sub_day_precision(isolated_cache):
     """
     CRITICAL BUG TEST: Arrival at 7d 0h 1m should be rejected (> 7 days).
 
-    Current bug: Uses .days which rounds down (7 .days returns 7, but comparison is > not >=)
+    Current bug: Uses .days which rounds down (7 .days returns 7, but comparison
+    is > not >=)
     Expected: Should use .total_seconds() for precise comparison
     """
     # Create timestamp that's 7 days + 1 minute ago (should be rejected)
-    ts_boundary = dt.datetime.now(dt.timezone.utc) - dt.timedelta(
-        days=7, minutes=1
-    )
+    ts_boundary = dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=7, minutes=1)
     cache.save(40.0, -75.0, ts=ts_boundary)
 
     result = cache.load(max_days=7)
@@ -64,7 +62,8 @@ def test_load_boundary_sub_day_precision(isolated_cache):
 
 
 def test_load_exact_7_days(isolated_cache):
-    """Arrival at exactly 7 days (minus 1 second to avoid timing race) should be accepted."""
+    """Arrival at exactly 7 days (minus 1 second to avoid timing race) should be
+    accepted."""
     # Use 7 days - 1 second to avoid test timing race condition
     ts_just_under = dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=7, seconds=-1)
     cache.save(40.0, -75.0, ts=ts_just_under)

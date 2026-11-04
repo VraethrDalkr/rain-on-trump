@@ -10,7 +10,6 @@ setup(
         "httpx>=0.23",
         "fastapi>=0.95",
         "uvicorn>=0.22",
-        "python-opensky>=1.0.1",
         "python-dateutil>=2.8",
         "geopy>=2.4",
         "beautifulsoup4>=4.12",

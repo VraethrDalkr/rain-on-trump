@@ -188,9 +188,16 @@ def test_emit_api_error_logs_event(mock_webhook_url, reset_api_error_state, capl
     assert "OpenSky" in caplog.text
 
 
-def test_emit_api_error_deduplicates(mock_webhook_url, reset_api_error_state, caplog):
+def test_emit_api_error_deduplicates(
+    mock_webhook_url, reset_api_error_state, caplog, monkeypatch
+):
     """emit_api_error suppresses duplicate errors within cooldown period."""
     import logging
+
+    async def _ok(embed):
+        return True
+
+    monkeypatch.setattr(es, "_post_webhook", _ok)
 
     caplog.set_level(logging.INFO)
 
@@ -213,6 +220,11 @@ def test_emit_api_error_resets_after_cooldown(
 ):
     """emit_api_error allows new errors after cooldown expires."""
     import logging
+
+    async def _ok(embed):
+        return True
+
+    monkeypatch.setattr(es, "_post_webhook", _ok)
 
     caplog.set_level(logging.INFO)
 
