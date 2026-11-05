@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- v3.0.1 -->
+<!-- v3.0.2 -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -199,11 +199,12 @@
       <h2>What This Project Does</h2>
       <p>
         "Is It Raining on Trump?" estimates Donald J. Trump's current location
-        using public data sources (primarily his published schedule from Factba.se,
-        supplemented by aircraft tracking when available), then queries weather
-        APIs to determine if it's raining there. A minimalist interface displays
-        a large <strong>YES</strong> or <strong>NO</strong>, the rain rate
-        in mm/h, and a link to view the provenance of the location.
+        from public data (aircraft tracking and his published schedule from
+        Factba.se), then asks a weather service whether it is raining or snowing
+        there. The answer is a big <strong>YES</strong> or <strong>NO</strong>
+        over a sky that matches the weather, with the rain and snow rates. Tap
+        the location card to see where the location comes from, how sure we are,
+        and the last places he was.
       </p>
       <p style="margin-top: 1rem; font-style: italic;" class="subtle">
         Whether a rainy notification brightens your day or prompts you to send
@@ -219,7 +220,7 @@
         View the code on <a href="https://github.com/VraethrDalkr/rain-on-trump" target="_blank">GitHub</a>.
       </p>
       <p style="font-size: 0.9rem; margin-top: 1rem;" class="muted">
-        <strong>Version:</strong> 3.0.1
+        <strong>Version:</strong> 3.0.2
       </p>
     </section>
 
@@ -282,65 +283,101 @@
     <section class="section">
       <h2>Data Sources &amp; Methodology</h2>
       <p>
-        <strong>1. Aircraft Tracking:</strong>
-        Checks community ADS-B feeds (adsb.fi → adsb.lol) for the presidential aircraft. If airborne,
-        we assume no rain until arrival; if grounded, we save the last arrival
-        coordinates to cache.
+        <strong>1. How the location is chosen.</strong>
+        Each source gives reports of the form "he was at this place at this
+        time", and each kind of report has its own level of trust. The app uses
+        the <em>newest</em> trusted report. Weaker ones are used only when
+        nothing better exists. A report stops counting once a newer trusted one
+        puts him more than 60&nbsp;km (about 37 miles) away.
       </p>
       <p>
-        <strong>2. Public Schedule (Factba.se):</strong>
-        When grounded or no plane data is available, we fetch Trump's JSON
-        schedule from Factba.se. We pick the most recent event with a valid
-        location and apply a 72-hour linear confidence decay. If no event
-        appears within 72 hours, the location is marked "unknown," but a
-        "last known" fallback is preserved.
+        <strong>2. Aircraft tracking.</strong>
+        Community aircraft-tracking feeds (adsb.fi, with adsb.lol as backup)
+        show the planes he flies on in the air, on the ground and when they
+        land. Several aircraft can fly as Air Force One, so the app trusts a
+        flight most when it is confirmed: the "AF1" callsign was seen, the
+        schedule lists a matching departure or arrival, or it is the plane he
+        was last known to use. A long flight that isn't confirmed counts a
+        little less. Short local flights, such as training runs, are used only
+        when nothing better is known.
       </p>
       <p>
-        <strong>2b. Overnight Inference:</strong>
-        During overnight hours (9PM–8AM Eastern), if both the last evening event
-        and the next morning event are in the same region, we infer the overnight
-        location: White House for DC, Mar-a-Lago for Florida, or Bedminster for
-        New Jersey (the "Summer White House"). This fills the gap between events
-        with ~85% accuracy based on historical schedule patterns.
+        <strong>3. Public schedule (Factba.se).</strong>
+        An event with a time and a known venue is trusted; an item with only a
+        date is not. On a long trip, a "departs X for Y" item means he is in the
+        air until the matching arrival or the estimated arrival time. Items that
+        don't say where he is are ignored: press "lids" (the end of the press
+        day), cancelled events, and items for the First Lady or the Vice
+        President alone.
       </p>
       <p>
-        <strong>2c. Context-Based Geocoding:</strong>
-        When the schedule contains ambiguous location names that aren't in our
-        curated alias list, we use nearby scheduled events to disambiguate. The
-        system fetches multiple geocoding candidates and filters out physically
-        impossible locations (e.g., can't travel DC to Arizona in 2 hours), then
-        picks the result closest to where other recent events occurred. This
-        prevents misresolutions like "Naval Observatory" matching Arizona
-        instead of DC.
+        <strong>4. Venue lookup.</strong>
+        Common venues come from a hand-made list. Others are looked up on
+        OpenStreetMap. When a name matches several places, the app drops any he
+        could not have reached in time from where he was recently and picks the
+        one closest to the rest of his schedule. So "Elysée Palace" means Paris
+        during a trip to France.
       </p>
       <p>
-        <strong>3. Weather Data:</strong>
-        With coordinates determined, we query Open-Meteo for current 15-minute
-        precipitation (both rain and snow). Any precipitation rate > 0 mm/h
-        yields "🌧 YES" in the UI; otherwise "☀ NO."
+        <strong>5. Overnight.</strong>
+        Between 9&nbsp;PM and 8&nbsp;AM Eastern, if his last evening event and
+        his next morning event are both near the same one of Washington, Palm
+        Beach or Bedminster, the app assumes he spent the night there: at the
+        White House, Mar-a-Lago or his Bedminster golf club.
       </p>
       <p>
-        <strong>4. Thunderstorm Detection:</strong>
-        Thunderstorm activity is detected using Open-Meteo weather codes
-        (WMO standard 95-99). Code 95 indicates a moderate thunderstorm, while
-        codes 96, 97, and 99 indicate severe thunderstorms with possible hail.
-        State changes (start, escalation, end) trigger push notifications.
+        <strong>6. Confidence.</strong>
+        The percentage is how much the app trusts the newest report. Each kind
+        of report starts at its own level (82% for a timed schedule item, for
+        example) and keeps it for 3&nbsp;hours. After that it falls with age:
+        about two thirds of the starting level after a day, under half after
+        three days. At the White House, Mar-a-Lago or Bedminster it stops at
+        half, since he tends to stay there. It never goes above 95%. Reports
+        older than 7&nbsp;days are dropped; if nothing usable is left the app
+        shows <strong>???</strong> with the last place he was seen.
+      </p>
+      <p>
+        <strong>7. Weather.</strong>
+        Open-Meteo data in 15-minute steps. It counts as raining (or snowing)
+        if any of the last four steps, one hour in all, had measurable rain (or
+        snow). So YES stays on until a full hour is dry, and the rate shown is
+        the total for that hour. Thunderstorms come from the hourly weather
+        code, which also tells when a storm brings hail.
+      </p>
+      <p>
+        <strong>8. Notifications.</strong>
+        Push alerts when rain or snow starts or stops where he is, and when a
+        thunderstorm starts, gets worse or passes. Settings has a switch for
+        each of rain starting, rain stopping and thunderstorms. Storm alerts
+        follow the rain switches: a storm starting or getting worse needs "Rain
+        starts" on, a storm passing needs "Rain stops" on.
       </p>
     </section>
 
     <section class="section">
       <h2>Limitations</h2>
-      <p>This is a best-effort estimate, not real-time surveillance:</p>
+      <p>The answer is a best guess from public information:</p>
       <ul>
-        <li><strong>Location accuracy:</strong> Derived from public schedule and
-            flight data. Confidence decreases over time since the last known event.</li>
-        <li><strong>Weather granularity:</strong> Open-Meteo provides 15-minute data
-            (we look at the last hour), so very brief showers may be missed or delayed.</li>
-        <li><strong>In-flight:</strong> No weather check while airborne. We report
-            "not raining" until landing.</li>
-        <li><strong>Unknown state:</strong> If no fresh data exists within 72 hours,
-            the app displays "Unknown" (no location).</li>
+        <li><strong>Location:</strong> depends on the public schedule and the
+            aircraft feeds. The schedule can be late or wrong, and the plane
+            isn't always visible.</li>
+        <li><strong>Weather:</strong> forecast-model data, with no measurement
+            at his exact spot. Very short showers can be missed, and the answer
+            can run about 20 minutes behind (thunderstorms up to an hour).</li>
+        <li><strong>In flight:</strong> while he is in the air the app answers
+            NO without checking the weather, and checks again once he has
+            landed.</li>
       </ul>
+    </section>
+
+    <section class="section">
+      <h2>Privacy</h2>
+      <p>
+        No cookies, no analytics, and the app never asks for your location. If
+        you turn on notifications, the server keeps your browser's push address
+        and which alerts you chose. Turning notifications off
+        deletes it. The contact form above is sent through Formspree.
+      </p>
     </section>
 
     <section class="section">

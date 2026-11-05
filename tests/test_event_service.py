@@ -250,3 +250,36 @@ def test_fire_and_forget_skips_when_not_configured(monkeypatch):
 
     # Should not raise
     es._fire_and_forget({"title": "Test"})
+
+
+def test_failed_post_keeps_a_newer_cooldown_stamp(reset_api_error_state):
+    """A late failure from an older post must not erase a newer stamp."""
+    old = dt.datetime(2026, 1, 1, tzinfo=dt.timezone.utc)
+    new = old + dt.timedelta(hours=2)
+    es._last_api_error["OpenSky"] = new
+    es._undo_stamp(es._last_api_error, "OpenSky", old)
+    assert es._last_api_error["OpenSky"] == new
+    es._undo_stamp(es._last_api_error, "OpenSky", new)
+    assert "OpenSky" not in es._last_api_error
+
+
+async def test_failed_post_undoes_only_its_own_stamp(
+    mock_webhook_url, reset_api_error_state, monkeypatch
+):
+    """emit_api_error's failure callback passes its own stamp (end to end)."""
+    import asyncio
+
+    async def _fail(embed):
+        return False
+
+    monkeypatch.setattr(es, "_post_webhook", _fail)
+
+    es.emit_api_error("OpenSky", "Error 1")
+    await asyncio.gather(*list(es._tasks))
+    assert "OpenSky" not in es._last_api_error  # failed: cooldown undone
+
+    es.emit_api_error("OpenSky", "Error 2")
+    newer = es._last_api_error["OpenSky"] + dt.timedelta(seconds=1)
+    es._last_api_error["OpenSky"] = newer  # a newer stamp before the post fails
+    await asyncio.gather(*list(es._tasks))
+    assert es._last_api_error["OpenSky"] == newer

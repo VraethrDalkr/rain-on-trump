@@ -14,6 +14,7 @@ import datetime as dt
 import httpx
 import pytest
 
+from app import weather_service
 from app.constants import USER_AGENT
 
 
@@ -117,6 +118,19 @@ class TestOpenMeteoAPI:
             ), f"Snow value {i} not numeric"
             assert rain_values[i] >= 0, f"Rain value {i} is negative"
             assert snow_values[i] >= 0, f"Snow value {i} is negative"
+
+    async def test_get_precip_uses_15min_window_and_wind(
+        self, washington_dc: tuple[float, float]
+    ) -> None:
+        """The service parses wind and takes the 15-minute rain window."""
+        lat, lon = washington_dc
+        result, t = await weather_service.get_precip(lat, lon, trace=[])
+
+        assert not result.get("error"), f"Weather error: {result}"
+        assert isinstance(result["wind_kmh"], float), result.get("wind_kmh")
+        assert any(
+            s.get("step") == "minutely_15" for s in t
+        ), "15-minute window not used (fell back to hourly)"
 
     async def test_invalid_coordinates_handled(self) -> None:
         """API should handle invalid coordinates gracefully."""

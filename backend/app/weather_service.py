@@ -39,7 +39,7 @@ Public helper
 from __future__ import annotations
 
 import datetime as dt
-from typing import Any
+from typing import Any, overload
 
 import httpx
 
@@ -162,6 +162,16 @@ def _wind_kmh(data: dict) -> float | None:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         return None
     return float(value)
+
+
+@overload
+async def get_precip(lat: float, lon: float, *, trace: None = None) -> dict: ...
+
+
+@overload
+async def get_precip(
+    lat: float, lon: float, *, trace: list[dict]
+) -> tuple[dict, list[dict]]: ...
 
 
 async def get_precip(

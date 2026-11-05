@@ -484,7 +484,7 @@ def broadcast(title: str, body: str, notification_type: str | None = None) -> in
 
         try:
             aud = _audience(sub["endpoint"])
-            vapid_claims = {
+            vapid_claims: dict[str, str | int] = {
                 "sub": "mailto:you@example.com",
                 "aud": aud,
             }

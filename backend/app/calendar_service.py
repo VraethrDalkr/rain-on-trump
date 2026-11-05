@@ -37,7 +37,7 @@ import logging
 import math
 import threading
 import unicodedata
-from typing import Callable, Final
+from typing import Any, Callable, Final
 
 import httpx
 from dateutil import tz
@@ -166,7 +166,7 @@ def _refresh(blocking: bool) -> list[dict[str, object]]:
         _DOWNLOAD_LOCK.release()
 
 
-def _fetch_events() -> list[dict[str, object]]:
+def _fetch_events() -> list[dict[str, Any]]:
     """Return normalised schedule items (cached for ``CACHE_SEC``).
 
     A Factba.se outage, timeout or malformed body must never break the location
@@ -393,7 +393,7 @@ def _resolve_location_to_coords(location: str) -> tuple[float, float] | None:
     # Check place aliases for a match (substring matching like location_service)
     alias = find_alias(location_lower)
     if alias:
-        return (alias["lat"], alias["lon"])
+        return (float(alias["lat"]), float(alias["lon"]))
 
     return None
 

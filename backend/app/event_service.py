@@ -73,6 +73,12 @@ def _prune_cooldowns(
         del seen[key]
 
 
+def _undo_stamp(seen: dict[str, dt.datetime], key: str, stamp: dt.datetime) -> None:
+    """Forget a cooldown stamp after a failed post, unless a newer one replaced it."""
+    if seen.get(key) == stamp:
+        del seen[key]
+
+
 async def _post_webhook(embed: dict[str, Any]) -> bool:
     """Post an embed to Discord webhook. Returns True on success."""
     if not _is_configured():
@@ -97,7 +103,7 @@ async def _post_webhook(embed: dict[str, Any]) -> bool:
 
 
 async def _post_then(
-    embed: dict[str, Any], on_failure: Callable[[], None] | None
+    embed: dict[str, Any], on_failure: Callable[[], object] | None
 ) -> None:
     """Post *embed*; call *on_failure* (e.g. to undo a cooldown stamp) if it fails."""
     ok = await _post_webhook(embed)
@@ -117,7 +123,7 @@ def set_main_loop(loop: asyncio.AbstractEventLoop | None) -> None:
 
 
 def _fire_and_forget(
-    embed: dict[str, Any], on_failure: Callable[[], None] | None = None
+    embed: dict[str, Any], on_failure: Callable[[], object] | None = None
 ) -> None:
     """Schedule a webhook post without ever blocking the caller.
 
@@ -443,7 +449,7 @@ def emit_geocode_failure(
         "fields": fields,
         "timestamp": now.isoformat(),
     }
-    _fire_and_forget(embed, lambda: _last_geocode_error.pop(query, None))
+    _fire_and_forget(embed, lambda: _undo_stamp(_last_geocode_error, query, now))
     LOG.info("[event] geocode_failure: %r (%s)", query, result_type)
 
 
@@ -506,7 +512,7 @@ def emit_low_importance_geocode(
         "fields": fields,
         "timestamp": now.isoformat(),
     }
-    _fire_and_forget(embed, lambda: _last_geocode_error.pop(query, None))
+    _fire_and_forget(embed, lambda: _undo_stamp(_last_geocode_error, query, now))
     LOG.info("[event] low_importance_geocode: %r (importance=%.3f)", query, importance)
 
 
@@ -538,7 +544,7 @@ def emit_api_error(api_name: str, error_message: str) -> None:
         ],
         "timestamp": now.isoformat(),
     }
-    _fire_and_forget(embed, lambda: _last_api_error.pop(api_name, None))
+    _fire_and_forget(embed, lambda: _undo_stamp(_last_api_error, api_name, now))
     LOG.info("[event] api_error: %s - %s", api_name, error_message[:100])
 
 

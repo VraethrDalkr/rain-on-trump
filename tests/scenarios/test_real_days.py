@@ -179,6 +179,30 @@ def ground_truth(events: list[dict], when: dt.datetime) -> tuple[str, object]:
     return "at", _resolve(last["location"])
 
 
+def output_errors(c: dict) -> list[str]:
+    """Contract violations in one fusion output (see the location_fusion output)."""
+    errs = []
+    if c.get("unknown") and ("lat" in c or "lon" in c):
+        errs.append("unknown with lat/lon")
+    if not 0 <= c.get("confidence", 0) <= 95:
+        errs.append(f"confidence {c.get('confidence')}")
+    ev = c.get("evidence")
+    if ev is not None:
+        ts = [e["t"] for e in ev]
+        if len(ev) > 4:
+            errs.append("more than 4 evidence steps")
+        if ts != sorted(ts):
+            errs.append(f"evidence not oldest first: {ts}")
+        if [e["current"] for e in ev].count(True) != 1 or not ev[-1]["current"]:
+            errs.append("evidence: the pick must be the one current step, last")
+        if ev[-1].get("since", "") > ev[-1]["t"]:
+            errs.append("evidence: since after t")
+        keys = [(e["kind"], e["place"]) for e in ev]
+        if len(set(keys)) != len(keys):
+            errs.append(f"evidence: repeated (kind, place) {keys}")
+    return errs
+
+
 def _replay(world: World, monkeypatch, fixture: str, first: str, last: str) -> None:
     events = _load(fixture, monkeypatch)
     world.events[:] = events
@@ -203,6 +227,8 @@ def _replay(world: World, monkeypatch, fixture: str, first: str, last: str) -> N
             ok = True
         if not ok:
             misses.append(f"{local} ET expected {kind} {truth}: {describe(coords)}")
+        if errs := output_errors(coords):
+            misses.append(f"{local} ET output contract: {errs}: {describe(coords)}")
         t += dt.timedelta(hours=1)
     assert not misses, "\n".join(misses)
 

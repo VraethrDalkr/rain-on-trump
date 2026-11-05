@@ -22,7 +22,7 @@ import math
 import re
 import unicodedata
 from dataclasses import dataclass, field
-from typing import Any, Final, Iterable
+from typing import Any, Final, Iterable, Mapping
 
 from .fleet import is_af1_callsign
 from .place_aliases import find_alias
@@ -334,7 +334,7 @@ class Inputs:
     geocodes: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
     tracks: list[Track] = field(default_factory=list)
     overnight: dict[str, Any] | None = None
-    news: dict[str, Any] | None = None
+    news: Mapping[str, Any] | None = None
     primary_hint: str | None = None
 
 
@@ -795,7 +795,10 @@ def _calendar_claims(
     alias_ctx = [
         (e.lat, e.lon, e.t)
         for e in events
-        if e.located and e.how != "geocode" and e.presence == "full"
+        if e.lat is not None
+        and e.lon is not None
+        and e.how != "geocode"
+        and e.presence == "full"
     ]
     dest_ctx = [
         (e.departs["dest"][0], e.departs["dest"][1], e.t)
@@ -885,29 +888,43 @@ def _movement_claims(
             continue
         name = dep["dest_name"] or dep["dest_text"]
 
-        def arrival_by(latest: dt.datetime) -> Event | None:
+        def flight_end(
+            latest: dt.datetime, default: dt.datetime
+        ) -> tuple[dt.datetime, bool]:
+            """End of the flight: the "arrives Y" item, else *default* (ETA).
+
+            Returns (end, listed): *listed* is True when the schedule itself
+            closes the flight (an arrival, or a departure from Y).
+
+            Other items at Y don't end it (a rally's listed start often comes
+            before the real arrival). The search stops at a later departure
+            from Y: he arrived before it, and an arrival listed after it
+            belongs to a later trip.
+            """
             assert dest is not None
-            return next(
-                (
-                    e
-                    for e in events[i + 1 :]
-                    if e.t <= latest
-                    and e.has_time
-                    and e.located
-                    and e.is_arrival
-                    and e.presence == "full"
-                    and e.km_to(dest) <= SUPERSEDE_KM
-                ),
-                None,
-            )
+            for e in events[i + 1 :]:
+                if e.t > latest:
+                    break
+                if not (e.has_time and e.located and e.presence == "full"):
+                    continue
+                if e.is_arrival and e.km_to(dest) <= SUPERSEDE_KM:
+                    return e.t, True
+                if e.departs:
+                    left = e.departs["origin"]
+                    km = haversine_km(*left, *dest) if left else e.km_to(dest)
+                    if km <= SUPERSEDE_KM:
+                        return min(default, e.t), True
+            return default, False
 
         if origin is None and (
             is_airport_venue(ev.location) or is_airport_venue(dep["origin_text"])
         ):
             # Taking off from an airport we cannot place (not geocoded yet):
             # in flight to Y until its arrival, else for UNKNOWN_LEG_H.
-            arrival = arrival_by(ev.t + dt.timedelta(hours=EN_ROUTE_MAX_H))
-            end = arrival.t if arrival else ev.t + dt.timedelta(hours=UNKNOWN_LEG_H)
+            end, end_known = flight_end(
+                ev.t + dt.timedelta(hours=EN_ROUTE_MAX_H),
+                ev.t + dt.timedelta(hours=UNKNOWN_LEG_H),
+            )
             claims.append(
                 Claim(
                     "en_route",
@@ -924,16 +941,18 @@ def _movement_claims(
                         "dest": dest,
                         "dest_name": name,
                         "until": end,
+                        "end_known": end_known,
                     },
                 )
             )
-            dest_t = end
+            dest_t, flight_until = end, end if end_known else None
         elif leg_km is not None and leg_km > LONG_LEG_KM:
             eta_h = leg_km / SCHEDULE_SPEED_KMH + SCHEDULE_PAD_H
-            arrival = arrival_by(
-                ev.t + dt.timedelta(hours=2 * eta_h + ARRIVAL_SEARCH_PAD_H)
+            end, _ = flight_end(
+                ev.t + dt.timedelta(hours=2 * eta_h + ARRIVAL_SEARCH_PAD_H),
+                ev.t + dt.timedelta(hours=eta_h),
             )
-            end = arrival.t if arrival else ev.t + dt.timedelta(hours=eta_h)
+            end_known = True  # listed, or a computed ETA
             assert origin is not None
             relay = next(
                 (
@@ -956,6 +975,40 @@ def _movement_claims(
                 # followed by the actual long leg from the same area to the same
                 # destination ("departs JBA for Calgary"): that leg is the flight.
                 continue
+            during = [
+                e
+                for e in events[i + 1 :]
+                if ev.t < e.t < end
+                and e.has_time
+                and e.located
+                and e.presence == "full"
+            ]
+            stayed = any(
+                e.is_arrival
+                and e.km_to(dest) > SUPERSEDE_KM
+                and e.km_to(origin) <= SUPERSEDE_KM
+                and not is_airport_venue(e.location)
+                and not is_airport_venue(e.summary)
+                for e in during
+            )
+            leaves_later = any(
+                e.departs
+                and (
+                    haversine_km(*e.departs["origin"], *origin)
+                    if e.departs["origin"]
+                    else e.km_to(origin)
+                )
+                <= SUPERSEDE_KM
+                for e in during
+            )
+            if stayed and not leaves_later:
+                # An arrival at a venue near the origin during the flight, and
+                # no later departure from there ("departs the UN for the White
+                # House", then "arrives at Trump Tower"): the flight never
+                # happened, so no en_route and no departure_dest. A later
+                # departure from the origin means the listed time was early
+                # (Sharm El-Sheikh, 2025-10-13: ceremony first, then the flight).
+                continue
             claims.append(
                 Claim(
                     "en_route",
@@ -972,13 +1025,18 @@ def _movement_claims(
                         "dest": dest,
                         "dest_name": name,
                         "until": end,
+                        "end_known": end_known,
                     },
                 )
             )
-            dest_t = end
+            dest_t, flight_until = end, end
         else:
-            dest_t = mask_at
-        if dest_t > now or any(e.t > ev.t for e in later):
+            dest_t, flight_until = mask_at, None
+        # Items listed during a scheduled flight are noise (ignored in fuse):
+        # only an item from its end on means the schedule has moved on. Not
+        # when the end is a guess (unknown origin, UNKNOWN_LEG_H).
+        moved_on = flight_until or ev.t
+        if dest_t > now or any(e.t > ev.t and e.t >= moved_on for e in later):
             continue  # not yet, or the schedule has moved on
         claims.append(
             Claim(
@@ -1118,18 +1176,31 @@ def fuse(inputs: Inputs, now: dt.datetime) -> Decision:
             c.status, c.why = "expired", "flight time elapsed"
         elif ended_by and not c.extra.get("scheduled"):
             c.status, c.why = "expired", f"arrived: {ended_by[0].name}"
+    # Schedule items listed during a scheduled flight (until its arrival /
+    # ETA) are noise: press pool calls, "Oval Office" while airborne. They stay
+    # ignored after the flight ends, or they would win as the newest items,
+    # unless its end was only guessed (unknown origin: a real venue listed in
+    # those UNKNOWN_LEG_H hours may be where he went). ADS-B still counts.
+    for flight in past:
+        if not (
+            flight.kind == "en_route"
+            and flight.extra.get("scheduled")
+            and (
+                flight.status == "live"
+                or (flight.status == "expired" and flight.extra.get("end_known"))
+            )
+        ):
+            continue
+        for x in past:
+            if (
+                x.status == "live"
+                and x.kind not in AIRCRAFT_KINDS
+                and (flight.t < x.t < flight.extra["until"])
+            ):
+                x.status, x.why = "ignored", "listed during a scheduled flight"
     active = [c for c in past if c.kind == "en_route" and c.status == "live"]
     for flight in active:
         if flight.extra.get("scheduled"):
-            # Until the listed arrival / ETA, schedule items are noise (press
-            # pool calls, "Oval Office" while airborne); ADS-B still counts.
-            for x in past:
-                if (
-                    x.status == "live"
-                    and x.kind not in AIRCRAFT_KINDS
-                    and (flight.t < x.t < flight.extra["until"])
-                ):
-                    x.status, x.why = "ignored", "listed during a scheduled flight"
             continue
         if not flight.extra.get("dest"):
             continue  # unknown destination: can't tell cancelled items apart
@@ -1231,7 +1302,9 @@ def _refine(pick: Claim, claims: list[Claim], now: dt.datetime) -> dict[str, Any
     if (
         pick.kind in CALENDAR_KINDS
         and is_airport_venue(pick.venue or pick.name)
-        and not DEPARTS_ONLY_RE.search(pick.summary)  # leaving the airport
+        # "departs PBI" means leaving the airport; a departure_dest claim's
+        # summary is the departure item too, but it places him at Y on arrival
+        and (pick.kind == "departure_dest" or not DEPARTS_ONLY_RE.search(pick.summary))
     ):
         base = base_near(pick.lat, pick.lon)
         if base:

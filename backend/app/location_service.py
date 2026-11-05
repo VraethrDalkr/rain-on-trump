@@ -39,7 +39,7 @@ import time
 import unicodedata
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Any, Dict, Final, List, Optional, Tuple, Union
+from typing import Any, Dict, Final, List, Optional, Tuple, Union, overload
 
 import httpx
 from dateutil import tz
@@ -402,7 +402,7 @@ def _disambiguate_results(
     results: list,
     context_events: list[dict],
     target_dt: dt.datetime,
-) -> tuple[object, dict | None]:
+) -> tuple[Any, dict | None]:
     """
     Apply hybrid 3-layer disambiguation to geocoding results.
 
@@ -1023,7 +1023,7 @@ def _window(events: list[dict], now: dt.datetime) -> list[dict]:
 
 
 def _venue_queries(events: list[dict], now: dt.datetime) -> list[str]:
-    """Event locations and departure destinations that need geocoding.
+    """Event locations and departure origins / destinations that need geocoding.
 
     Covers items in the fusion window (7 days back, 24 h ahead), nearest in
     time first; aliased, skip-listed and generic strings and items that place
@@ -1043,6 +1043,9 @@ def _venue_queries(events: list[dict], now: dt.datetime) -> list[str]:
         texts = [str(ev.get("location") or "")]
         m = location_fusion.DEPARTS_RE.search(str(ev.get("summary") or ""))
         if m:
+            # The fusion resolves the summary's origin too (it wins over a
+            # disagreeing location field, and an empty one is common)
+            texts.append(m.group("origin").strip())
             texts.append(m.group("dest").strip().rstrip("."))
         for text in texts:
             key = _clean(text)
@@ -1120,6 +1123,16 @@ DECISION_TTL_S: Final = 45.0
 DECISION_BUCKET_S: Final = 30
 #: Last decision and the inputs it was made from (kept alive so ids stay valid)
 _decision_memo: dict[str, Any] = {}
+
+
+@overload
+async def current_coords(*, trace: None = None) -> Dict[str, Any]: ...
+
+
+@overload
+async def current_coords(
+    *, trace: List[Dict[str, Any]]
+) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]: ...
 
 
 async def current_coords(

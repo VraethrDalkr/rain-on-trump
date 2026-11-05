@@ -40,7 +40,7 @@ GROUND_ALT_FT: Final[int] = 300  # ft – treat lower alt as “ground”
 
 
 # ─────────────────────────────── typing ─────────────────────────────────
-class PlaneState(TypedDict, total=False):
+class PlaneState(TypedDict):
     callsign: str
     lat: float
     lon: float
@@ -120,7 +120,9 @@ def _parse_aircraft(
         return None  # not one of ours
     flight_id = str(ac.get("flight") or "").strip()
     if not counts_as_president(tail, flight_id):
-        LOG.debug("[adsb.fi] %s as %r is not flying as AF1", tail, flight_id)
+        # INFO, not DEBUG: shows the real broadcast form of the AF1 callsign in
+        # `fly logs` (one line per poll while such an aircraft is visible)
+        LOG.info("[%s] %s as %r is not flying as AF1", source, tail, flight_id)
         return None
 
     lat, lon, seen_pos = ac.get("lat"), ac.get("lon"), ac.get("seen_pos")

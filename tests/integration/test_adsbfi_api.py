@@ -16,6 +16,11 @@ from app import adsbfi_service as svc
 from app.constants import USER_AGENT
 from app.fleet import FLEET
 
+# adsb.fi answers a quick burst of requests with 429 (HTML): pace every test.
+pytestmark = pytest.mark.usefixtures("rate_limiter")
+
+FLEET_HEXES = ",".join(m["icao"] for m in FLEET.values())
+
 
 def _get(url: str) -> httpx.Response:
     with httpx.Client(timeout=30.0, headers={"User-Agent": USER_AGENT}) as client:
@@ -27,8 +32,16 @@ class TestAdsbFiAPI:
 
     def test_fleet_query_returns_v2_shape(self) -> None:
         """The fleet query returns the ADSBx-v2 shape: an 'ac' list and 'now' (ms)."""
-        url = svc.ADSBFI_URL.format(hexes=",".join(m["icao"] for m in FLEET.values()))
-        resp = _get(url)
+        resp = _get(svc.ADSBFI_URL.format(hexes=FLEET_HEXES))
+
+        assert resp.status_code == 200, f"Unexpected status: {resp.status_code}"
+        data = resp.json()
+        assert isinstance(data.get("ac"), list), f"No 'ac' list: {data}"
+        assert isinstance(data.get("now"), (int, float))
+
+    def test_adsblol_fleet_query_returns_v2_shape(self) -> None:
+        """The adsb.lol fallback answers the fleet query in the same v2 shape."""
+        resp = _get(svc.ADSBLOL_URL.format(hexes=FLEET_HEXES))
 
         assert resp.status_code == 200, f"Unexpected status: {resp.status_code}"
         data = resp.json()
@@ -39,13 +52,15 @@ class TestAdsbFiAPI:
         """The /v2/mil feed lists military aircraft (proves no military filter)."""
         resp = _get("https://opendata.adsb.fi/api/v2/mil")
 
-        assert resp.status_code == 200
-        assert resp.json().get("ac"), "No military aircraft visible right now"
+        assert resp.status_code == 200, f"Unexpected status: {resp.status_code}"
+        if not resp.json().get("ac"):
+            pytest.skip("No military aircraft visible right now")
 
     def test_visible_fleet_aircraft_parse(self) -> None:
         """Any fleet aircraft currently visible must parse without errors."""
-        url = svc.ADSBFI_URL.format(hexes=",".join(m["icao"] for m in FLEET.values()))
-        aircraft = svc._aircraft_list(_get(url).json())
+        resp = _get(svc.ADSBFI_URL.format(hexes=FLEET_HEXES))
+        assert resp.status_code == 200, f"Unexpected status: {resp.status_code}"
+        aircraft = svc._aircraft_list(resp.json())
         if not aircraft:
             pytest.skip("No fleet aircraft visible right now")
 

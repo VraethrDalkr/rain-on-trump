@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
-from typing import Any, Final, Literal, TypedDict, cast
+from typing import Any, Final, Literal, NotRequired, TypedDict, cast
 
 from dateutil import tz
 
@@ -95,7 +95,7 @@ def calculate_confidence(age_seconds: float, is_airborne: bool) -> int | None:
         return int(confidence)
 
 
-class PlaneState(TypedDict, total=False):
+class PlaneState(TypedDict):
     """Homogeneous snapshot shape used throughout the project."""
 
     callsign: str
@@ -106,7 +106,7 @@ class PlaneState(TypedDict, total=False):
     ts: dt.datetime
     status: Literal["airborne", "grounded"]
     tracker_url: str
-    confidence: int
+    confidence: NotRequired[int]  # set by _with_confidence
     flight_id: str
     source: str
     vertical_rate: float | None

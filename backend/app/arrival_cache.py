@@ -353,8 +353,17 @@ def record_airborne(
             or rec.get("takeoff") is None
         )
         if new_flight:
-            on_ground = landing and (not prev or landing["ts"] >= prev["ts"])
-            origin = landing if on_ground else {"lat": lat, "lon": lon}
+            on_ground = landing is not None and (
+                not prev or landing["ts"] >= prev["ts"]
+            )
+            origin = (
+                landing
+                if landing is not None and on_ground
+                else {
+                    "lat": lat,
+                    "lon": lon,
+                }
+            )
             rec["takeoff"] = {
                 "lat": float(origin["lat"]),
                 "lon": float(origin["lon"]),
