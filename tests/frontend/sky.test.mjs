@@ -28,3 +28,10 @@ test('theme-color follows the top of each sky', () => {
   const tops = Object.fromEntries(skies.map(([, name, , top]) => [name, top]));
   assert.deepEqual(SKY_TOP, tops);
 });
+
+test('the sun has a visible style (the view model shows it on dry days)', () => {
+  const rule = css.match(/^\.sun \{([^}]*)\}/m);
+  assert.ok(rule, '.sun rule missing: the element renders as an empty div');
+  assert.match(rule[1], /width: \d+px/);
+  assert.match(rule[1], /radial-gradient/);
+});

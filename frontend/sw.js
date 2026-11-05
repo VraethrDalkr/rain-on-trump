@@ -1,7 +1,7 @@
 /* rain-on-trump service-worker
    – precached shell, network-first code, cache-first icons/fonts, notification clicks */
 
-const VERSION     = '3-0-3';  // sky gradient on the root: status-bar strip and Safari bars match
+const VERSION     = '3-0-4';  // the sun glow shows on dry days (its CSS was missing)
 const SHELL_CACHE = `rain-on-trump-shell-${VERSION}`;
 const ICON_CACHE  = `rain-on-trump-icons-${VERSION}`;
 const SHELL       = '/index.html';
@@ -21,7 +21,8 @@ const STATIC_SHELL = [
   '/js/sheet.js',
   '/js/toast.js',
   '/js/dialog.js',
-  '/js/settings.js'
+  '/js/settings.js',
+  '/js/debug.js'
 ];
 
 // Nice to have: a missing one must not abort the install (that would also

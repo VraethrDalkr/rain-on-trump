@@ -4,9 +4,10 @@
 
 // Stars: a jittered 10×10 grid (2 per cell) plus extras, so the whole sky is
 // covered evenly. Seeded, so the same sky comes back on every refresh.
-const STAR_GRID = 10;
-const STARS_PER_CELL = 2;
-const EXTRA_STARS = 30;
+// ~76 stars: the prototype's density (30 in the top 40%) over the whole sky
+const STAR_GRID = 8;
+const STARS_PER_CELL = 1;
+const EXTRA_STARS = 12;
 const STAR_SEED = 20261104;
 
 /** Small deterministic PRNG (mulberry32). */
@@ -24,8 +25,8 @@ function rng(seed) {
 function star(rand, left, top) {
   const el = document.createElement('i');
   const r = rand();
-  if (r > 0.95) el.className = 'bright';
-  else if (r > 0.85) el.className = 'large';
+  if (r > 0.97) el.className = 'bright';
+  else if (r > 0.9) el.className = 'large';
   el.style.left = `${left.toFixed(2)}%`;
   el.style.top = `${top.toFixed(2)}%`;
   el.style.animationDuration = `${(2 + rand() * 3).toFixed(2)}s`;
@@ -86,6 +87,23 @@ export const SKY_TOP = {
   fog: '#2c3038',
 };
 
+const PLANE_PITCH = Math.tan((7 * Math.PI) / 180); // .flight is rotated -7deg
+
+/**
+ * Fly the plane through the free space between the top bar and the question
+ * (.moon-slot, empty in flight), so it never passes under the cards. The path
+ * climbs PLANE_PITCH × width across the screen: centre it on the slot.
+ */
+function placeFlight(el) {
+  const slot = document.querySelector('.moon-slot');
+  if (!slot) return;
+  const r = slot.getBoundingClientRect();
+  if (!r.height) return;
+  el.style.top = `${Math.round(r.top + r.height / 2 + (PLANE_PITCH * window.innerWidth) / 2)}px`;
+}
+
+let flightResize = false;
+
 export function renderSky(root, sky) {
   const q = (sel) => root.querySelector(sel);
   const fog = sky.kind === 'fog';
@@ -102,6 +120,13 @@ export function renderSky(root, sky) {
   show(q('.clouds'), sky.wet && !fog);
   show(q('.fog'), fog);
   show(q('.flight'), sky.kind === 'flight');
+  if (sky.kind === 'flight') {
+    placeFlight(q('.flight'));
+    if (!flightResize) {
+      flightResize = true;
+      window.addEventListener('resize', () => placeFlight(q('.flight')));
+    }
+  }
   show(q('.flash'), sky.storm !== 'none');
   show(q('.bolt'), sky.storm !== 'none');
 

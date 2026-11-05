@@ -328,3 +328,15 @@ test('a step more than a week old shows its date', () => {
   const vm = viewModel(data, at(data), PREFS);
   assert.ok(vm.timeline[0].meta.startsWith('Oct 25, 7:12 PM · '), vm.timeline[0].meta);
 });
+
+test('in flight (no sun times, no offset): the sky follows solar time at the plane', () => {
+  // 19:30 UTC over South Carolina (lon -79.9) is about 14:10 solar time
+  const d = fx('in-flight-adsb');
+  assert.equal(timeOfDay(at(d), d), 'day');
+  assert.equal(vmOf('in-flight-adsb').sky.time, 'day');
+  // 04:00 UTC there is night
+  assert.equal(timeOfDay(new Date('2026-11-05T04:00:00Z'), d), 'night');
+  // Unknown answer: the last known position gives the solar time
+  const u = fx('unknown');
+  assert.equal(timeOfDay(new Date('2026-11-04T17:00:00Z'), u), 'day');
+});

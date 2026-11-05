@@ -105,6 +105,14 @@ export function timeOfDay(now, data) {
     const hour = new Date(t + offset * 1000).getUTCHours();
     return hour >= 6 && hour < 18 ? 'day' : 'night';
   }
+  // In flight or unknown, the weather (and with it the sun times) is skipped:
+  // use the solar time at his position, 06:00-18:00 is day.
+  const c = d.coords || {};
+  const lon = num(c.lon ?? (c.last_known && c.last_known.lon));
+  if (lon !== null) {
+    const hour = new Date(t + (lon / 15) * 3600e3).getUTCHours();
+    return hour >= 6 && hour < 18 ? 'day' : 'night';
+  }
   return 'night';
 }
 

@@ -7,6 +7,7 @@ import { showToast } from './toast.js';
 import { initNotify, onNotifyTap } from './notify.js';
 import { initSheet } from './sheet.js';
 import { initSettings } from './settings.js';
+import { initDebug, presetPayload, presetLabel } from './debug.js';
 
 const REFRESH_MS = 60000;
 const MIN_REFRESH_GAP_MS = 5000;
@@ -28,6 +29,8 @@ export const app = {
   answered: false,
   /** Latest view model, for the details sheet. */
   vm: null,
+  /** Debug preset id (dev PWA panel), or null for live data. */
+  debug: null,
 };
 
 export function prefs() {
@@ -95,7 +98,10 @@ export function render() {
   const now = new Date();
   const last = lastAnswer();
   let vm;
-  if (!app.answered) {
+  if (app.debug) {
+    vm = viewModel(presetPayload(app.debug, now), now, prefs());
+    vm = { ...vm, status: { tone: 'searching', text: `Debug · ${presetLabel(app.debug)}` } };
+  } else if (!app.answered) {
     if (!last) return; // keep the static "Loading…" markup
     vm = viewModel(last.data, now, prefs());
     vm = { ...vm, status: { tone: 'searching', text: 'Updating…' } };
@@ -178,6 +184,10 @@ function boot() {
   initSettings({ units: () => prefs().units });
   document.addEventListener('units-change', (e) => setUnits(e.detail));
   initNotify();
+  initDebug((id) => {
+    app.debug = id;
+    render();
+  });
   render(); // last good answer (or the offline screen) until the first response
   refresh();
   setInterval(refresh, REFRESH_MS);
