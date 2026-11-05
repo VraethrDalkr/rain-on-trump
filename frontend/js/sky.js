@@ -75,11 +75,23 @@ function show(el, on) {
  * @param {HTMLElement} root  the #sky element
  * @param {object} sky        vm.sky from model.js
  */
+/** Top colour of each sky gradient (css/app.css): the status-bar strip. */
+export const SKY_TOP = {
+  day: '#1f6fd1',
+  'day-wet': '#465568',
+  dusk: '#221a46',
+  'dusk-wet': '#1c1a2e',
+  night: '#060a1c',
+  'night-wet': '#030409',
+  fog: '#2c3038',
+};
+
 export function renderSky(root, sky) {
   const q = (sel) => root.querySelector(sel);
   const fog = sky.kind === 'fog';
   const gradient = fog ? 'fog' : `${sky.time}${sky.wet ? '-wet' : ''}`;
   root.className = `sky sky-${gradient} storm-${sky.storm}`;
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', SKY_TOP[gradient]);
 
   const stars = q('.stars');
   if (sky.stars) buildStars(stars);

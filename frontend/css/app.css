@@ -59,25 +59,20 @@ button { font: inherit; color: inherit; }
 
 /* ── Sky ─────────────────────────────────────────────────────────────── */
 /* Full screen: viewport + the top inset the installed app leaves out (see html) */
-.sky { position: fixed; top: 0; left: 0; right: 0; height: max(100lvh, calc(100% + env(safe-area-inset-top))); overflow: hidden; pointer-events: none; transition: background 1s; }
-/* Whatever the sky layer doesn't cover (that strip, overscroll) shows the root
-   background: paint it in the current sky's bottom colour so it continues the
-   gradient instead of showing a dark band. */
-html { background: #25305a; transition: background-color 1s; }
-html:has(.sky-day) { background: #bfe2ff; }
-html:has(.sky-day-wet) { background: #9aa8b6; }
-html:has(.sky-dusk) { background: #e9895e; }
-html:has(.sky-dusk-wet) { background: #7d5d63; }
-html:has(.sky-night) { background: #25305a; }
-html:has(.sky-night-wet) { background: #18202f; }
-html:has(.sky-fog) { background: #6e737c; }
-.sky-day { background: linear-gradient(180deg, #1f6fd1 0%, #5aa8f0 55%, #bfe2ff 100%); }
-.sky-day-wet { background: linear-gradient(180deg, #465568 0%, #6d7d90 55%, #9aa8b6 100%); }
-.sky-dusk { background: linear-gradient(180deg, #221a46 0%, #7b3f74 50%, #e9895e 100%); }
-.sky-dusk-wet { background: linear-gradient(180deg, #1c1a2e 0%, #46384f 55%, #7d5d63 100%); }
-.sky-night { background: linear-gradient(180deg, #060a1c 0%, #121a3d 60%, #25305a 100%); }
-.sky-night-wet { background: linear-gradient(180deg, #030409 0%, #0b111e 55%, #18202f 100%); }
-.sky-fog { background: linear-gradient(180deg, #2c3038 0%, #4a4f59 55%, #6e737c 100%); }
+.sky { position: fixed; top: 0; left: 0; right: 0; height: max(100lvh, calc(100% + env(safe-area-inset-top))); overflow: hidden; pointer-events: none; }
+/* The sky gradient is the root background, as in v2: the strip under the iOS
+   status bar (installed app) and Safari's bars take their colour from the root,
+   so it must be the gradient with its top colour as the plain colour. The
+   .sky layer above only holds stars, rain, moon. html is extended by the top
+   inset (above), so the gradient also reaches the bottom of the screen. */
+html { --sky-top: #060a1c; --sky: linear-gradient(180deg, #060a1c 0%, #121a3d 60%, #25305a 100%); background: var(--sky-top) var(--sky); }
+html:has(.sky-day) { --sky-top: #1f6fd1; --sky: linear-gradient(180deg, #1f6fd1 0%, #5aa8f0 55%, #bfe2ff 100%); }
+html:has(.sky-day-wet) { --sky-top: #465568; --sky: linear-gradient(180deg, #465568 0%, #6d7d90 55%, #9aa8b6 100%); }
+html:has(.sky-dusk) { --sky-top: #221a46; --sky: linear-gradient(180deg, #221a46 0%, #7b3f74 50%, #e9895e 100%); }
+html:has(.sky-dusk-wet) { --sky-top: #1c1a2e; --sky: linear-gradient(180deg, #1c1a2e 0%, #46384f 55%, #7d5d63 100%); }
+html:has(.sky-night) { --sky-top: #060a1c; --sky: linear-gradient(180deg, #060a1c 0%, #121a3d 60%, #25305a 100%); }
+html:has(.sky-night-wet) { --sky-top: #030409; --sky: linear-gradient(180deg, #030409 0%, #0b111e 55%, #18202f 100%); }
+html:has(.sky-fog) { --sky-top: #2c3038; --sky: linear-gradient(180deg, #2c3038 0%, #4a4f59 55%, #6e737c 100%); }
 
 /* Full moon (v2 look). It sits in .moon-slot, the flexible space between the
    top bar and the question, and scales to it: it can't overlap text. */

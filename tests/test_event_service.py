@@ -283,3 +283,37 @@ async def test_failed_post_undoes_only_its_own_stamp(
     es._last_api_error["OpenSky"] = newer  # a newer stamp before the post fails
     await asyncio.gather(*list(es._tasks))
     assert es._last_api_error["OpenSky"] == newer
+
+
+def _capture_embeds(monkeypatch) -> list[dict]:
+    sent: list[dict] = []
+    monkeypatch.setattr(
+        es, "_fire_and_forget", lambda embed, *a, **k: sent.append(embed)
+    )
+    return sent
+
+
+def _field(embed: dict, name: str) -> str | None:
+    return next((f["value"] for f in embed["fields"] if f["name"] == name), None)
+
+
+def test_flight_detected_shows_the_broadcast_callsign(mock_webhook_url, monkeypatch):
+    """The Discord message names what the aircraft broadcast (AF1, SAM, ...)."""
+    sent = _capture_embeds(monkeypatch)
+    es.emit_flight_detected(
+        callsign="92-9000",
+        lat=38.8,
+        lon=-76.8,
+        altitude=12000,
+        source="adsb.fi",
+        flight_id="AF1",
+    )
+    assert _field(sent[0], "Broadcast as") == "AF1"
+
+
+def test_landing_detected_shows_a_missing_callsign(mock_webhook_url, monkeypatch):
+    sent = _capture_embeds(monkeypatch)
+    es.emit_landing_detected(
+        callsign="92-9000", lat=26.68, lon=-80.1, location_name="PBI", flight_id=""
+    )
+    assert _field(sent[0], "Broadcast as") == "(none)"

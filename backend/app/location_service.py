@@ -145,7 +145,8 @@ def _emit_state_change_events(
                 lat=plane_state.get("lat", 0),
                 lon=plane_state.get("lon", 0),
                 altitude=plane_state.get("altitude", 0),
-                source="adsb.fi/adsb.lol",
+                source=plane_state.get("source") or "adsb.fi/adsb.lol",
+                flight_id=plane_state.get("flight_id"),
             )
 
         elif curr_status == "grounded" and _prev_flight_status == "airborne":
@@ -154,6 +155,7 @@ def _emit_state_change_events(
                 lat=plane_state.get("lat", 0),
                 lon=plane_state.get("lon", 0),
                 location_name=coords.get("name"),
+                flight_id=plane_state.get("flight_id"),
             )
 
         _prev_flight_status = curr_status

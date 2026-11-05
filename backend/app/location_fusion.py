@@ -1093,13 +1093,15 @@ def fuse(inputs: Inputs, now: dt.datetime) -> Decision:
                 out.append(enr)
         return [c for c in out if 0 <= c.age_h(now) <= MAX_AGE_H]
 
-    pre = aircraft_claims(build_aircraft(None))
+    pre_rated = build_aircraft(None)
+    pre = aircraft_claims(pre_rated)
     gated_air = [c for c in pre if c.R >= GATE]
     primary_gated = bool(gated_air)
     primary = (
         max(gated_air, key=lambda c: c.t).airframe if gated_air else inputs.primary_hint
     )
-    air = aircraft_claims(build_aircraft(primary)) if primary else pre
+    rated = build_aircraft(primary) if primary else pre_rated
+    air = aircraft_claims(rated) if primary else pre
     gated_air = [c for c in air if c.R >= GATE]
     freshest_air = max(gated_air, key=lambda c: c.t) if gated_air else None
     air_ctx = (
@@ -1261,6 +1263,10 @@ def fuse(inputs: Inputs, now: dt.datetime) -> Decision:
             scheduled = True
 
     coords = _output(pick, scheduled, past, now)
+    if pick is not None and pick.airframe:
+        rating = next((r for r in rated if r[0].airframe == pick.airframe), None)
+        if rating:
+            coords["identity"] = _identity(*rating, primary)
     return Decision(
         coords=coords,
         pick=pick,
@@ -1271,6 +1277,17 @@ def fuse(inputs: Inputs, now: dt.datetime) -> Decision:
 
 
 # ── Output ───────────────────────────────────────────────────────────────
+def _identity(track: Track, tf: float, why: str, primary: str | None) -> dict[str, Any]:
+    """How an aircraft pick was rated, for the debug history."""
+    return {
+        "factor": tf,
+        "why": why,
+        "flight_id": (track.live or {}).get("flight_id") or None,
+        "af1_seen": track.af1,
+        "primary": track.airframe == primary,
+    }
+
+
 def _refine(pick: Claim, claims: list[Claim], now: dt.datetime) -> dict[str, Any]:
     """Venue / base refinement of landings, parked jets and airport arrivals."""
     out: dict[str, Any] = {"lat": pick.lat, "lon": pick.lon, "name": pick.name}

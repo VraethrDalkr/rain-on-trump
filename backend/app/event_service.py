@@ -159,6 +159,7 @@ def emit_flight_detected(
     lon: float,
     altitude: float,
     source: str,
+    flight_id: str | None = None,
 ) -> None:
     """Emit event when aircraft becomes airborne."""
     embed = {
@@ -166,6 +167,7 @@ def emit_flight_detected(
         "color": 0x3498DB,  # Blue
         "fields": [
             {"name": "Callsign", "value": callsign, "inline": True},
+            {"name": "Broadcast as", "value": flight_id or "(none)", "inline": True},
             {"name": "Altitude", "value": f"{altitude:,.0f} ft", "inline": True},
             {"name": "Source", "value": source, "inline": True},
             {"name": "Position", "value": f"{lat:.4f}, {lon:.4f}", "inline": False},
@@ -173,7 +175,13 @@ def emit_flight_detected(
         "timestamp": dt.datetime.now(UTC).isoformat(),
     }
     _fire_and_forget(embed)
-    LOG.info("[event] flight_detected: %s at %.4f, %.4f", callsign, lat, lon)
+    LOG.info(
+        "[event] flight_detected: %s (%s) at %.4f, %.4f",
+        callsign,
+        flight_id or "no callsign",
+        lat,
+        lon,
+    )
 
 
 def emit_landing_detected(
@@ -181,6 +189,7 @@ def emit_landing_detected(
     lat: float,
     lon: float,
     location_name: str | None = None,
+    flight_id: str | None = None,
 ) -> None:
     """Emit event when aircraft transitions to grounded."""
     embed = {
@@ -188,6 +197,7 @@ def emit_landing_detected(
         "color": 0x2ECC71,  # Green
         "fields": [
             {"name": "Callsign", "value": callsign, "inline": True},
+            {"name": "Broadcast as", "value": flight_id or "(none)", "inline": True},
             {
                 "name": "Location",
                 "value": location_name or f"{lat:.4f}, {lon:.4f}",

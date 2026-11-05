@@ -1,7 +1,7 @@
 /* rain-on-trump service-worker
    – precached shell, network-first code, cache-first icons/fonts, notification clicks */
 
-const VERSION     = '3-0-2';  // README / About: describe the v3 location fusion
+const VERSION     = '3-0-3';  // sky gradient on the root: status-bar strip and Safari bars match
 const SHELL_CACHE = `rain-on-trump-shell-${VERSION}`;
 const ICON_CACHE  = `rain-on-trump-icons-${VERSION}`;
 const SHELL       = '/index.html';
