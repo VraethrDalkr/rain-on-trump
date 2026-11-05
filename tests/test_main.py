@@ -313,3 +313,40 @@ def test_cors_rejects_unknown_origin(monkeypatch: pytest.MonkeyPatch) -> None:
         },
     )
     assert "access-control-allow-origin" not in r.headers
+
+
+@pytest.mark.parametrize(
+    "coords,precip,expected",
+    [
+        (
+            {"lat": 40.0, "lon": -75.0, "name": "X"},
+            {"precipitating": False, "wind_kmh": 31.5},
+            31.5,
+        ),
+        ({"lat": 40.0, "lon": -75.0, "name": "X"}, {"precipitating": False}, None),
+        (
+            {"lat": 40.0, "lon": -75.0, "name": "X", "in_flight": True},
+            {"wind_kmh": 9.0},
+            None,
+        ),
+        ({"unknown": True}, {"wind_kmh": 9.0}, None),
+    ],
+)
+def test_is_it_raining_reports_wind_kmh(
+    monkeypatch: pytest.MonkeyPatch, coords: dict, precip: dict, expected: float | None
+) -> None:
+    """``wind_kmh`` is always present: the weather's value, else None."""
+
+    async def _fake_coords() -> dict[str, Any]:
+        return dict(coords)
+
+    async def _fake_precip(lat: float, lon: float) -> dict[str, Any]:
+        return precip
+
+    monkeypatch.setattr(main, "current_coords", _fake_coords, raising=True)
+    monkeypatch.setattr(main, "get_precip", _fake_precip, raising=True)
+
+    data = TestClient(main.app).get("/is_it_raining.json").json()
+
+    assert "wind_kmh" in data
+    assert data["wind_kmh"] == expected

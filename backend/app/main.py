@@ -906,6 +906,7 @@ async def is_it_raining(
                 "sunrise_utc": None,
                 "sunset_utc": None,
                 "utc_offset_seconds": None,
+                "wind_kmh": None,
                 "coords": coords,
                 "timestamp": dt.datetime.now(UTC).isoformat(),
             }
@@ -926,6 +927,7 @@ async def is_it_raining(
                 "sunrise_utc": None,
                 "sunset_utc": None,
                 "utc_offset_seconds": None,
+                "wind_kmh": None,
                 "coords": coords,
                 "timestamp": dt.datetime.now(UTC).isoformat(),
             }
@@ -949,6 +951,7 @@ async def is_it_raining(
                 "sunrise_utc": None,
                 "sunset_utc": None,
                 "utc_offset_seconds": None,
+                "wind_kmh": None,
                 "coords": coords,
                 "error": precip.get("reason", "Weather API error"),
                 "timestamp": dt.datetime.now(UTC).isoformat(),
@@ -969,6 +972,7 @@ async def is_it_raining(
             "sunrise_utc": precip.get("sunrise_utc"),
             "sunset_utc": precip.get("sunset_utc"),
             "utc_offset_seconds": precip.get("utc_offset_seconds"),
+            "wind_kmh": precip.get("wind_kmh"),
             "coords": coords,
             "timestamp": dt.datetime.now(UTC).isoformat(),
         }

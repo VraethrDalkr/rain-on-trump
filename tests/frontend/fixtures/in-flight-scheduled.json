@@ -1,0 +1,46 @@
+{
+ "precipitating": false,
+ "mmh": 0.0,
+ "precipitation_type": "none",
+ "snow": 0.0,
+ "thunderstorm": false,
+ "thunderstorm_state": "none",
+ "sunrise": null,
+ "sunset": null,
+ "sunrise_utc": null,
+ "sunset_utc": null,
+ "utc_offset_seconds": null,
+ "wind_kmh": null,
+ "coords": {
+  "reason": "en_route",
+  "lat": 33.1,
+  "lon": -79.9,
+  "name": "In flight to Palm Beach, FL",
+  "in_flight": true,
+  "destination": "Palm Beach, FL",
+  "eta": "2026-11-04T21:10:00+00:00",
+  "confidence": 85,
+  "age_h": 0.5,
+  "observed_at": "2026-11-04T19:00:00+00:00",
+  "stale": false,
+  "source_display": "Factba.se schedule (flight), just now",
+  "source_url": "https://rollcall.com/factbase/trump/topic/calendar/",
+  "evidence": [
+   {
+    "t": "2026-11-04T18:20:00+00:00",
+    "place": "The White House",
+    "kind": "calendar_alias",
+    "source": "Factba.se schedule",
+    "current": false
+   },
+   {
+    "t": "2026-11-04T19:00:00+00:00",
+    "place": "In flight to Palm Beach, FL",
+    "kind": "en_route",
+    "source": "Factba.se schedule (flight)",
+    "current": true
+   }
+  ]
+ },
+ "timestamp": "2026-11-04T19:30:00+00:00"
+}

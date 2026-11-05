@@ -1,0 +1,58 @@
+{
+ "precipitating": false,
+ "mmh": 0.0,
+ "precipitation_type": "none",
+ "snow": 0.0,
+ "thunderstorm": true,
+ "thunderstorm_state": "moderate",
+ "sunrise": "2026-11-04T06:38",
+ "sunset": "2026-11-04T17:04",
+ "sunrise_utc": "2026-11-04T11:38:00Z",
+ "sunset_utc": "2026-11-04T22:04:00Z",
+ "utc_offset_seconds": -18000,
+ "wind_kmh": 30.0,
+ "coords": {
+  "reason": "calendar_alias",
+  "lat": 38.897676,
+  "lon": -77.036529,
+  "name": "The White House",
+  "event_summary": "The President participates in a Policy Meeting",
+  "confidence": 81,
+  "age_h": 3.75,
+  "observed_at": "2026-11-04T20:30:00+00:00",
+  "stale": false,
+  "evidence": [
+   {
+    "t": "2026-11-02T19:59:00+00:00",
+    "place": "Lincoln Memorial Reflecting Pool, DC",
+    "kind": "calendar_alias",
+    "source": "Factba.se schedule",
+    "current": false
+   },
+   {
+    "t": "2026-11-03T21:00:00+00:00",
+    "place": "Oval Office, WH",
+    "kind": "calendar_alias",
+    "source": "Factba.se schedule",
+    "current": false
+   },
+   {
+    "t": "2026-11-04T00:00:00+00:00",
+    "place": "East Room, WH",
+    "kind": "calendar_alias",
+    "source": "Factba.se schedule",
+    "current": false
+   },
+   {
+    "t": "2026-11-04T20:30:00+00:00",
+    "place": "The White House",
+    "kind": "calendar_alias",
+    "source": "Factba.se schedule",
+    "current": true
+   }
+  ],
+  "source_display": "Factba.se schedule, 3 h ago",
+  "source_url": "https://rollcall.com/factbase/trump/topic/calendar/"
+ },
+ "timestamp": "2026-11-04T17:00:00+00:00"
+}

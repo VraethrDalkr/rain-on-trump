@@ -592,3 +592,48 @@ def test_memo_is_size_capped():
         c.cell_contents for c in fn.__closure__ if isinstance(c.cell_contents, dict)
     ]
     assert all(len(c) <= ws.MEMO_MAX_ENTRIES for c in cell)
+
+
+def _hourly_payload(**extra):
+    now_hour = ws._utcnow().replace(minute=0, second=0, microsecond=0)
+    return {
+        "hourly": {
+            "time": [now_hour.strftime("%Y-%m-%dT%H:%M")],
+            "rain": [0.0],
+            "snowfall": [0.0],
+            "weather_code": [0],
+        },
+        **extra,
+    }
+
+
+@pytest.mark.asyncio
+async def test_wind_kmh_from_current(monkeypatch):
+    """Current 10 m wind speed (km/h) drives the frontend's rain slant."""
+    urls = []
+
+    class _Client(_DummyAsyncClient):
+        async def get(self, url, *a):
+            urls.append(url)
+            return await super().get(url, *a)
+
+    payload = _hourly_payload(current={"wind_speed_10m": 23.4})
+    monkeypatch.setattr(ws.httpx, "AsyncClient", lambda *_, **__: _Client(payload))
+
+    res = await ws.get_precip(40.0, -70.0)
+
+    assert res["wind_kmh"] == 23.4
+    assert "current=wind_speed_10m" in urls[0]
+
+
+@pytest.mark.parametrize("current", [None, {}, {"wind_speed_10m": None}, "junk"])
+@pytest.mark.asyncio
+async def test_wind_kmh_missing_is_none(monkeypatch, current):
+    payload = _hourly_payload(**({} if current is None else {"current": current}))
+    monkeypatch.setattr(
+        ws.httpx, "AsyncClient", lambda *_, **__: _DummyAsyncClient(payload)
+    )
+
+    res = await ws.get_precip(40.0, -70.0)
+
+    assert res["wind_kmh"] is None

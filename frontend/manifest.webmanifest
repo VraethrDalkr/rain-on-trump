@@ -3,8 +3,8 @@
   "short_name": "RainOnTrump",
   "start_url": "/index.html",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "background_color": "#060a1c",
+  "theme_color": "#060a1c",
   "icons": [
     {
       "src": "/icons/icon-192.png",

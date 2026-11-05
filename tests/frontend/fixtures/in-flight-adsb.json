@@ -1,0 +1,29 @@
+{
+ "precipitating": false,
+ "mmh": 0.0,
+ "precipitation_type": "none",
+ "snow": 0.0,
+ "thunderstorm": false,
+ "thunderstorm_state": "none",
+ "sunrise": null,
+ "sunset": null,
+ "sunrise_utc": null,
+ "sunset_utc": null,
+ "utc_offset_seconds": null,
+ "wind_kmh": null,
+ "coords": {
+  "reason": "plane_air",
+  "lat": 33.1,
+  "lon": -79.9,
+  "name": "Air Force One (airborne)",
+  "in_flight": true,
+  "confidence": 95,
+  "age_h": 0.02,
+  "observed_at": "2026-11-04T19:29:00+00:00",
+  "stale": false,
+  "airframe": "vc25b-bridge",
+  "source_display": "ADS-B (adsb.fi), just now",
+  "source_url": "https://globe.adsbexchange.com/?icao=af83f3"
+ },
+ "timestamp": "2026-11-04T19:30:00+00:00"
+}

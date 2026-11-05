@@ -62,7 +62,6 @@ HANDOFF.md
 
 # Backup files
 *.backup
-frontend/theme-test.html
 
 # Wrangler local state/cache
 .wrangler/

@@ -30,6 +30,7 @@ Public helper
             "utc_offset_seconds": int,  # the location's UTC offset
             "sunrise_utc": str | None,  # ISO8601 UTC with "Z"
             "sunset_utc": str | None,   # ISO8601 UTC with "Z"
+            "wind_kmh": float | None,   # current 10 m wind speed
         }
         The bare dict is returned unless a *trace* list is supplied, in which
         case it returns ``(result, trace)``.
@@ -152,6 +153,17 @@ def _utc_iso(local_iso: str | None, offset_s: int) -> str | None:
     return (naive - dt.timedelta(seconds=offset_s)).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def _wind_kmh(data: dict) -> float | None:
+    """Current 10 m wind speed in km/h, or None when missing or malformed."""
+    current = data.get("current")
+    if not isinstance(current, dict):
+        return None
+    value = current.get("wind_speed_10m")
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    return float(value)
+
+
 async def get_precip(
     lat: float,
     lon: float,
@@ -197,6 +209,7 @@ async def _fetch_precip(lat: float, lon: float) -> tuple[dict, list[dict]]:
         "&minutely_15=rain,snowfall"
         f"&past_minutely_15={PRECIP_WINDOW_STEPS + 4}&forecast_minutely_15=1"
         "&daily=sunrise,sunset"
+        "&current=wind_speed_10m"
         "&timezone=auto"
     )
     trace.append({"ts": ts, "phase": "weather", "step": "fetch", "url": url})
@@ -347,6 +360,7 @@ async def _fetch_precip(lat: float, lon: float) -> tuple[dict, list[dict]]:
         "utc_offset_seconds": utc_offset_seconds,
         "sunrise_utc": sunrise_utc,
         "sunset_utc": sunset_utc,
+        "wind_kmh": _wind_kmh(data),
     }
     return result, trace
 

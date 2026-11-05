@@ -1,0 +1,28 @@
+{
+ "precipitating": null,
+ "mmh": null,
+ "precipitation_type": null,
+ "snow": null,
+ "thunderstorm": null,
+ "thunderstorm_state": null,
+ "sunrise": null,
+ "sunset": null,
+ "sunrise_utc": null,
+ "sunset_utc": null,
+ "utc_offset_seconds": null,
+ "wind_kmh": null,
+ "coords": {
+  "unknown": true,
+  "confidence": 0,
+  "reason": "unknown",
+  "last_known": {
+   "lat": 40.6,
+   "lon": -74.7,
+   "name": "Trump Nat'l Golf Club Bedminster",
+   "kind": "calendar_alias",
+   "observed_at": "2026-10-31T19:00:00+00:00",
+   "age_h": 97.2
+  }
+ },
+ "timestamp": "2026-11-04T20:10:00+00:00"
+}

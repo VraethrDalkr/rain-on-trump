@@ -39,6 +39,7 @@ REFINE_BEFORE_H: Final = 2.0
 STALE_SCORE: Final = 0.3
 STALE_AGE_H: Final = 72.0
 MAX_CONF: Final = 0.95
+EVIDENCE_SITE_KM: Final = 2.0  # evidence steps closer than this are one stay
 
 R_CAL_TIMED: Final = 0.82
 R_CAL_DATE_ONLY: Final = 0.5
@@ -1292,4 +1293,57 @@ def _output(
     }
     if pick.airframe:
         out["airframe"] = pick.airframe
+    if pick.kind == "en_route":
+        if pick.extra.get("dest_name"):
+            out["destination"] = pick.extra["dest_name"]
+        if pick.extra.get("scheduled") and pick.extra.get("until"):
+            out["eta"] = pick.extra["until"].astimezone(dt.timezone.utc).isoformat()
+    if not scheduled:
+        out["evidence"] = _evidence(pick, claims, now)
     return out
+
+
+def _evidence(
+    pick: Claim, claims: list[Claim], now: dt.datetime
+) -> list[dict[str, Any]]:
+    """The "how we know" steps behind *pick*: up to 4 claims, oldest first.
+
+    Only trustworthy (gated), already-happened claims count, including places
+    he has since left (``superseded``); flights
+    other than the pick are left out, and a (kind, place) pair appears once
+    (newest kept), and a claim within :data:`EVIDENCE_SITE_KM` of the next
+    newer step is the same stay (White House rooms). The last entry is the
+    pick itself (``current``).
+    """
+    seen: set[tuple[str, str]] = {(pick.kind, pick.name)}
+    steps: list[Claim] = []
+    anchor = pick  # newest kept step: a stay at one site is one step
+    for c in sorted(claims, key=lambda c: c.t, reverse=True):
+        key = (c.kind, c.name)
+        if (
+            c is pick
+            or key in seen
+            or c.status not in ("live", "superseded")
+            or c.R < GATE
+            or c.future
+            or c.t > now
+            or c.kind == "en_route"
+            or _km(c, anchor) <= EVIDENCE_SITE_KM
+        ):
+            continue
+        seen.add(key)
+        steps.append(c)
+        anchor = c
+        if len(steps) == 3:
+            break
+
+    def entry(c: Claim, current: bool) -> dict[str, Any]:
+        return {
+            "t": c.t.astimezone(dt.timezone.utc).isoformat(),
+            "place": c.name,
+            "kind": c.kind,
+            "source": c.source,
+            "current": current,
+        }
+
+    return [entry(c, False) for c in reversed(steps)] + [entry(pick, True)]

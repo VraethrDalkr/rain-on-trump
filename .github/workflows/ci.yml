@@ -24,3 +24,7 @@ jobs:
       - run: black --check .
       - run: flake8
       - run: pytest -q
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - run: node --test 'tests/frontend/*.test.mjs'
