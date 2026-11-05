@@ -99,3 +99,41 @@ def test_evidence_merges_a_stay_at_one_site(world: World) -> None:
 
     assert len(coords["evidence"]) == 1
     assert coords["evidence"][0]["current"] is True
+
+
+def test_evidence_steps_carry_the_event_text(world: World) -> None:
+    """Each step says which schedule item it comes from (findable on Factba.se)."""
+    _trip(world)
+    coords = world.at("2026-11-13T18:00")
+
+    by_place = {e["place"]: e["summary"] for e in coords["evidence"]}
+    assert by_place["Mar-a-Lago, FL"] == "The President arrives at Mar-a-Lago"
+    assert any(
+        s.startswith("The President departs Joint Base Andrews")
+        for s in by_place.values()
+    )
+
+
+def test_current_step_says_when_the_stay_began(world: World) -> None:
+    """The current step's `since` is the start of the stay, not its newest report."""
+    world.ev(
+        "2026-11-13T10:00", "The President speaks", "Lincoln Memorial Reflecting Pool"
+    )
+    world.ev("2026-11-13T12:00", "The President signs bills", "Oval Office")
+    world.ev("2026-11-13T15:00", "The President hosts a reception", "East Room")
+    coords = world.at("2026-11-13T18:00")
+
+    current = coords["evidence"][-1]
+    assert dt.datetime.fromisoformat(current["t"]) == et("2026-11-13T15:00")
+    assert dt.datetime.fromisoformat(current["since"]) == et("2026-11-13T10:00")
+
+
+def test_stay_start_stops_at_the_last_move(world: World) -> None:
+    """A visit to the same place before a trip is a different stay."""
+    _trip(world)
+    world.ev("2026-11-13T09:00", "The President has lunch", "The White House")
+    world.ev("2026-11-13T21:00", "The President dines", "Mar-a-Lago")
+    coords = world.at("2026-11-13T22:00")
+
+    since = dt.datetime.fromisoformat(coords["evidence"][-1]["since"])
+    assert since == et("2026-11-13T16:40")  # arrived at Mar-a-Lago, not earlier

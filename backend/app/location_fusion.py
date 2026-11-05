@@ -1309,27 +1309,39 @@ def _evidence(
     """The "how we know" steps behind *pick*: up to 4 claims, oldest first.
 
     Only trustworthy (gated), already-happened claims count, including places
-    he has since left (``superseded``); flights
-    other than the pick are left out, and a (kind, place) pair appears once
-    (newest kept), and a claim within :data:`EVIDENCE_SITE_KM` of the next
-    newer step is the same stay (White House rooms). The last entry is the
-    pick itself (``current``).
+    he has since left (``superseded``); flights other than the pick are left
+    out. A claim within :data:`EVIDENCE_SITE_KM` of the next newer step is the
+    same stay (White House rooms) and a (kind, place) pair appears once
+    (newest kept). Each step carries its schedule text (``summary``); the last
+    entry is the pick itself (``current``) with ``since``, the start of the
+    current stay: the oldest claim merged into it before the last move.
     """
+
+    def eligible(c: Claim) -> bool:
+        return (
+            c is not pick
+            and c.status in ("live", "superseded")
+            and c.R >= GATE
+            and not c.future
+            and c.t <= now
+            and c.kind != "en_route"
+        )
+
     seen: set[tuple[str, str]] = {(pick.kind, pick.name)}
     steps: list[Claim] = []
     anchor = pick  # newest kept step: a stay at one site is one step
+    stay_start = pick.t
+    in_current_stay = True
     for c in sorted(claims, key=lambda c: c.t, reverse=True):
+        if not eligible(c):
+            continue
+        if _km(c, anchor) <= EVIDENCE_SITE_KM:
+            if in_current_stay:
+                stay_start = min(stay_start, c.t)
+            continue
+        in_current_stay = False
         key = (c.kind, c.name)
-        if (
-            c is pick
-            or key in seen
-            or c.status not in ("live", "superseded")
-            or c.R < GATE
-            or c.future
-            or c.t > now
-            or c.kind == "en_route"
-            or _km(c, anchor) <= EVIDENCE_SITE_KM
-        ):
+        if key in seen:
             continue
         seen.add(key)
         steps.append(c)
@@ -1337,13 +1349,20 @@ def _evidence(
         if len(steps) == 3:
             break
 
+    def iso(t: dt.datetime) -> str:
+        return t.astimezone(dt.timezone.utc).isoformat()
+
     def entry(c: Claim, current: bool) -> dict[str, Any]:
-        return {
-            "t": c.t.astimezone(dt.timezone.utc).isoformat(),
+        out = {
+            "t": iso(c.t),
             "place": c.name,
             "kind": c.kind,
             "source": c.source,
+            "summary": c.summary,
             "current": current,
         }
+        if current:
+            out["since"] = iso(stay_start)
+        return out
 
     return [entry(c, False) for c in reversed(steps)] + [entry(pick, True)]

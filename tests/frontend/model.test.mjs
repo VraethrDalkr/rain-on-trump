@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 import {
-  viewModel, resolveUnits, fmtRate, timeOfDay, dropsFor, nextUnits, unitsToast,
+  viewModel, resolveUnits, fmtRate, timeOfDay, dropsFor, nextUnits, unitsToast, eventText,
 } from '../../frontend/js/model.js';
 
 const fx = (name) =>
@@ -282,4 +282,49 @@ test('a tile tap flips to the other unit system as an explicit choice', () => {
 test('units toast says what changed and how to undo it', () => {
   assert.equal(unitsToast('imperial'), 'Showing inches · tap again for millimetres');
   assert.equal(unitsToast('metric'), 'Showing millimetres · tap again for inches');
+});
+
+test('eventText shortens a Factba.se item to what happened', () => {
+  assert.equal(
+    eventText('The President departs Dubuque Regional Airport, IA for Salina Regional Airport, KS [6:11 PM Local]'),
+    'Departs Dubuque Regional Airport, IA for Salina Regional Airport, KS',
+  );
+  assert.equal(eventText('The President and The First Lady arrive at Mar-a-Lago'), 'Arrive at Mar-a-Lago');
+  assert.equal(eventText('Sean Hannity interviews The President on the telephone'), 'Sean Hannity interviews The President on the telephone');
+  assert.equal(eventText(''), '');
+  assert.equal(eventText(undefined), '');
+});
+
+function multiDay() {
+  const data = fx('dry-day');  // timestamp: Wed 2026-11-04 12:00 PM ET
+  data.coords.evidence = [
+    { t: '2026-11-02T00:12:00+00:00', place: 'Dubuque Regional Airport, IA', kind: 'calendar_geocode', source: 'Factba.se schedule (geocoded)', summary: 'The President departs Dubuque Regional Airport, IA for Salina Regional Airport, KS [6:11 PM Local]', current: false },
+    { t: '2026-11-02T06:45:00+00:00', place: 'Joint Base Andrews, MD', kind: 'calendar_alias', source: 'Factba.se schedule', summary: 'The President departs Joint Base Andrews en route to The White House', current: false },
+    { t: '2026-11-04T15:30:00+00:00', place: 'The White House', kind: 'calendar_alias', source: 'Factba.se schedule', summary: 'The President participates in a Policy Meeting', current: true, since: '2026-11-02T06:52:00+00:00' },
+  ];
+  data.coords.observed_at = '2026-11-04T15:30:00+00:00';
+  return data;
+}
+
+test('timeline steps show the weekday when not today, and what happened', () => {
+  const data = multiDay();
+  const vm = viewModel(data, at(data), PREFS);
+  assert.deepEqual(vm.timeline.map((s) => s.meta), [
+    'Sun 7:12 PM · Departs Dubuque Regional Airport, IA for Salina Regional Airport, KS',
+    'Mon 1:45 AM · Departs Joint Base Andrews en route to The White House',
+    '10:30 AM · Participates in a Policy Meeting',
+  ]);
+});
+
+test('sheet header gives the start of the stay and the latest report', () => {
+  const data = multiDay();
+  const vm = viewModel(data, at(data), PREFS);
+  assert.equal(vm.location.detail, 'Since Mon 1:52 AM · last report 10:30 AM');
+});
+
+test('a step more than a week old shows its date', () => {
+  const data = multiDay();
+  data.coords.evidence[0].t = '2026-10-25T23:12:00+00:00';
+  const vm = viewModel(data, at(data), PREFS);
+  assert.ok(vm.timeline[0].meta.startsWith('Oct 25, 7:12 PM · '), vm.timeline[0].meta);
 });

@@ -133,6 +133,38 @@ function clock(iso, prefs) {
   }).format(new Date(ms));
 }
 
+const DAY_MS = 864e5;
+
+function dayKey(ms, prefs) {
+  // YYYY-MM-DD in the display time zone
+  return new Intl.DateTimeFormat('en-CA', { timeZone: prefs.timeZone }).format(new Date(ms));
+}
+
+/** "7:12 PM" today, "Sat 7:12 PM" within the last week, else "Oct 25, 7:12 PM". */
+function when(iso, now, prefs) {
+  const ms = Date.parse(iso);
+  if (!Number.isFinite(ms)) return '';
+  const opts = { hour: 'numeric', minute: '2-digit', timeZone: prefs.timeZone };
+  if (dayKey(ms, prefs) !== dayKey(now.getTime(), prefs)) {
+    if (now.getTime() - ms < 6 * DAY_MS) opts.weekday = 'short';
+    else Object.assign(opts, { month: 'short', day: 'numeric' });
+  }
+  return new Intl.DateTimeFormat(prefs.locale || 'en-US', opts).format(new Date(ms)).replace(' at ', ', ');
+}
+
+/**
+ * What a Factba.se schedule item says happened, shortened for a timeline:
+ * "The President departs X for Y [6:11 PM Local]" → "Departs X for Y".
+ */
+export function eventText(summary) {
+  if (typeof summary !== 'string') return '';
+  const text = summary
+    .replace(/\s*\[[^\]]*\]/g, '')
+    .replace(/^The President( and The First Lady)?\s+/, '')
+    .trim();
+  return text ? text[0].toUpperCase() + text.slice(1) : '';
+}
+
 function windClass(kmh) {
   const v = num(kmh);
   if (v === null || v < 15) return 'calm';
@@ -255,9 +287,10 @@ export function viewModel(data, now, prefs, last) {
   const evidence = Array.isArray(coords.evidence) ? coords.evidence : [];
   const timeline = evidence.map((e) => ({
     title: timelineTitle(e),
-    meta: [clock(e.t, prefs), e.source].filter(Boolean).join(' · '),
+    meta: [when(e.t, now, prefs), eventText(e.summary) || e.source].filter(Boolean).join(' · '),
     current: Boolean(e.current),
   }));
+  const current = evidence.find((e) => e.current);
   const confidence = num(coords.confidence);
   const liveStatus = {
     tone: 'live',
@@ -287,14 +320,17 @@ export function viewModel(data, now, prefs, last) {
   }
 
   const since = clock(coords.observed_at, prefs);
+  // A stay that started before its newest report: "Since Sun 1:52 AM · last report 10:30 AM"
+  const stayDetail = current && current.since && Date.parse(current.since) < Date.parse(current.t)
+    ? `Since ${when(current.since, now, prefs)} · last report ${when(current.t, now, prefs)}`
+    : '';
   const location = {
     title: coords.name || 'Unknown place',
     meta: [coords.source_display, confidence !== null ? `${confidence}% sure` : '']
       .filter(Boolean)
       .join(' · '),
-    detail: [since ? `${sinceLabel(coords)} ${since}` : '', coords.source_display]
-      .filter(Boolean)
-      .join(' · '),
+    detail: (!coords.in_flight && stayDetail)
+      || [since ? `${sinceLabel(coords)} ${since}` : '', coords.source_display].filter(Boolean).join(' · '),
     note: coords.stale ? SUBLINES.staleNote : SUBLINES.freshNote,
     confidence,
     stale: Boolean(coords.stale),
